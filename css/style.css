@@ -1,0 +1,95 @@
+/* Font diimpor dengan preconnect di index.html untuk performa maksimal */
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background-image: linear-gradient(rgba(252, 252, 252, 0.92), rgba(255, 255, 255, 0.92)), url('../bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+code, pre, .font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+
+@keyframes shortBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.animate-bounce-short {
+  animation: shortBounce 0.4s ease-in-out;
+}
+
+/* Card QR Style */
+.qr-card-item {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.qr-card-item:hover {
+  transform: translateY(-3px);
+}
+
+/* Frame Scanner Kamera */
+#tenant1-qr-reader, #tenant2-qr-reader, #emp-portal-qr-reader {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid #10b981 !important;
+}
+
+#tenant1-qr-reader video, #tenant2-qr-reader video, #emp-portal-qr-reader video {
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+/* Aturan Khusus Cetak / Print Stylesheet */
+@media print {
+  /* Sembunyikan elemen navigasi dan tombol aksi */
+  header, nav, aside, #mobile-menu, button, .print\:hidden {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  .page-view {
+    display: block !important;
+  }
+
+  .page-view:not(#page-qrcards):not(#page-reports) {
+    display: none !important;
+  }
+
+  /* Grid Kartu QR Saat Dicetak di Kertas A4 */
+  #qr-cards-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 16px !important;
+    page-break-inside: auto;
+  }
+
+  .qr-card-item {
+    border: 1.5px solid #333333 !important;
+    box-shadow: none !important;
+    page-break-inside: avoid !important;
+    padding: 12px !important;
+    background: #ffffff !important;
+  }
+
+  /* Report Area Print */
+  #printable-report-area {
+    padding: 20px !important;
+  }
+}

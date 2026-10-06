@@ -1,0 +1,564 @@
+/**
+ * reports.js - Pengelolaan Halaman Laporan & Cetak PDF
+ * Fitur:
+ * - Pilihan tanggal + tombol "Cetak sebagai PDF"
+ * - Filter Lingkup:
+ *   1. Laporan Global (Semua Karyawan & Semua Training)
+ *   2. Hanya Training (Khusus Siswa / Mahasiswa Magang)
+ * - Rekapitulasi per Departemen / per Siswa Training
+ * - Rincian Detail Log Absensi
+ */
+
+const ReportsManager = {
+  startDate: Store.getTodayDateString(),
+  endDate: Store.getTodayDateString(),
+  activePreset: 'today',
+  scope: 'global', // 'global' atau 'training'
+
+  init() {
+    this.startDate = Store.getTodayDateString();
+    this.endDate = Store.getTodayDateString();
+    this.setupInputs();
+    this.updateScopeUI();
+    this.render();
+  },
+
+  setupInputs() {
+    const sInput = document.getElementById('report-start-date');
+    const eInput = document.getElementById('report-end-date');
+    if (sInput) sInput.value = this.startDate;
+    if (eInput) eInput.value = this.endDate;
+  },
+
+  setScope(newScope) {
+    this.scope = newScope;
+    this.updateScopeUI();
+    this.render();
+    Store.playSound('click');
+  },
+
+  updateScopeUI() {
+    const btnGlobal = document.getElementById('report-scope-global');
+    const btnTraining = document.getElementById('report-scope-training');
+    const scopeBadge = document.getElementById('report-scope-badge');
+    const printTag = document.getElementById('pdf-print-scope-tag');
+    const pdfIconBox = document.getElementById('pdf-icon-box');
+
+    if (this.scope === 'global') {
+      if (btnGlobal) {
+        btnGlobal.className = 'px-3.5 py-1.5 text-xs font-extrabold rounded-lg transition bg-emerald-700 text-white shadow-xs flex items-center gap-1.5 cursor-pointer';
+      }
+      if (btnTraining) {
+        btnTraining.className = 'px-3.5 py-1.5 text-xs font-bold rounded-lg transition text-slate-600 hover:text-slate-900 hover:bg-slate-200 flex items-center gap-1.5 cursor-pointer';
+      }
+      if (scopeBadge) {
+        scopeBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200';
+        scopeBadge.innerText = 'Global (Semua)';
+      }
+      if (printTag) {
+        printTag.className = 'inline-block px-2.5 py-0.5 mb-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200';
+        printTag.innerText = 'Laporan Global (Karyawan & Training)';
+      }
+      if (pdfIconBox) {
+        pdfIconBox.className = 'w-12 h-12 rounded-xl bg-emerald-800 text-white flex items-center justify-center text-xl font-bold';
+        pdfIconBox.innerHTML = '<i class="fa-solid fa-hotel"></i>';
+      }
+    } else {
+      if (btnGlobal) {
+        btnGlobal.className = 'px-3.5 py-1.5 text-xs font-bold rounded-lg transition text-slate-600 hover:text-slate-900 hover:bg-slate-200 flex items-center gap-1.5 cursor-pointer';
+      }
+      if (btnTraining) {
+        btnTraining.className = 'px-3.5 py-1.5 text-xs font-extrabold rounded-lg transition bg-amber-600 text-white shadow-xs flex items-center gap-1.5 cursor-pointer';
+      }
+      if (scopeBadge) {
+        scopeBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-amber-100 text-amber-900 border border-amber-300';
+        scopeBadge.innerText = 'Khusus Training';
+      }
+      if (printTag) {
+        printTag.className = 'inline-block px-2.5 py-0.5 mb-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300';
+        printTag.innerText = 'Khusus Siswa Training (Magang)';
+      }
+      if (pdfIconBox) {
+        pdfIconBox.className = 'w-12 h-12 rounded-xl bg-amber-700 text-white flex items-center justify-center text-xl font-bold';
+        pdfIconBox.innerHTML = '<i class="fa-solid fa-graduation-cap"></i>';
+      }
+    }
+  },
+
+  handleCustomDateChange() {
+    const sInput = document.getElementById('report-start-date');
+    const eInput = document.getElementById('report-end-date');
+    if (sInput && sInput.value) this.startDate = sInput.value;
+    if (eInput && eInput.value) this.endDate = eInput.value;
+    this.render();
+  },
+
+  isTraineeRecord(r) {
+    if (r.department === 'Training') return true;
+    if (r.employeeId && r.employeeId.toUpperCase().startsWith('TRN-')) return true;
+    const emp = Store.findEmployee(r.employeeId);
+    return emp && (emp.department === 'Training' || emp.isTrainee === true);
+  },
+
+  render() {
+    const s = Store.getSettings();
+    const allRecords = Store.getAttendances(this.startDate, this.endDate);
+    const isGlobal = this.scope === 'global';
+
+    // Filter data sesuai lingkup (Global vs Training)
+    const records = isGlobal ? allRecords : allRecords.filter(r => this.isTraineeRecord(r));
+
+    // Update Label Periode & Kop Surat
+    const periodLabel = document.getElementById('report-period-label');
+    const pdfPeriod = document.getElementById('pdf-report-period');
+    const pdfSubtitle = document.getElementById('pdf-report-subtitle');
+    const printDateEl = document.getElementById('pdf-print-date');
+
+    const periodText = this.startDate === this.endDate
+      ? `Tanggal: ${this.startDate}`
+      : `Periode: ${this.startDate} s/d ${this.endDate}`;
+
+    if (periodLabel) periodLabel.innerText = periodText;
+    if (pdfPeriod) pdfPeriod.innerText = periodText;
+    if (printDateEl) {
+      printDateEl.innerText = new Date().toLocaleDateString('id-ID', {
+        day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+      }) + ' WIB';
+    }
+
+    if (pdfSubtitle) {
+      pdfSubtitle.innerText = isGlobal
+        ? 'Laporan Konsumsi & Absensi Makan Karyawan & Training (Global)'
+        : 'Laporan Konsumsi & Absensi Makan Khusus Siswa Magang / Training';
+    }
+
+    // 1. Statistik Total Orang Makan & Total Biaya
+    const totalEaten = records.length;
+    const totalBiaya = records.reduce((sum, r) => sum + (Number(r.cost) || s.mealPrice || 15000), 0);
+
+    const totalEatenEl = document.getElementById('report-total-eaten');
+    const totalCostEl = document.getElementById('report-total-cost');
+    const eatenLabel = document.getElementById('report-eaten-label');
+    const eatenSubtext = document.getElementById('report-eaten-subtext');
+    const costLabel = document.getElementById('report-cost-label');
+    const costSubtext = document.getElementById('report-cost-subtext');
+
+    if (totalEatenEl) totalEatenEl.innerText = `${totalEaten} ${isGlobal ? 'Orang' : 'Porsi'}`;
+    if (totalCostEl) totalCostEl.innerText = `Rp ${totalBiaya.toLocaleString('id-ID')}`;
+
+    if (isGlobal) {
+      const traineeCount = records.filter(r => this.isTraineeRecord(r)).length;
+      const empCount = totalEaten - traineeCount;
+      if (eatenLabel) eatenLabel.innerText = 'Total Orang yang Makan (Global)';
+      if (eatenSubtext) eatenSubtext.innerText = `${empCount} Karyawan Tetap + ${traineeCount} Siswa Training`;
+      if (costLabel) costLabel.innerText = 'Total Biaya Konsumsi Makan';
+      if (costSubtext) costSubtext.innerText = 'Seluruh Unit Departemen Hotel';
+    } else {
+      if (eatenLabel) eatenLabel.innerText = 'Total Porsi Siswa Training (Magang)';
+      if (eatenSubtext) eatenSubtext.innerText = 'Khusus Siswa / Mahasiswa Magang (OJT)';
+      if (costLabel) costLabel.innerText = 'Total Biaya Konsumsi Training';
+      if (costSubtext) costSubtext.innerText = 'Beban Konsumsi Departemen Training';
+    }
+
+    // 2. Render Tabel Rekapitulasi
+    this.renderRekapTable(records, isGlobal, s);
+
+    // 3. Render Tabel Rincian Data Absensi
+    this.renderDetailTable(records, isGlobal, s);
+  },
+
+  renderRekapTable(records, isGlobal, s) {
+    const heading = document.getElementById('report-rekap-heading');
+    const thead = document.getElementById('report-dept-table-head');
+    const tbody = document.getElementById('report-dept-table-body');
+    const tfoot = document.getElementById('report-dept-table-footer');
+    if (!tbody) return;
+
+    if (isGlobal) {
+      // MODE GLOBAL: Rekap per 10 Departemen
+      if (heading) {
+        heading.innerHTML = '<i class="fa-solid fa-table-list text-emerald-700"></i> Rekapitulasi Konsumsi Per Departemen';
+      }
+      if (thead) {
+        thead.innerHTML = `
+          <tr class="bg-slate-100 text-slate-700 text-xs uppercase tracking-wider font-bold border-b border-slate-200">
+            <th class="py-3 px-4 w-12">No</th>
+            <th class="py-3 px-4">Departemen</th>
+            <th class="py-3 px-4 text-center">Jumlah (Orang)</th>
+            <th class="py-3 px-4 text-right">Biaya (Rp)</th>
+          </tr>
+        `;
+      }
+
+      let grandTotalJumlah = 0;
+      let grandTotalBiaya = 0;
+
+      const rowsHtml = window.DEPARTMENTS.map((deptName, idx) => {
+        const deptRecords = records.filter(r => r.department === deptName);
+        const jumlah = deptRecords.length;
+        const biaya = deptRecords.reduce((sum, r) => sum + (Number(r.cost) || s.mealPrice || 15000), 0);
+
+        grandTotalJumlah += jumlah;
+        grandTotalBiaya += biaya;
+
+        const isTrn = deptName === 'Training';
+        return `
+          <tr class="hover:bg-slate-50 border-b border-slate-100 transition ${isTrn ? 'bg-amber-50/40' : ''}">
+            <td class="py-3 px-4 text-xs text-slate-400 font-mono">${idx + 1}</td>
+            <td class="py-3 px-4 text-xs font-bold text-slate-800">
+              ${deptName} ${isTrn ? '<span class="text-[10px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full ml-1 border border-amber-200"><i class="fa-solid fa-graduation-cap"></i> Training (Magang)</span>' : ''}
+            </td>
+            <td class="py-3 px-4 text-xs font-semibold text-center text-slate-900">${jumlah} Orang</td>
+            <td class="py-3 px-4 text-xs font-semibold text-right font-mono text-emerald-700">Rp ${biaya.toLocaleString('id-ID')}</td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.innerHTML = rowsHtml;
+
+      if (tfoot) {
+        tfoot.innerHTML = `
+          <tr class="bg-emerald-50/80 font-bold border-t-2 border-emerald-500">
+            <td colspan="2" class="py-3.5 px-4 text-xs uppercase tracking-wider text-emerald-950 font-extrabold">TOTAL KESELURUHAN (KARYAWAN & TRAINING)</td>
+            <td class="py-3.5 px-4 text-xs text-center text-emerald-950 font-extrabold">${grandTotalJumlah} Orang</td>
+            <td class="py-3.5 px-4 text-xs text-right font-mono text-emerald-950 font-extrabold text-sm">Rp ${grandTotalBiaya.toLocaleString('id-ID')}</td>
+          </tr>
+        `;
+      }
+    } else {
+      // MODE HANYA TRAINING: Rekapitulasi per Siswa Training / Institusi
+      if (heading) {
+        heading.innerHTML = '<i class="fa-solid fa-graduation-cap text-amber-600"></i> Rekapitulasi Konsumsi Siswa Training (Magang)';
+      }
+      if (thead) {
+        thead.innerHTML = `
+          <tr class="bg-amber-100/70 text-amber-950 text-xs uppercase tracking-wider font-bold border-b border-amber-200">
+            <th class="py-3 px-4 w-12">No</th>
+            <th class="py-3 px-4">Nama Siswa Magang</th>
+            <th class="py-3 px-4">Asal Sekolah / Kampus</th>
+            <th class="py-3 px-4">Penempatan / Posisi</th>
+            <th class="py-3 px-4 text-center">Jumlah Porsi</th>
+            <th class="py-3 px-4 text-right">Total Biaya (Rp)</th>
+          </tr>
+        `;
+      }
+
+      // Group per ID trainee
+      const traineeMap = {};
+      records.forEach(r => {
+        const id = r.employeeId || 'TRN-UNKNOWN';
+        if (!traineeMap[id]) {
+          const emp = Store.findEmployee(id);
+          traineeMap[id] = {
+            id: id,
+            name: r.employeeName || (emp ? emp.name : id),
+            institution: (emp && emp.institution) ? emp.institution : (r.institution || 'SMK / Kampus Mitra'),
+            position: (emp && emp.position) ? emp.position : (r.position || 'Trainee'),
+            count: 0,
+            cost: 0
+          };
+        }
+        traineeMap[id].count++;
+        traineeMap[id].cost += (Number(r.cost) || s.mealPrice || 15000);
+      });
+
+      const traineeList = Object.values(traineeMap);
+
+      if (traineeList.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center py-6 text-slate-400 text-xs">
+              Belum ada riwayat absensi makan untuk siswa training pada periode ini.
+            </td>
+          </tr>
+        `;
+        if (tfoot) tfoot.innerHTML = '';
+        return;
+      }
+
+      let grandTotalJumlah = 0;
+      let grandTotalBiaya = 0;
+
+      const rowsHtml = traineeList.map((t, idx) => {
+        grandTotalJumlah += t.count;
+        grandTotalBiaya += t.cost;
+        return `
+          <tr class="hover:bg-amber-50/50 border-b border-slate-100 transition">
+            <td class="py-3 px-4 text-xs text-slate-400 font-mono">${idx + 1}</td>
+            <td class="py-3 px-4 text-xs font-bold text-slate-900">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-[10px]">
+                  <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div>
+                  <span class="block">${t.name}</span>
+                  <span class="text-[10px] text-slate-400 font-mono">${t.id}</span>
+                </div>
+              </div>
+            </td>
+            <td class="py-3 px-4 text-xs font-medium text-slate-700">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 text-[11px]">
+                <i class="fa-solid fa-school text-slate-400 mr-1.5 text-[10px]"></i> ${t.institution}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-xs text-slate-600 font-medium">${t.position}</td>
+            <td class="py-3 px-4 text-xs font-extrabold text-center text-slate-900">${t.count} Porsi</td>
+            <td class="py-3 px-4 text-xs font-bold text-right font-mono text-emerald-700">Rp ${t.cost.toLocaleString('id-ID')}</td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.innerHTML = rowsHtml;
+
+      if (tfoot) {
+        tfoot.innerHTML = `
+          <tr class="bg-amber-50 font-bold border-t-2 border-amber-500">
+            <td colspan="4" class="py-3.5 px-4 text-xs uppercase tracking-wider text-amber-950 font-extrabold">TOTAL KONSUMSI ANAK TRAINING (MAGANG)</td>
+            <td class="py-3.5 px-4 text-xs text-center text-amber-950 font-extrabold">${grandTotalJumlah} Porsi</td>
+            <td class="py-3.5 px-4 text-xs text-right font-mono text-amber-950 font-extrabold text-sm">Rp ${grandTotalBiaya.toLocaleString('id-ID')}</td>
+          </tr>
+        `;
+      }
+    }
+  },
+
+  renderDetailTable(records, isGlobal, s) {
+    const heading = document.getElementById('report-detail-heading');
+    const thead = document.getElementById('report-detail-table-head');
+    const tbody = document.getElementById('report-detail-table-body');
+    if (!tbody) return;
+
+    if (heading) {
+      heading.innerHTML = isGlobal
+        ? '<i class="fa-solid fa-list-check text-slate-600"></i> Rincian Data Absensi Karyawan & Training (Global)'
+        : '<i class="fa-solid fa-graduation-cap text-amber-600"></i> Rincian Data Absensi Khusus Siswa Training (Magang)';
+    }
+
+    if (isGlobal) {
+      if (thead) {
+        thead.innerHTML = `
+          <tr class="bg-slate-100 text-slate-600 text-[11px] uppercase tracking-wider font-semibold border-b border-slate-200">
+            <th class="py-2.5 px-3">No</th>
+            <th class="py-2.5 px-3">Waktu</th>
+            <th class="py-2.5 px-3">ID</th>
+            <th class="py-2.5 px-3">Nama Lengkap</th>
+            <th class="py-2.5 px-3">Departemen</th>
+            <th class="py-2.5 px-3">Kantin / Depot</th>
+            <th class="py-2.5 px-3 text-right">Biaya</th>
+          </tr>
+        `;
+      }
+    } else {
+      if (thead) {
+        thead.innerHTML = `
+          <tr class="bg-amber-100/60 text-amber-950 text-[11px] uppercase tracking-wider font-semibold border-b border-amber-200">
+            <th class="py-2.5 px-3">No</th>
+            <th class="py-2.5 px-3">Waktu</th>
+            <th class="py-2.5 px-3">ID Siswa</th>
+            <th class="py-2.5 px-3">Nama Siswa Magang</th>
+            <th class="py-2.5 px-3">Asal Sekolah / Kampus</th>
+            <th class="py-2.5 px-3">Kantin / Depot</th>
+            <th class="py-2.5 px-3 text-right">Biaya</th>
+          </tr>
+        `;
+      }
+    }
+
+    if (records.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="text-center py-6 text-slate-400 text-xs">
+            Tidak ada riwayat data absensi untuk rentang tanggal ini.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = records.map((r, i) => {
+      const isTrn = this.isTraineeRecord(r);
+      const emp = Store.findEmployee(r.employeeId);
+      const institution = (emp && emp.institution) ? emp.institution : (r.institution || '-');
+      const biaya = Number(r.cost) || s.mealPrice || 15000;
+
+      if (isGlobal) {
+        return `
+          <tr class="hover:bg-slate-50 border-b border-slate-100 text-xs ${isTrn ? 'bg-amber-50/25' : ''}">
+            <td class="py-2.5 px-3 text-slate-400 font-mono">${i + 1}</td>
+            <td class="py-2.5 px-3 font-mono font-semibold">${r.date} ${r.time}</td>
+            <td class="py-2.5 px-3 font-mono font-bold text-slate-800">${r.employeeId}</td>
+            <td class="py-2.5 px-3 font-semibold text-slate-900">${r.employeeName}</td>
+            <td class="py-2.5 px-3 text-slate-600">
+              ${isTrn ? '<span class="inline-flex items-center gap-1 font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md text-[10px] border border-amber-200"><i class="fa-solid fa-graduation-cap"></i> Training (Magang)</span>' : r.department}
+            </td>
+            <td class="py-2.5 px-3 font-semibold text-emerald-800">${r.tenantName}</td>
+            <td class="py-2.5 px-3 font-mono font-semibold text-emerald-700 text-right">Rp ${biaya.toLocaleString('id-ID')}</td>
+          </tr>
+        `;
+      } else {
+        return `
+          <tr class="hover:bg-amber-50/40 border-b border-slate-100 text-xs">
+            <td class="py-2.5 px-3 text-slate-400 font-mono">${i + 1}</td>
+            <td class="py-2.5 px-3 font-mono font-semibold">${r.date} ${r.time}</td>
+            <td class="py-2.5 px-3 font-mono font-bold text-amber-900">${r.employeeId}</td>
+            <td class="py-2.5 px-3 font-bold text-slate-900">${r.employeeName}</td>
+            <td class="py-2.5 px-3 text-slate-700 font-medium">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 text-[11px]">
+                <i class="fa-solid fa-school text-slate-400 mr-1 text-[10px]"></i> ${institution}
+              </span>
+            </td>
+            <td class="py-2.5 px-3 font-semibold text-emerald-800">${r.tenantName}</td>
+            <td class="py-2.5 px-3 font-mono font-semibold text-emerald-700 text-right">Rp ${biaya.toLocaleString('id-ID')}</td>
+          </tr>
+        `;
+      }
+    }).join('');
+  },
+
+  // Buka Pratinjau PDF Sebelum Mengunduh Sesuai Permintaan User
+  openPdfPreview() {
+    const s = Store.getSettings();
+    const hotelTitleEl = document.getElementById('pdf-hotel-name');
+    const periodHeaderEl = document.getElementById('pdf-report-period');
+    if (hotelTitleEl) hotelTitleEl.innerText = s.hotelName;
+    if (periodHeaderEl) {
+      periodHeaderEl.innerText = this.startDate === this.endDate
+        ? `Tanggal: ${this.startDate}`
+        : `Periode: ${this.startDate} s/d ${this.endDate}`;
+    }
+
+    const isGlobal = this.scope === 'global';
+    const scopeName = isGlobal ? 'Global' : 'Training';
+    const filename = `Laporan_Absensi_Makan_${scopeName}_${this.startDate}_sd_${this.endDate}.pdf`;
+
+    if (window.PDFPreview) {
+      PDFPreview.open('printable-report-area', filename, 'portrait');
+    } else {
+      this.executeDirectDownload(filename);
+    }
+  },
+
+  printAsPDF() {
+    this.openPdfPreview();
+  },
+
+  executeDirectDownload(filename) {
+    const reportElement = document.getElementById('printable-report-area');
+    if (!reportElement) {
+      window.print();
+      return;
+    }
+
+    if (window.html2pdf) {
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: filename || `Laporan_Absensi_Makan_${this.startDate}_sd_${this.endDate}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      const btn = document.getElementById('report-btn-pdf');
+      const originalText = btn ? btn.innerHTML : '';
+      if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Membuat PDF...';
+
+      html2pdf().set(opt).from(reportElement).save().then(() => {
+        if (btn) btn.innerHTML = originalText;
+        Store.playSound('success');
+      }).catch(err => {
+        console.error('PDF error, fallback to print', err);
+        if (btn) btn.innerHTML = originalText;
+        window.print();
+      });
+    } else {
+      window.print();
+    }
+  }
+};
+
+// ================= MODAL PRATINJAU PDF HELPER =================
+const PDFPreview = {
+  currentElementId: null,
+  currentFilename: 'Laporan.pdf',
+  currentOrientation: 'portrait',
+
+  open(elementId, filename, orientation = 'portrait') {
+    this.currentElementId = elementId;
+    this.currentFilename = filename;
+    this.currentOrientation = orientation;
+
+    const sourceEl = document.getElementById(elementId);
+    const paperEl = document.getElementById('pdf-preview-paper');
+    const modalEl = document.getElementById('pdf-preview-modal');
+    const filenameEl = document.getElementById('pdf-preview-filename');
+
+    if (!sourceEl || !paperEl || !modalEl) return;
+
+    if (filenameEl) filenameEl.innerText = filename;
+
+    // Duplikasi konten dokumen ke kertas pratinjau
+    paperEl.innerHTML = sourceEl.innerHTML;
+
+    // Tampilkan jendela modal pratinjau
+    modalEl.classList.remove('hidden');
+    Store.playSound('click');
+  },
+
+  close() {
+    const modalEl = document.getElementById('pdf-preview-modal');
+    if (modalEl) modalEl.classList.add('hidden');
+  },
+
+  downloadCurrentPDF() {
+    const sourceEl = document.getElementById(this.currentElementId);
+    if (!sourceEl) return;
+
+    const btn = document.getElementById('pdf-modal-download-btn');
+    const originalText = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Mengunduh...';
+      btn.disabled = true;
+    }
+
+    if (window.html2pdf) {
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: this.currentFilename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: this.currentOrientation }
+      };
+
+      html2pdf().set(opt).from(sourceEl).save().then(() => {
+        if (btn) {
+          btn.innerHTML = '<i class="fa-solid fa-circle-check mr-1.5"></i> Berhasil Diunduh!';
+          setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+          }, 2000);
+        }
+        Store.playSound('success');
+      }).catch(err => {
+        console.error('PDF error', err);
+        if (btn) {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+        }
+        window.print();
+      });
+    } else {
+      window.print();
+      if (btn) {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+  },
+
+  printDirectly() {
+    window.print();
+  }
+};
+
+window.ReportsManager = ReportsManager;
+window.PDFPreview = PDFPreview;

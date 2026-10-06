@@ -1,0 +1,31 @@
+# ======================================================================
+# .htaccess - Konfigurasi Server Produksi Apache / Web Hosting
+# Sistem Absensi Makan Karyawan Hotel (BeSS Mansion Hotel Surabaya)
+# ======================================================================
+
+# 1. Lindungi File Sensitif agar Tidak Bisa Diunduh Publik Langsung
+<FilesMatch "\.(sql|ini|bat|ps1|log|md|gitignore)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# 2. Set Karakter Default UTF-8
+AddDefaultCharset UTF-8
+
+# 3. Nonaktifkan Directory Listing (Mencegah Pengunjung Melihat Isi Folder)
+Options -Indexes
+
+# 4. Halaman Index Utama
+DirectoryIndex index.html index.php
+
+# 5. Redirect Otomatis ke HTTPS (Aktifkan jika hosting sudah memiliki SSL)
+# <IfModule mod_rewrite.c>
+#     RewriteEngine On
+#     RewriteCond %{HTTPS} off
+#     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# </IfModule>
