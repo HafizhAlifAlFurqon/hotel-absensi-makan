@@ -558,9 +558,33 @@ const Store = {
   },
 
   deleteEmployee(id) {
+    const emp = Store.findEmployee(id);
+    // Pastikan seluruh absensi karyawan yang tersimpan di localStorage diperkaya dengan snapshot data lengkap
+    if (emp) {
+      try {
+        const attendances = Store.getAttendances();
+        let changed = false;
+        attendances.forEach(a => {
+          if ((a.employeeId && a.employeeId.toLowerCase() === id.toLowerCase()) || a.employeeName === emp.name) {
+            a.employeeName = a.employeeName || emp.name;
+            a.department = a.department || emp.department;
+            a.position = a.position || emp.position;
+            a.institution = a.institution || emp.institution || '';
+            if (a.isTrainee === undefined) {
+              a.isTrainee = !!(emp.isTrainee || emp.department === 'Training');
+            }
+            changed = true;
+          }
+        });
+        if (changed) {
+          localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(attendances));
+        }
+      } catch (e) {}
+    }
+
     const employees = Store.getEmployees().filter(e => e.id !== id);
     localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
-    // Hapus dari database MySQL
+    // Hapus dari database MySQL (soft-delete di backend agar riwayat absensi tetap utuh di laporan)
     Store.apiPost('delete_employee', { id });
   },
 
@@ -788,6 +812,12 @@ const Store = {
     const settings = Store.getSettings();
     const tenantName = Store.getTenantName(tenantKey);
 
+    const isTrn = !!(
+      validation.employee.isTrainee ||
+      validation.employee.department === 'Training' ||
+      (validation.employee.id && validation.employee.id.toUpperCase().startsWith('TRN-'))
+    );
+
     const newRecord = {
       id: 'ATT-' + Date.now().toString(36).toUpperCase(),
       date: targetDate,
@@ -796,6 +826,8 @@ const Store = {
       employeeName: validation.employee.name,
       department: validation.employee.department,
       position: validation.employee.position || '-',
+      institution: validation.employee.institution || '',
+      isTrainee: isTrn,
       tenantKey: tenantKey,
       tenantName: tenantName,
       shift: validation.shift,

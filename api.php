@@ -97,12 +97,20 @@ function ensureSchema($pdo) {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-    // Tabel Meal Attendance
+    // Tabel Meal Attendance (Dilengkapi Snapshot Karyawan agar Riwayat Absensi Abadi)
     $pdo->exec("CREATE TABLE IF NOT EXISTS meal_attendance (
         id BIGINT AUTO_INCREMENT PRIMARY KEY,
         attendance_code VARCHAR(50) UNIQUE DEFAULT NULL,
-        employee_id INT NOT NULL,
+        employee_id INT NULL,
         tenant_id INT NOT NULL,
+        employee_code VARCHAR(50) DEFAULT NULL,
+        employee_name VARCHAR(150) DEFAULT NULL,
+        department VARCHAR(100) DEFAULT NULL,
+        position VARCHAR(100) DEFAULT NULL,
+        institution VARCHAR(150) DEFAULT NULL,
+        is_trainee TINYINT(1) DEFAULT 0,
+        tenant_key VARCHAR(50) DEFAULT NULL,
+        tenant_name VARCHAR(100) DEFAULT NULL,
         meal_date DATE NOT NULL,
         attended_at DATETIME NOT NULL,
         price DECIMAL(12,2) DEFAULT 15000.00,
@@ -110,6 +118,53 @@ function ensureSchema($pdo) {
         cost DECIMAL(12,2) DEFAULT 15000.00,
         UNIQUE KEY one_meal_per_day (employee_id, meal_date)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+    // Pastikan kolom snapshot selalu tersedia di database MySQL
+    $snapshotCols = [
+        'employee_code' => "VARCHAR(50) NULL",
+        'employee_name' => "VARCHAR(150) NULL",
+        'department'    => "VARCHAR(100) NULL",
+        'position'      => "VARCHAR(100) NULL",
+        'institution'   => "VARCHAR(150) NULL",
+        'is_trainee'    => "TINYINT(1) DEFAULT 0",
+        'tenant_key'    => "VARCHAR(50) NULL",
+        'tenant_name'   => "VARCHAR(100) NULL"
+    ];
+    foreach ($snapshotCols as $col => $colDef) {
+        try {
+            $colCheck = $pdo->query("SHOW COLUMNS FROM meal_attendance LIKE '$col'")->fetch();
+            if (!$colCheck) {
+                $pdo->exec("ALTER TABLE meal_attendance ADD COLUMN $col $colDef");
+            }
+        } catch (Exception $eCol) {}
+    }
+
+    // Pastikan employee_id bersifat NULLABLE agar data absensi tidak ikut terhapus jika relasi karyawan dihapus
+    try {
+        $pdo->exec("ALTER TABLE meal_attendance MODIFY COLUMN employee_id INT NULL");
+    } catch (Exception $eMod) {}
+
+    // Backfill snapshot data absensi lama jika masih ada yang kosong
+    try {
+        $pdo->exec("
+            UPDATE meal_attendance a
+            JOIN employees e ON a.employee_id = e.id
+            SET a.employee_code = COALESCE(a.employee_code, e.employee_code),
+                a.employee_name = COALESCE(a.employee_name, e.name),
+                a.department = COALESCE(a.department, e.department),
+                a.position = COALESCE(a.position, e.position),
+                a.institution = COALESCE(a.institution, e.institution),
+                a.is_trainee = COALESCE(a.is_trainee, e.is_trainee)
+            WHERE a.employee_name IS NULL OR a.employee_code IS NULL
+        ");
+        $pdo->exec("
+            UPDATE meal_attendance a
+            JOIN tenants t ON a.tenant_id = t.id
+            SET a.tenant_key = COALESCE(a.tenant_key, t.tenant_key),
+                a.tenant_name = COALESCE(a.tenant_name, t.name)
+            WHERE a.tenant_name IS NULL
+        ");
+    } catch (Exception $eBf) {}
 
     // Tabel Settings
     $pdo->exec("CREATE TABLE IF NOT EXISTS settings (
@@ -140,9 +195,10 @@ if (empty($action)) {
 
 try {
     $pdo = getDb();
-    // Optimasi kecepatan: hanya buat tabel jika database masih baru/kosong
+    // Optimasi kecepatan: pastikan skema lengkap dengan snapshot absensi
     $hasTable = $pdo->query("SHOW TABLES LIKE 'employees'")->fetch();
-    if (!$hasTable) {
+    $hasCol = $hasTable ? $pdo->query("SHOW COLUMNS FROM meal_attendance LIKE 'employee_code'")->fetch() : null;
+    if (!$hasTable || !$hasCol) {
         ensureSchema($pdo);
     }
 
@@ -150,7 +206,7 @@ try {
         // --- 1. Status / Ping ---
         case 'ping':
         case 'status':
-            $stmt = $pdo->query("SELECT COUNT(*) as emp_count FROM employees");
+            $stmt = $pdo->query("SELECT COUNT(*) as emp_count FROM employees WHERE status != 'Dihapus' AND employee_code NOT LIKE '%__DELETED_%'");
             $empCount = $stmt->fetch()['emp_count'];
             $stmt = $pdo->query("SELECT COUNT(*) as att_count FROM meal_attendance");
             $attCount = $stmt->fetch()['att_count'];
@@ -166,7 +222,7 @@ try {
 
         // --- 2. Ambil Semua Data Sekaligus (Inisialisasi Frontend) ---
         case 'get_all':
-            // Employees
+            // Employees (Hanya tampilkan karyawan aktif/non-dihapus di master data)
             $empStmt = $pdo->query("
                 SELECT 
                     e.employee_code AS id,
@@ -179,6 +235,7 @@ try {
                     COALESCE(e.status, 'Aktif') AS status
                 FROM employees e
                 LEFT JOIN departments d ON e.department_id = d.id
+                WHERE e.status != 'Dihapus' AND e.employee_code NOT LIKE '%__DELETED_%'
                 ORDER BY e.name ASC
             ");
             $employees = [];
@@ -187,24 +244,26 @@ try {
                 $employees[] = $row;
             }
 
-            // Attendances
+            // Attendances (Riwayat Lengkap Karyawan & Training, Termasuk Karyawan yang Telah Dihapus)
             $attStmt = $pdo->query("
                 SELECT 
                     COALESCE(a.attendance_code, CONCAT('ATT-', a.id)) AS id,
-                    a.meal_date AS date,
+                    DATE_FORMAT(a.meal_date, '%Y-%m-%d') AS date,
                     DATE_FORMAT(a.attended_at, '%H:%i:%s') AS time,
-                    e.employee_code AS employeeId,
-                    e.name AS employeeName,
-                    COALESCE(e.department, d.name, 'Housekeeping') AS department,
-                    COALESCE(e.position, 'Staff') AS position,
-                    COALESCE(t.tenant_key, CONCAT('tenant', t.id)) AS tenantKey,
-                    t.name AS tenantName,
+                    COALESCE(a.employee_code, SUBSTRING_INDEX(e.employee_code, '__DELETED_', 1), e.employee_code, 'EMP-UNKNOWN') AS employeeId,
+                    COALESCE(a.employee_name, e.name, 'Karyawan (Dihapus)') AS employeeName,
+                    COALESCE(a.department, e.department, d.name, 'Housekeeping') AS department,
+                    COALESCE(a.position, e.position, 'Staff') AS position,
+                    COALESCE(a.institution, e.institution, '') AS institution,
+                    (CASE WHEN a.is_trainee = 1 OR a.department = 'Training' OR e.is_trainee = 1 OR e.department = 'Training' OR d.name = 'Training' THEN 1 ELSE 0 END) AS isTrainee,
+                    COALESCE(a.tenant_key, t.tenant_key, CONCAT('tenant', t.id), 'tenant1') AS tenantKey,
+                    COALESCE(a.tenant_name, t.name, 'Kantin Hotel') AS tenantName,
                     COALESCE(a.shift, 'Makan Siang') AS shift,
                     CAST(COALESCE(a.cost, a.price, 15000) AS UNSIGNED) AS cost
                 FROM meal_attendance a
-                JOIN employees e ON a.employee_id = e.id
+                LEFT JOIN employees e ON a.employee_id = e.id
                 LEFT JOIN departments d ON e.department_id = d.id
-                JOIN tenants t ON a.tenant_id = t.id
+                LEFT JOIN tenants t ON a.tenant_id = t.id
                 ORDER BY a.attended_at DESC
             ");
             $attendances = $attStmt->fetchAll();
@@ -373,7 +432,7 @@ try {
             }
             break;
 
-        // --- 5. Hapus Karyawan ---
+        // --- 5. Hapus Karyawan (Riwayat Absensi Tetap Utuh di Laporan) ---
         case 'delete_employee':
             $data = getJsonInput();
             $id = trim($data['id'] ?? '');
@@ -382,19 +441,42 @@ try {
                 exit;
             }
 
-            // Hapus absensi terkait terlebih dahulu jika perlu
-            $empStmt = $pdo->prepare("SELECT id FROM employees WHERE LOWER(employee_code) = LOWER(?) LIMIT 1");
+            // Cari Karyawan di DB
+            $empStmt = $pdo->prepare("SELECT id, employee_code, name, department, position, institution, is_trainee FROM employees WHERE LOWER(employee_code) = LOWER(?) LIMIT 1");
             $empStmt->execute([$id]);
             $emp = $empStmt->fetch();
             if ($emp) {
-                $pdo->prepare("DELETE FROM meal_attendance WHERE employee_id = ?")->execute([$emp['id']]);
-                $pdo->prepare("DELETE FROM employees WHERE id = ?")->execute([$emp['id']]);
+                // Pastikan seluruh absensi karyawan ini diisi snapshot datanya agar riwayat di laporan tetap ada
+                $pdo->prepare("
+                    UPDATE meal_attendance 
+                    SET employee_code = COALESCE(employee_code, ?),
+                        employee_name = COALESCE(employee_name, ?),
+                        department = COALESCE(department, ?),
+                        position = COALESCE(position, ?),
+                        institution = COALESCE(institution, ?),
+                        is_trainee = COALESCE(is_trainee, ?)
+                    WHERE employee_id = ?
+                ")->execute([
+                    $emp['employee_code'],
+                    $emp['name'],
+                    $emp['department'],
+                    $emp['position'],
+                    $emp['institution'],
+                    $emp['is_trainee'],
+                    $emp['id']
+                ]);
+
+                // Soft-delete: Jangan pernah hapus data di meal_attendance!
+                // Ubah status karyawan menjadi 'Dihapus' dan rename employee_code agar ID aslinya bisa dipakai ulang jika dibutuhkan
+                $delCode = $emp['employee_code'] . '__DELETED_' . time();
+                $pdo->prepare("UPDATE employees SET status = 'Dihapus', active = 0, employee_code = ? WHERE id = ?")
+                    ->execute([$delCode, $emp['id']]);
             }
 
-            echo json_encode(['success' => true, 'message' => 'Karyawan berhasil dihapus dari MySQL.']);
+            echo json_encode(['success' => true, 'message' => 'Karyawan berhasil dihapus dari master data. Riwayat absensi makan tetap tersimpan rapi di laporan.']);
             break;
 
-        // --- 6. Rekam Absensi Makan ---
+        // --- 6. Rekam Absensi Makan (Menyimpan Snapshot Lengkap) ---
         case 'record_attendance':
             $data = getJsonInput();
             $employeeId = trim($data['employeeId'] ?? '');
@@ -411,7 +493,7 @@ try {
             }
 
             // Cari Karyawan di DB
-            $empStmt = $pdo->prepare("SELECT id, employee_code, name, department, position, status FROM employees WHERE LOWER(employee_code) = LOWER(?) LIMIT 1");
+            $empStmt = $pdo->prepare("SELECT id, employee_code, name, department, position, institution, is_trainee, status FROM employees WHERE LOWER(employee_code) = LOWER(?) AND status != 'Dihapus' LIMIT 1");
             $empStmt->execute([$employeeId]);
             $employee = $empStmt->fetch();
 
@@ -464,11 +546,14 @@ try {
                 exit;
             }
 
-            // Simpan absensi
+            // Simpan absensi beserta snapshot data lengkap karyawan
             $datetimeStr = $date . ' ' . $time;
+            $isTraineeVal = (!empty($employee['is_trainee']) || $employee['department'] === 'Training' || stripos($employee['employee_code'], 'TRN-') === 0) ? 1 : 0;
             $insAtt = $pdo->prepare("
-                INSERT INTO meal_attendance (attendance_code, employee_id, tenant_id, meal_date, attended_at, price, shift, cost)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO meal_attendance (
+                    attendance_code, employee_id, tenant_id, meal_date, attended_at, price, shift, cost,
+                    employee_code, employee_name, department, position, institution, is_trainee, tenant_key, tenant_name
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $insAtt->execute([
                 $code,
@@ -478,7 +563,15 @@ try {
                 $datetimeStr,
                 $cost,
                 $shift,
-                $cost
+                $cost,
+                $employee['employee_code'],
+                $employee['name'],
+                $employee['department'],
+                $employee['position'] ?? 'Staff',
+                $employee['institution'] ?? '',
+                $isTraineeVal,
+                $tenant['tenant_key'] ?? $tenantKey,
+                $tenant['name']
             ]);
 
             $record = [
@@ -489,6 +582,8 @@ try {
                 'employeeName' => $employee['name'],
                 'department' => $employee['department'],
                 'position' => $employee['position'] ?? 'Staff',
+                'institution' => $employee['institution'] ?? '',
+                'isTrainee' => (bool)$isTraineeVal,
                 'tenantKey' => $tenant['tenant_key'] ?? $tenantKey,
                 'tenantName' => $tenant['name'],
                 'shift' => $shift,
@@ -587,16 +682,24 @@ try {
                     . (int)$e['active'] . ") ON DUPLICATE KEY UPDATE `name`=VALUES(`name`), `department`=VALUES(`department`), `position`=VALUES(`position`), `institution`=VALUES(`institution`), `is_trainee`=VALUES(`is_trainee`), `password`=VALUES(`password`), `status`=VALUES(`status`);\n";
             }
 
-            // 4. Meal attendance
+            // 4. Meal attendance (Dengan Snapshot Permanen)
             $sql .= "\n-- Tabel meal_attendance\n";
-            $sql .= "CREATE TABLE IF NOT EXISTS `meal_attendance` (`id` BIGINT AUTO_INCREMENT PRIMARY KEY, `attendance_code` VARCHAR(50) UNIQUE DEFAULT NULL, `employee_id` INT NOT NULL, `tenant_id` INT NOT NULL, `meal_date` DATE NOT NULL, `attended_at` DATETIME NOT NULL, `price` DECIMAL(12,2) DEFAULT 15000.00, `shift` VARCHAR(50) DEFAULT 'Makan Siang', `cost` DECIMAL(12,2) DEFAULT 15000.00, UNIQUE KEY one_meal_per_day (employee_id, meal_date)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;\n";
+            $sql .= "CREATE TABLE IF NOT EXISTS `meal_attendance` (`id` BIGINT AUTO_INCREMENT PRIMARY KEY, `attendance_code` VARCHAR(50) UNIQUE DEFAULT NULL, `employee_id` INT NULL, `tenant_id` INT NOT NULL, `employee_code` VARCHAR(50) DEFAULT NULL, `employee_name` VARCHAR(150) DEFAULT NULL, `department` VARCHAR(100) DEFAULT NULL, `position` VARCHAR(100) DEFAULT NULL, `institution` VARCHAR(150) DEFAULT NULL, `is_trainee` TINYINT(1) DEFAULT 0, `tenant_key` VARCHAR(50) DEFAULT NULL, `tenant_name` VARCHAR(100) DEFAULT NULL, `meal_date` DATE NOT NULL, `attended_at` DATETIME NOT NULL, `price` DECIMAL(12,2) DEFAULT 15000.00, `shift` VARCHAR(50) DEFAULT 'Makan Siang', `cost` DECIMAL(12,2) DEFAULT 15000.00, UNIQUE KEY one_meal_per_day (employee_id, meal_date)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;\n";
             $atts = $pdo->query("SELECT * FROM meal_attendance ORDER BY id ASC")->fetchAll();
             foreach ($atts as $a) {
-                $sql .= "INSERT IGNORE INTO `meal_attendance` (`id`, `attendance_code`, `employee_id`, `tenant_id`, `meal_date`, `attended_at`, `price`, `shift`, `cost`) VALUES ("
+                $sql .= "INSERT IGNORE INTO `meal_attendance` (`id`, `attendance_code`, `employee_id`, `tenant_id`, `employee_code`, `employee_name`, `department`, `position`, `institution`, `is_trainee`, `tenant_key`, `tenant_name`, `meal_date`, `attended_at`, `price`, `shift`, `cost`) VALUES ("
                     . (int)$a['id'] . ", "
                     . $pdo->quote($a['attendance_code']) . ", "
-                    . (int)$a['employee_id'] . ", "
+                    . ($a['employee_id'] ? (int)$a['employee_id'] : "NULL") . ", "
                     . (int)$a['tenant_id'] . ", "
+                    . ($a['employee_code'] ? $pdo->quote($a['employee_code']) : "NULL") . ", "
+                    . ($a['employee_name'] ? $pdo->quote($a['employee_name']) : "NULL") . ", "
+                    . ($a['department'] ? $pdo->quote($a['department']) : "NULL") . ", "
+                    . ($a['position'] ? $pdo->quote($a['position']) : "NULL") . ", "
+                    . ($a['institution'] ? $pdo->quote($a['institution']) : "NULL") . ", "
+                    . (int)($a['is_trainee'] ?? 0) . ", "
+                    . ($a['tenant_key'] ? $pdo->quote($a['tenant_key']) : "NULL") . ", "
+                    . ($a['tenant_name'] ? $pdo->quote($a['tenant_name']) : "NULL") . ", "
                     . $pdo->quote($a['meal_date']) . ", "
                     . $pdo->quote($a['attended_at']) . ", "
                     . (float)$a['price'] . ", "
@@ -623,8 +726,8 @@ try {
 
         // --- 9. Kosongkan Data (Maintenance) ---
         case 'clear_employees':
-            $pdo->exec("SET FOREIGN_KEY_CHECKS = 0; TRUNCATE TABLE meal_attendance; TRUNCATE TABLE employees; SET FOREIGN_KEY_CHECKS = 1;");
-            echo json_encode(['success' => true, 'message' => 'Semua data karyawan dan absensi berhasil dikosongkan di MySQL.']);
+            $pdo->exec("SET FOREIGN_KEY_CHECKS = 0; TRUNCATE TABLE employees; SET FOREIGN_KEY_CHECKS = 1;");
+            echo json_encode(['success' => true, 'message' => 'Semua data karyawan master berhasil dikosongkan di MySQL. Riwayat absensi tetap aman.']);
             break;
 
         case 'clear_attendances':

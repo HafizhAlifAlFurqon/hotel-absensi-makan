@@ -70,15 +70,25 @@ CREATE TABLE IF NOT EXISTS `employees` (
 CREATE TABLE IF NOT EXISTS `meal_attendance` (
   `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
   `attendance_code` VARCHAR(50) UNIQUE DEFAULT NULL,
-  `employee_id` INT NOT NULL,
+  `employee_id` INT NULL,
   `tenant_id` INT NOT NULL,
+  `employee_code` VARCHAR(50) DEFAULT NULL,
+  `employee_name` VARCHAR(150) DEFAULT NULL,
+  `department` VARCHAR(100) DEFAULT NULL,
+  `position` VARCHAR(100) DEFAULT NULL,
+  `institution` VARCHAR(150) DEFAULT NULL,
+  `is_trainee` TINYINT(1) DEFAULT 0,
+  `tenant_key` VARCHAR(50) DEFAULT NULL,
+  `tenant_name` VARCHAR(100) DEFAULT NULL,
   `meal_date` DATE NOT NULL,
   `attended_at` DATETIME NOT NULL,
   `price` DECIMAL(12,2) DEFAULT 15000.00,
   `shift` VARCHAR(50) DEFAULT 'Makan Siang',
   `cost` DECIMAL(12,2) DEFAULT 15000.00,
   UNIQUE KEY `one_meal_per_day` (`employee_id`, `meal_date`),
-  FOREIGN KEY (`employee_id`) REFERENCES `employees`(`id`) ON DELETE CASCADE,
+  KEY `idx_meal_date` (`meal_date`),
+  KEY `idx_employee_code` (`employee_code`),
+  FOREIGN KEY (`employee_id`) REFERENCES `employees`(`id`) ON DELETE SET NULL,
   FOREIGN KEY (`tenant_id`) REFERENCES `tenants`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

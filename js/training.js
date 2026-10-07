@@ -13,8 +13,18 @@ const TrainingManager = {
   editingId: null,
 
   init() {
-    this.startDate = Store.getTodayDateString();
-    this.endDate = Store.getTodayDateString();
+    const sInput = document.getElementById('training-report-start-date');
+    const eInput = document.getElementById('training-report-end-date');
+    if (sInput && sInput.value) {
+      this.startDate = sInput.value;
+    } else if (!this.startDate) {
+      this.startDate = Store.getTodayDateString();
+    }
+    if (eInput && eInput.value) {
+      this.endDate = eInput.value;
+    } else if (!this.endDate) {
+      this.endDate = Store.getTodayDateString();
+    }
     this.setupDateInputs();
     this.populateCanteenFilter();
     this.renderStats();
@@ -25,8 +35,14 @@ const TrainingManager = {
   setupDateInputs() {
     const sInput = document.getElementById('training-report-start-date');
     const eInput = document.getElementById('training-report-end-date');
-    if (sInput && !sInput.value) sInput.value = this.startDate;
-    if (eInput && !eInput.value) eInput.value = this.endDate;
+    if (sInput) {
+      if (!sInput.value) sInput.value = this.startDate;
+      else this.startDate = sInput.value;
+    }
+    if (eInput) {
+      if (!eInput.value) eInput.value = this.endDate;
+      else this.endDate = eInput.value;
+    }
   },
 
   populateCanteenFilter() {
@@ -123,16 +139,40 @@ const TrainingManager = {
     if (eInput && eInput.value) this.endDate = eInput.value;
     const canteenFilter = canteenSelect ? canteenSelect.value : '';
 
-    const trainees = this.getTrainees();
-    const traineeIds = trainees.map(t => t.id.toLowerCase());
+    const activeTrainees = this.getTrainees();
+    const mapTrainees = new Map();
+    activeTrainees.forEach(t => mapTrainees.set(t.id.toLowerCase(), { ...t }));
+
     const s = Store.getSettings();
 
     let records = Store.getAttendances(this.startDate, this.endDate);
-    records = records.filter(r => (r.department === 'Training' || traineeIds.includes((r.employeeId || '').toLowerCase())));
+    records = records.filter(r => (
+      r.department === 'Training' ||
+      (r.employeeId && r.employeeId.toUpperCase().startsWith('TRN-')) ||
+      r.isTrainee ||
+      mapTrainees.has((r.employeeId || '').toLowerCase())
+    ));
 
     if (canteenFilter) {
-      records = records.filter(r => r.tenantId === canteenFilter);
+      records = records.filter(r => (r.tenantKey === canteenFilter || r.tenantId === canteenFilter));
     }
+
+    // Jika ada siswa training pada riwayat absensi yang sudah dihapus dari master data, tetap sertakan di rekapitulasi laporan
+    records.forEach(r => {
+      const idKey = (r.employeeId || '').toLowerCase();
+      if (idKey && !mapTrainees.has(idKey)) {
+        mapTrainees.set(idKey, {
+          id: r.employeeId,
+          name: r.employeeName || r.employeeId,
+          institution: r.institution || '-',
+          position: r.position || 'Trainee',
+          department: 'Training',
+          status: 'Dihapus'
+        });
+      }
+    });
+
+    const trainees = Array.from(mapTrainees.values());
 
     // 1. Rekapitulasi per Trainee
     const rekapTbody = document.getElementById('training-rekap-table-body');

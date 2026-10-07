@@ -232,6 +232,35 @@ const App = {
     }
   },
 
+  refreshCurrentPageData() {
+    const pageId = this.currentPage;
+    if (pageId === 'dashboard' && window.Dashboard) {
+      if (typeof window.Dashboard.updateData === 'function') {
+        window.Dashboard.updateData();
+      }
+    } else if (pageId === 'canteen' && window.AttendanceManager) {
+      if (typeof window.AttendanceManager.renderCanteenHistory === 'function') {
+        window.AttendanceManager.renderCanteenHistory();
+      }
+    } else if (pageId === 'training' && window.TrainingManager) {
+      if (typeof window.TrainingManager.renderStats === 'function') window.TrainingManager.renderStats();
+      if (typeof window.TrainingManager.renderReport === 'function') window.TrainingManager.renderReport();
+      if (typeof window.TrainingManager.renderTraineesTable === 'function') window.TrainingManager.renderTraineesTable();
+    } else if (pageId === 'tenants' && window.TenantManager) {
+      if (typeof window.TenantManager.render === 'function') window.TenantManager.render();
+    } else if (pageId === 'employees' && window.EmployeesManager) {
+      if (typeof window.EmployeesManager.renderTable === 'function') window.EmployeesManager.renderTable();
+      if (typeof window.EmployeesManager.updateTotalBadge === 'function') window.EmployeesManager.updateTotalBadge();
+    } else if (pageId === 'qrcards' && window.QRCardsManager) {
+      if (typeof window.QRCardsManager.render === 'function') window.QRCardsManager.render();
+    } else if (pageId === 'reports' && window.ReportsManager) {
+      // Re-render laporan dengan tetap mempertahankan tanggal yang dipilih user
+      if (typeof window.ReportsManager.render === 'function') window.ReportsManager.render();
+    } else if ((pageId === 'employee-scan' || pageId === 'employee-portal') && window.AttendanceManager) {
+      if (typeof window.AttendanceManager.renderPortalHistory === 'function') window.AttendanceManager.renderPortalHistory();
+    }
+  },
+
   handleLogout() {
     if (confirm('Apakah Anda ingin keluar (logout) dari sistem absensi makan?')) {
       Auth.logout();
@@ -250,12 +279,12 @@ if (document.readyState === 'loading') {
   });
 }
 
-// Re-render antarmuka saat sinkronisasi MySQL selesai
+// Re-render antarmuka saat sinkronisasi MySQL selesai TANPA mereset tanggal/filter yang telah dipilih user
 window.addEventListener('store-synced', () => {
   if (window.App) {
     App.updateTenantLabels();
     if (App.currentPage) {
-      App.navigateTo(App.currentPage);
+      App.refreshCurrentPageData();
     }
   }
 });

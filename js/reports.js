@@ -16,8 +16,18 @@ const ReportsManager = {
   scope: 'global', // 'global' atau 'training'
 
   init() {
-    this.startDate = Store.getTodayDateString();
-    this.endDate = Store.getTodayDateString();
+    const sInput = document.getElementById('report-start-date');
+    const eInput = document.getElementById('report-end-date');
+    if (sInput && sInput.value) {
+      this.startDate = sInput.value;
+    } else if (!this.startDate) {
+      this.startDate = Store.getTodayDateString();
+    }
+    if (eInput && eInput.value) {
+      this.endDate = eInput.value;
+    } else if (!this.endDate) {
+      this.endDate = Store.getTodayDateString();
+    }
     this.setupInputs();
     this.updateScopeUI();
     this.render();
@@ -26,8 +36,14 @@ const ReportsManager = {
   setupInputs() {
     const sInput = document.getElementById('report-start-date');
     const eInput = document.getElementById('report-end-date');
-    if (sInput) sInput.value = this.startDate;
-    if (eInput) eInput.value = this.endDate;
+    if (sInput) {
+      if (!sInput.value) sInput.value = this.startDate;
+      else this.startDate = sInput.value;
+    }
+    if (eInput) {
+      if (!eInput.value) eInput.value = this.endDate;
+      else this.endDate = eInput.value;
+    }
   },
 
   setScope(newScope) {
@@ -96,11 +112,17 @@ const ReportsManager = {
   isTraineeRecord(r) {
     if (r.department === 'Training') return true;
     if (r.employeeId && r.employeeId.toUpperCase().startsWith('TRN-')) return true;
+    if (r.isTrainee === true || r.isTrainee === 1 || r.isTrainee === '1') return true;
     const emp = Store.findEmployee(r.employeeId);
-    return emp && (emp.department === 'Training' || emp.isTrainee === true);
+    return !!(emp && (emp.department === 'Training' || emp.isTrainee === true));
   },
 
   render() {
+    const sInput = document.getElementById('report-start-date');
+    const eInput = document.getElementById('report-end-date');
+    if (sInput && sInput.value) this.startDate = sInput.value;
+    if (eInput && eInput.value) this.endDate = eInput.value;
+
     const s = Store.getSettings();
     const allRecords = Store.getAttendances(this.startDate, this.endDate);
     const isGlobal = this.scope === 'global';

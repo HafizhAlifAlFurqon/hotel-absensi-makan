@@ -11,8 +11,24 @@ const Dashboard = {
   chartInstance: null,
 
   init() {
-    this.startDate = Store.getTodayDateString();
-    this.endDate = Store.getTodayDateString();
+    const singleInput = document.getElementById('dash-single-date');
+    const startEl = document.getElementById('dash-start-date');
+    const endEl = document.getElementById('dash-end-date');
+
+    if (this.filterMode === 'single') {
+      if (singleInput && singleInput.value) {
+        this.startDate = singleInput.value;
+        this.endDate = singleInput.value;
+      } else if (!this.startDate) {
+        this.startDate = Store.getTodayDateString();
+        this.endDate = this.startDate;
+      }
+    } else {
+      if (startEl && startEl.value) this.startDate = startEl.value;
+      if (endEl && endEl.value) this.endDate = endEl.value;
+      if (!this.startDate) this.startDate = Store.getTodayDateString();
+      if (!this.endDate) this.endDate = Store.getTodayDateString();
+    }
     this.render();
   },
 
@@ -22,6 +38,8 @@ const Dashboard = {
     const rangeContainer = document.getElementById('dash-range-container');
     const btnSingle = document.getElementById('dash-btn-mode-single');
     const btnRange = document.getElementById('dash-btn-mode-range');
+    const startEl = document.getElementById('dash-start-date');
+    const endEl = document.getElementById('dash-end-date');
 
     if (mode === 'single') {
       if (singleInput) singleInput.classList.remove('hidden');
@@ -31,6 +49,9 @@ const Dashboard = {
       }
       if (btnRange) {
         btnRange.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200';
+      }
+      if (singleInput && singleInput.value) {
+        this.startDate = singleInput.value;
       }
       this.endDate = this.startDate;
     } else {
@@ -42,6 +63,8 @@ const Dashboard = {
       if (btnRange) {
         btnRange.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 text-white shadow-sm';
       }
+      if (startEl && startEl.value) this.startDate = startEl.value;
+      if (endEl && endEl.value) this.endDate = endEl.value;
     }
     this.updateData();
   },
