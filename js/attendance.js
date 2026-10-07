@@ -123,7 +123,11 @@ const AttendanceManager = {
     if (!tbody) return;
 
     const allAttendances = Store.getAttendances(selectedDate, selectedDate);
-    const tenantAttendances = allAttendances.filter(a => a.tenantId === tenantKey);
+    const tenantAttendances = allAttendances.filter(a => {
+      const tKey = (a.tenantKey || a.tenantId || '').toLowerCase().trim();
+      const target = (tenantKey || '').toLowerCase().trim();
+      return tKey === target;
+    });
 
     if (badge) {
       badge.innerText = `${tenantAttendances.length} Karyawan`;
@@ -141,7 +145,7 @@ const AttendanceManager = {
 
     tbody.innerHTML = tenantAttendances.map((item, idx) => {
       const isLunch = item.shift && item.shift.includes('Siang');
-      const isTrn = item.department === 'Training';
+      const isTrn = item.department === 'Training' || item.isTrainee;
       return `
         <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs hover:bg-emerald-50/40 transition">
           <div class="flex items-center gap-2.5 min-w-0">
@@ -249,12 +253,12 @@ const AttendanceManager = {
 
     const result = Store.recordAttendance(empId, tenantKey, dateVal);
 
-    if (result.success) {
+    if (result.success || result.valid) {
       Store.playSound('success');
       this.renderCanteenTodayList();
       if (input) input.value = '';
       this.previewCanteenEmployee('');
-      this.showScanResultModal(result, tenantKey);
+      this.showScanModal(result, empId);
     } else {
       Store.playSound('error');
       alert(`[GAGAL] ${result.message}`);
@@ -534,6 +538,7 @@ const AttendanceManager = {
 
       // Refresh list hari ini di halaman depot & refresh dashboard
       this.renderTodayList(tenantKey);
+      this.renderCanteenTodayList();
       if (window.Dashboard) {
         window.Dashboard.updateData();
       }
@@ -635,7 +640,11 @@ const AttendanceManager = {
     if (!listContainer) return;
 
     const targetDate = dateInput ? dateInput.value : Store.getTodayDateString();
-    const records = Store.getAttendances(targetDate).filter(r => r.tenantKey === tenantKey);
+    const records = Store.getAttendances(targetDate).filter(r => {
+      const tKey = (r.tenantKey || r.tenantId || '').toLowerCase().trim();
+      const target = (tenantKey || '').toLowerCase().trim();
+      return tKey === target;
+    });
 
     if (countBadge) {
       countBadge.innerText = `${records.length} Karyawan`;
@@ -1419,6 +1428,7 @@ const AttendanceManager = {
       this.renderPersonalHistory();
       this.renderTodayList('tenant1');
       this.renderTodayList('tenant2');
+      this.renderCanteenTodayList();
       if (window.Dashboard) window.Dashboard.updateData();
 
       if (this.activeScanner.employee) {
@@ -1554,6 +1564,19 @@ const AttendanceManager = {
         `;
       }
     }
+  },
+
+  showScanResultModal(result, tenantKeyOrEmpId) {
+    const empId = (result && result.record && result.record.employeeId) || tenantKeyOrEmpId;
+    this.showScanModal(result, empId);
+  },
+
+  renderCanteenHistory() {
+    this.renderCanteenTodayList();
+  },
+
+  renderPortalHistory() {
+    this.renderPersonalHistory();
   }
 };
 

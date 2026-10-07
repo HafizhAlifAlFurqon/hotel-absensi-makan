@@ -239,7 +239,9 @@ const App = {
         window.Dashboard.updateData();
       }
     } else if (pageId === 'canteen' && window.AttendanceManager) {
-      if (typeof window.AttendanceManager.renderCanteenHistory === 'function') {
+      if (typeof window.AttendanceManager.renderCanteenTodayList === 'function') {
+        window.AttendanceManager.renderCanteenTodayList();
+      } else if (typeof window.AttendanceManager.renderCanteenHistory === 'function') {
         window.AttendanceManager.renderCanteenHistory();
       }
     } else if (pageId === 'training' && window.TrainingManager) {

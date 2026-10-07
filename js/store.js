@@ -747,6 +747,7 @@ const Store = {
     const employee = Store.findEmployee(employeeId);
     if (!employee) {
       return {
+        success: false,
         valid: false,
         code: 'NOT_FOUND',
         message: `ID Karyawan "${employeeId}" tidak ditemukan dalam database karyawan.`
@@ -756,6 +757,7 @@ const Store = {
     // 2. Cek Status Karyawan
     if (employee.status !== 'Aktif') {
       return {
+        success: false,
         valid: false,
         code: 'INACTIVE',
         employee,
@@ -767,6 +769,7 @@ const Store = {
     const timeCheck = Store.evaluateShiftAndTime();
     if (!timeCheck.isAllowed) {
       return {
+        success: false,
         valid: false,
         code: 'OUTSIDE_HOURS',
         employee,
@@ -782,6 +785,7 @@ const Store = {
 
     if (existing) {
       return {
+        success: false,
         valid: false,
         code: 'ALREADY_EATEN',
         employee,
@@ -791,6 +795,7 @@ const Store = {
     }
 
     return {
+      success: true,
       valid: true,
       employee,
       shift: timeCheck.shift,
@@ -829,6 +834,7 @@ const Store = {
       institution: validation.employee.institution || '',
       isTrainee: isTrn,
       tenantKey: tenantKey,
+      tenantId: tenantKey,
       tenantName: tenantName,
       shift: validation.shift,
       cost: Number(settings.mealPrice) || 15000
@@ -843,6 +849,7 @@ const Store = {
 
     Store.playSound('success');
     return {
+      success: true,
       valid: true,
       record: newRecord,
       message: `Berhasil! Absensi makan dicatat untuk ${newRecord.employeeName} (${newRecord.shift}) di ${tenantName}.`
@@ -854,6 +861,12 @@ const Store = {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.ATTENDANCE);
       let list = data ? JSON.parse(data) : [];
+
+      // Normalisasi dwikunci tenantKey & tenantId agar selalu kompatibel di seluruh modul
+      list.forEach(item => {
+        if (!item.tenantKey && item.tenantId) item.tenantKey = item.tenantId;
+        if (!item.tenantId && item.tenantKey) item.tenantId = item.tenantKey;
+      });
 
       if (startDate && endDate) {
         list = list.filter(item => item.date >= startDate && item.date <= endDate);

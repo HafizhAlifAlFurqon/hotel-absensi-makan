@@ -257,6 +257,7 @@ try {
                     COALESCE(a.institution, e.institution, '') AS institution,
                     (CASE WHEN a.is_trainee = 1 OR a.department = 'Training' OR e.is_trainee = 1 OR e.department = 'Training' OR d.name = 'Training' THEN 1 ELSE 0 END) AS isTrainee,
                     COALESCE(a.tenant_key, t.tenant_key, CONCAT('tenant', t.id), 'tenant1') AS tenantKey,
+                    COALESCE(a.tenant_key, t.tenant_key, CONCAT('tenant', t.id), 'tenant1') AS tenantId,
                     COALESCE(a.tenant_name, t.name, 'Kantin Hotel') AS tenantName,
                     COALESCE(a.shift, 'Makan Siang') AS shift,
                     CAST(COALESCE(a.cost, a.price, 15000) AS UNSIGNED) AS cost
@@ -585,6 +586,7 @@ try {
                 'institution' => $employee['institution'] ?? '',
                 'isTrainee' => (bool)$isTraineeVal,
                 'tenantKey' => $tenant['tenant_key'] ?? $tenantKey,
+                'tenantId' => $tenant['tenant_key'] ?? $tenantKey,
                 'tenantName' => $tenant['name'],
                 'shift' => $shift,
                 'cost' => $cost
