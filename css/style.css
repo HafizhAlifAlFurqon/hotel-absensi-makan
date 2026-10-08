@@ -44,18 +44,64 @@ code, pre, .font-mono {
   object-fit: cover;
 }
 
+/* Aturan Global Pencegahan Baris Terpotong di PDF & Cetak */
+.kop-surat,
+.report-stat-card,
+.report-signatures,
+.avoid-break {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+}
+
+table.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  page-break-inside: auto;
+}
+
+table.report-table tr {
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+  page-break-after: auto;
+}
+
+table.report-table thead {
+  display: table-header-group;
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+}
+
+table.report-table tfoot {
+  display: table-footer-group;
+  page-break-inside: avoid !important;
+  break-inside: avoid !important;
+}
+
+#pdf-preview-paper .no-print,
+.no-print {
+  display: none !important;
+}
+
 /* Aturan Khusus Cetak / Print Stylesheet */
 @media print {
-  /* Sembunyikan elemen navigasi dan tombol aksi */
-  header, nav, aside, #mobile-menu, button, .print\:hidden {
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  /* Sembunyikan elemen navigasi, tombol, footer sistem, modal headers */
+  header, nav, aside, #mobile-menu, button, .print\:hidden, #header-db-badge, .no-print {
     display: none !important;
   }
 
   body {
     background: #ffffff !important;
-    color: #000000 !important;
+    color: #0f172a !important;
     padding: 0 !important;
     margin: 0 !important;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   main {
@@ -64,12 +110,81 @@ code, pre, .font-mono {
     width: 100% !important;
   }
 
+  /* KASUS 1: Jika Modal Pratinjau Sedang Terbuka saat Print / Ctrl+P */
+  #pdf-preview-modal:not(.hidden) {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    z-index: auto !important;
+    inset: auto !important;
+  }
+
+  #pdf-preview-modal:not(.hidden) > div {
+    box-shadow: none !important;
+    border: none !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Sembunyikan top bar modal & footer info modal saat dicetak */
+  #pdf-preview-modal-header,
+  #pdf-preview-modal-footer,
+  #pdf-preview-modal .border-b,
+  #pdf-preview-modal .border-t {
+    display: none !important;
+  }
+
+  #pdf-preview-scroll-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    overflow: visible !important;
+    display: block !important;
+    width: 100% !important;
+  }
+
+  #pdf-preview-paper {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    min-height: auto !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+
+  /* KASUS 2: Print Biasa dari Halaman (Modal Tertutup) */
   .page-view {
     display: block !important;
   }
 
-  .page-view:not(#page-qrcards):not(#page-reports) {
+  .page-view:not(#page-qrcards):not(#page-reports):not(#page-training) {
     display: none !important;
+  }
+
+  #printable-report-area, #training-view-report {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+    overflow: visible !important;
   }
 
   /* Grid Kartu QR Saat Dicetak di Kertas A4 */
@@ -86,10 +201,5 @@ code, pre, .font-mono {
     page-break-inside: avoid !important;
     padding: 12px !important;
     background: #ffffff !important;
-  }
-
-  /* Report Area Print */
-  #printable-report-area {
-    padding: 20px !important;
   }
 }

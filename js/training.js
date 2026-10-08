@@ -205,7 +205,7 @@ const TrainingManager = {
           grandTotalBiaya += cost;
 
           return `
-            <tr class="hover:bg-slate-50 border-b border-slate-100 transition">
+            <tr class="hover:bg-slate-50 border-b border-slate-100 transition avoid-break">
               <td class="py-3 px-4 text-xs text-slate-400 font-mono">${idx + 1}</td>
               <td class="py-3 px-4 text-xs font-mono font-bold text-amber-900">${trn.id}</td>
               <td class="py-3 px-4 text-xs font-bold text-slate-800">${trn.name}</td>
@@ -219,7 +219,7 @@ const TrainingManager = {
 
         if (rekapTfoot) {
           rekapTfoot.innerHTML = `
-            <tr class="bg-amber-50/80 font-bold border-t-2 border-amber-500">
+            <tr class="bg-amber-50/80 font-bold border-t-2 border-amber-500 avoid-break">
               <td colspan="5" class="py-3 px-4 text-xs uppercase tracking-wider text-amber-950 font-extrabold">TOTAL KESELURUHAN TRAINING</td>
               <td class="py-3 px-4 text-xs text-center text-amber-950 font-extrabold text-sm">${grandTotalMakan} Porsi</td>
               <td class="py-3 px-4 text-xs text-right font-mono text-amber-950 font-extrabold text-sm">Rp ${grandTotalBiaya.toLocaleString('id-ID')}</td>
@@ -250,7 +250,7 @@ const TrainingManager = {
           const trn = trainees.find(t => t.id.toLowerCase() === (r.employeeId || '').toLowerCase());
           const inst = (trn && trn.institution) || '-';
           return `
-            <tr class="hover:bg-slate-50 border-b border-slate-100 transition">
+            <tr class="hover:bg-slate-50 border-b border-slate-100 transition avoid-break">
               <td class="py-2.5 px-3 text-xs text-slate-400 font-mono">${idx + 1}</td>
               <td class="py-2.5 px-3 text-xs font-mono font-bold text-slate-800">${r.date} ${r.time}</td>
               <td class="py-2.5 px-3 text-xs font-mono font-bold text-amber-900">${r.employeeId}</td>

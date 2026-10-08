@@ -225,7 +225,7 @@ const ReportsManager = {
 
         const isTrn = deptName === 'Training';
         return `
-          <tr class="hover:bg-slate-50 border-b border-slate-100 transition ${isTrn ? 'bg-amber-50/40' : ''}">
+          <tr class="hover:bg-slate-50 border-b border-slate-100 transition avoid-break ${isTrn ? 'bg-amber-50/40' : ''}">
             <td class="py-3 px-4 text-xs text-slate-400 font-mono">${idx + 1}</td>
             <td class="py-3 px-4 text-xs font-bold text-slate-800">
               ${deptName} ${isTrn ? '<span class="text-[10px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full ml-1 border border-amber-200"><i class="fa-solid fa-graduation-cap"></i> Training (Magang)</span>' : ''}
@@ -240,7 +240,7 @@ const ReportsManager = {
 
       if (tfoot) {
         tfoot.innerHTML = `
-          <tr class="bg-emerald-50/80 font-bold border-t-2 border-emerald-500">
+          <tr class="bg-emerald-50/80 font-bold border-t-2 border-emerald-500 avoid-break">
             <td colspan="2" class="py-3.5 px-4 text-xs uppercase tracking-wider text-emerald-950 font-extrabold">TOTAL KESELURUHAN (KARYAWAN & TRAINING)</td>
             <td class="py-3.5 px-4 text-xs text-center text-emerald-950 font-extrabold">${grandTotalJumlah} Orang</td>
             <td class="py-3.5 px-4 text-xs text-right font-mono text-emerald-950 font-extrabold text-sm">Rp ${grandTotalBiaya.toLocaleString('id-ID')}</td>
@@ -305,7 +305,7 @@ const ReportsManager = {
         grandTotalJumlah += t.count;
         grandTotalBiaya += t.cost;
         return `
-          <tr class="hover:bg-amber-50/50 border-b border-slate-100 transition">
+          <tr class="hover:bg-amber-50/50 border-b border-slate-100 transition avoid-break">
             <td class="py-3 px-4 text-xs text-slate-400 font-mono">${idx + 1}</td>
             <td class="py-3 px-4 text-xs font-bold text-slate-900">
               <div class="flex items-center gap-2">
@@ -334,7 +334,7 @@ const ReportsManager = {
 
       if (tfoot) {
         tfoot.innerHTML = `
-          <tr class="bg-amber-50 font-bold border-t-2 border-amber-500">
+          <tr class="bg-amber-50 font-bold border-t-2 border-amber-500 avoid-break">
             <td colspan="4" class="py-3.5 px-4 text-xs uppercase tracking-wider text-amber-950 font-extrabold">TOTAL KONSUMSI ANAK TRAINING (MAGANG)</td>
             <td class="py-3.5 px-4 text-xs text-center text-amber-950 font-extrabold">${grandTotalJumlah} Porsi</td>
             <td class="py-3.5 px-4 text-xs text-right font-mono text-amber-950 font-extrabold text-sm">Rp ${grandTotalBiaya.toLocaleString('id-ID')}</td>
@@ -405,7 +405,7 @@ const ReportsManager = {
 
       if (isGlobal) {
         return `
-          <tr class="hover:bg-slate-50 border-b border-slate-100 text-xs ${isTrn ? 'bg-amber-50/25' : ''}">
+          <tr class="hover:bg-slate-50 border-b border-slate-100 text-xs avoid-break ${isTrn ? 'bg-amber-50/25' : ''}">
             <td class="py-2.5 px-3 text-slate-400 font-mono">${i + 1}</td>
             <td class="py-2.5 px-3 font-mono font-semibold">${r.date} ${r.time}</td>
             <td class="py-2.5 px-3 font-mono font-bold text-slate-800">${r.employeeId}</td>
@@ -419,7 +419,7 @@ const ReportsManager = {
         `;
       } else {
         return `
-          <tr class="hover:bg-amber-50/40 border-b border-slate-100 text-xs">
+          <tr class="hover:bg-amber-50/40 border-b border-slate-100 text-xs avoid-break">
             <td class="py-2.5 px-3 text-slate-400 font-mono">${i + 1}</td>
             <td class="py-2.5 px-3 font-mono font-semibold">${r.date} ${r.time}</td>
             <td class="py-2.5 px-3 font-mono font-bold text-amber-900">${r.employeeId}</td>
@@ -465,40 +465,11 @@ const ReportsManager = {
   },
 
   executeDirectDownload(filename) {
-    const reportElement = document.getElementById('printable-report-area');
-    if (!reportElement) {
-      window.print();
-      return;
-    }
-
-    if (window.html2pdf) {
-      const opt = {
-        margin: [10, 10, 10, 10],
-        filename: filename || `Laporan_Absensi_Makan_${this.startDate}_sd_${this.endDate}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-
-      const btn = document.getElementById('report-btn-pdf');
-      const originalText = btn ? btn.innerHTML : '';
-      if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Membuat PDF...';
-
-      html2pdf().set(opt).from(reportElement).save().then(() => {
-        if (btn) btn.innerHTML = originalText;
-        Store.playSound('success');
-      }).catch(err => {
-        console.error('PDF error, fallback to print', err);
-        if (btn) btn.innerHTML = originalText;
-        window.print();
-      });
-    } else {
-      window.print();
-    }
+    this.openPdfPreview();
   }
 };
 
-// ================= MODAL PRATINJAU PDF HELPER =================
+// ================= MODAL PRATINJAU PDF & PRINT ENGINE (A4 IDENTIK) =================
 const PDFPreview = {
   currentElementId: null,
   currentFilename: 'Laporan.pdf',
@@ -506,23 +477,58 @@ const PDFPreview = {
 
   open(elementId, filename, orientation = 'portrait') {
     this.currentElementId = elementId;
-    this.currentFilename = filename;
-    this.currentOrientation = orientation;
+    this.currentFilename = filename || 'Laporan.pdf';
+    this.currentOrientation = orientation || 'portrait';
 
     const sourceEl = document.getElementById(elementId);
     const paperEl = document.getElementById('pdf-preview-paper');
     const modalEl = document.getElementById('pdf-preview-modal');
     const filenameEl = document.getElementById('pdf-preview-filename');
+    const badgeEl = document.getElementById('pdf-preview-badge');
+    const scrollContainer = document.getElementById('pdf-preview-scroll-container');
 
     if (!sourceEl || !paperEl || !modalEl) return;
 
-    if (filenameEl) filenameEl.innerText = filename;
+    if (filenameEl) filenameEl.innerText = this.currentFilename;
 
-    // Duplikasi konten dokumen ke kertas pratinjau
-    paperEl.innerHTML = sourceEl.innerHTML;
+    const isLandscape = this.currentOrientation === 'landscape';
+    if (badgeEl) {
+      badgeEl.innerText = isLandscape ? 'A4 Landscape (Siap Cetak)' : 'A4 Portrait (Siap Cetak)';
+      badgeEl.className = isLandscape
+        ? 'px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300'
+        : 'px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200';
+    }
+
+    // Set dimensi kertas pratinjau agar 100% presisi standar lembar A4 nyata
+    if (isLandscape) {
+      paperEl.style.maxWidth = '1122px';
+      paperEl.style.width = '100%';
+      paperEl.style.minHeight = '794px';
+    } else {
+      paperEl.style.maxWidth = '794px';
+      paperEl.style.width = '100%';
+      paperEl.style.minHeight = '1123px';
+    }
+
+    // Klon konten dokumen ke kertas pratinjau
+    const clone = sourceEl.cloneNode(true);
+    // Hilangkan tombol/kontrol filter jika ada di dalam clone
+    clone.querySelectorAll('.no-print, button, input[type="date"], select').forEach(el => {
+      if (el.tagName === 'BUTTON' || el.closest('.no-print')) {
+        el.remove();
+      }
+    });
+
+    paperEl.innerHTML = clone.innerHTML;
 
     // Tampilkan jendela modal pratinjau
     modalEl.classList.remove('hidden');
+
+    // Reset posisi scroll ke paling atas agar Kop Surat langsung terlihat seketika
+    if (scrollContainer) {
+      scrollContainer.scrollTop = 0;
+    }
+
     Store.playSound('click');
   },
 
@@ -532,8 +538,8 @@ const PDFPreview = {
   },
 
   downloadCurrentPDF() {
-    const sourceEl = document.getElementById(this.currentElementId);
-    if (!sourceEl) return;
+    const paperEl = document.getElementById('pdf-preview-paper');
+    if (!paperEl) return;
 
     const btn = document.getElementById('pdf-modal-download-btn');
     const originalText = btn ? btn.innerHTML : '';
@@ -542,16 +548,62 @@ const PDFPreview = {
       btn.disabled = true;
     }
 
+    const isLandscape = this.currentOrientation === 'landscape';
+    const targetWidth = isLandscape ? 1122 : 794;
+
+    // Wadah render terisolasi berskala presisi 1:1 lembar A4 agar pemotongan halaman jsPDF akurat
+    const renderContainer = document.createElement('div');
+    renderContainer.style.position = 'fixed';
+    renderContainer.style.left = '-9999px';
+    renderContainer.style.top = '0';
+    renderContainer.style.width = `${targetWidth}px`;
+    renderContainer.style.background = '#ffffff';
+    renderContainer.style.color = '#0f172a';
+    renderContainer.style.padding = '32px 36px';
+    renderContainer.style.zIndex = '-9999';
+    renderContainer.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+
+    const contentClone = paperEl.cloneNode(true);
+    contentClone.style.width = '100%';
+    contentClone.style.maxWidth = '100%';
+    contentClone.style.boxShadow = 'none';
+    contentClone.style.border = 'none';
+    contentClone.style.borderRadius = '0';
+    contentClone.style.padding = '0';
+    contentClone.style.margin = '0';
+
+    renderContainer.appendChild(contentClone);
+    document.body.appendChild(renderContainer);
+
     if (window.html2pdf) {
       const opt = {
-        margin: [10, 10, 10, 10],
+        margin: [10, 10, 10, 10], // Margin standar 10mm (atas, kiri, bawah, kanan)
         filename: this.currentFilename,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: this.currentOrientation }
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          letterRendering: true,
+          logging: false,
+          scrollY: 0,
+          scrollX: 0
+        },
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
+          orientation: this.currentOrientation,
+          compress: true
+        },
+        pagebreak: {
+          mode: ['avoid-all', 'css', 'legacy'],
+          avoid: ['tr', 'thead', 'tfoot', '.avoid-break', '.report-stat-card', '.kop-surat', '.report-signatures', 'h2', 'h3']
+        }
       };
 
-      html2pdf().set(opt).from(sourceEl).save().then(() => {
+      html2pdf().set(opt).from(renderContainer).save().then(() => {
+        if (document.body.contains(renderContainer)) {
+          document.body.removeChild(renderContainer);
+        }
         if (btn) {
           btn.innerHTML = '<i class="fa-solid fa-circle-check mr-1.5"></i> Berhasil Diunduh!';
           setTimeout(() => {
@@ -562,14 +614,20 @@ const PDFPreview = {
         Store.playSound('success');
       }).catch(err => {
         console.error('PDF error', err);
+        if (document.body.contains(renderContainer)) {
+          document.body.removeChild(renderContainer);
+        }
         if (btn) {
           btn.innerHTML = originalText;
           btn.disabled = false;
         }
-        window.print();
+        this.printDirectly();
       });
     } else {
-      window.print();
+      if (document.body.contains(renderContainer)) {
+        document.body.removeChild(renderContainer);
+      }
+      this.printDirectly();
       if (btn) {
         btn.innerHTML = originalText;
         btn.disabled = false;
@@ -578,7 +636,99 @@ const PDFPreview = {
   },
 
   printDirectly() {
-    window.print();
+    const paperEl = document.getElementById('pdf-preview-paper');
+    if (!paperEl) {
+      window.print();
+      return;
+    }
+
+    const isLandscape = this.currentOrientation === 'landscape';
+
+    // Buat iframe terisolasi khusus cetak agar hasil cetak fisik bersih tanpa frame modal
+    let printFrame = document.getElementById('pdf-isolated-print-frame');
+    if (!printFrame) {
+      printFrame = document.createElement('iframe');
+      printFrame.id = 'pdf-isolated-print-frame';
+      printFrame.style.position = 'fixed';
+      printFrame.style.right = '0';
+      printFrame.style.bottom = '0';
+      printFrame.style.width = '0';
+      printFrame.style.height = '0';
+      printFrame.style.border = '0';
+      document.body.appendChild(printFrame);
+    }
+
+    const doc = printFrame.contentWindow.document;
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
+      <html lang="id">
+      <head>
+        <title>${this.currentFilename || 'Laporan Absensi Makan'}</title>
+        <meta charset="UTF-8">
+        <script src="https://cdn.tailwindcss.com"><\/script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <style>
+          @page {
+            size: ${isLandscape ? 'A4 landscape' : 'A4 portrait'};
+            margin: 10mm;
+          }
+          body {
+            margin: 0;
+            padding: 0;
+            background: #ffffff !important;
+            color: #0f172a !important;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .print-container {
+            width: 100%;
+            background: #ffffff;
+            padding: 0;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            page-break-inside: auto;
+          }
+          tr {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            page-break-after: auto;
+          }
+          thead {
+            display: table-header-group;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          tfoot {
+            display: table-footer-group;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          .avoid-break, .report-stat-card, .kop-surat, .report-signatures {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          .no-print {
+            display: none !important;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="print-container">
+          ${paperEl.innerHTML}
+        </div>
+      </body>
+      </html>
+    `);
+    doc.close();
+
+    setTimeout(() => {
+      printFrame.contentWindow.focus();
+      printFrame.contentWindow.print();
+    }, 450);
   }
 };
 

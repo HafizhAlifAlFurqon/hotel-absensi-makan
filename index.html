@@ -1188,10 +1188,10 @@
       </div>
 
       <!-- AREA LAPORAN YANG AKAN DIEKSPOR KE PDF (Printable Area) -->
-      <div id="printable-report-area" class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+      <div id="printable-report-area" class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6 a4-document-paper">
         
         <!-- Kop Surat Laporan Hotel -->
-        <div class="border-b-2 border-slate-800 pb-4 flex items-center justify-between">
+        <div class="border-b-2 border-slate-800 pb-4 flex items-center justify-between kop-surat avoid-break">
           <div class="flex items-center gap-3">
             <div id="pdf-icon-box" class="w-12 h-12 rounded-xl bg-emerald-800 text-white flex items-center justify-center text-xl font-bold">
               <i class="fa-solid fa-hotel"></i>
@@ -1215,7 +1215,7 @@
         </div>
 
         <!-- TOTAL ORANG MAKAN & TOTAL BIAYA DI BAWAHNYA SESUAI PERMINTAAN -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-4 report-stat-card avoid-break">
           <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
             <span id="report-eaten-label" class="text-xs font-bold text-slate-500 uppercase tracking-wider block">
               Total Orang yang Makan (Hari Ini / Periode Terpilih)
@@ -1238,14 +1238,14 @@
         </div>
 
         <!-- TABEL REKAPITULASI -->
-        <div>
+        <div class="avoid-break report-rekap-container">
           <h3 id="report-rekap-heading" class="font-bold text-slate-900 text-sm mb-2 flex items-center gap-2">
             <i class="fa-solid fa-table-list text-emerald-700"></i> Rekapitulasi Konsumsi Per Departemen
           </h3>
           <div class="overflow-x-auto rounded-xl border border-slate-200">
-            <table class="w-full text-left border-collapse">
+            <table class="w-full text-left border-collapse report-table">
               <thead id="report-dept-table-head">
-                <tr class="bg-slate-100 text-slate-700 text-xs uppercase tracking-wider font-bold border-b border-slate-200">
+                <tr class="bg-slate-100 text-slate-700 text-xs uppercase tracking-wider font-bold border-b border-slate-200 avoid-break">
                   <th class="py-3 px-4 w-12">No</th>
                   <th class="py-3 px-4">Departemen</th>
                   <th class="py-3 px-4 text-center">Jumlah (Orang)</th>
@@ -1261,14 +1261,14 @@
         </div>
 
         <!-- Rincian Detail Log Absensi -->
-        <div>
-          <h3 id="report-detail-heading" class="font-bold text-slate-900 text-sm mb-2 flex items-center gap-2">
+        <div class="report-detail-container">
+          <h3 id="report-detail-heading" class="font-bold text-slate-900 text-sm mb-2 flex items-center gap-2 avoid-break">
             <i class="fa-solid fa-list-check text-slate-600"></i> Rincian Data Absensi
           </h3>
           <div class="overflow-x-auto rounded-xl border border-slate-200">
-            <table class="w-full text-left border-collapse">
+            <table class="w-full text-left border-collapse report-table">
               <thead id="report-detail-table-head">
-                <tr class="bg-slate-100 text-slate-600 text-[11px] uppercase tracking-wider font-semibold border-b border-slate-200">
+                <tr class="bg-slate-100 text-slate-600 text-[11px] uppercase tracking-wider font-semibold border-b border-slate-200 avoid-break">
                   <th class="py-2.5 px-3">No</th>
                   <th class="py-2.5 px-3">Waktu</th>
                   <th class="py-2.5 px-3">ID Karyawan</th>
@@ -1282,6 +1282,31 @@
               </tbody>
             </table>
           </div>
+        </div>
+
+        <!-- Lembar Tanda Tangan / Pengesahan Resmi Laporan Hotel -->
+        <div class="report-signatures pt-6 mt-8 border-t border-slate-200 grid grid-cols-3 gap-6 text-center text-xs avoid-break">
+          <div>
+            <p class="text-slate-500 font-medium mb-12">Dibuat Oleh,</p>
+            <p class="font-bold text-slate-900 underline font-mono">Petugas HRD / Absensi</p>
+            <p class="text-[10px] text-slate-400">BeSS Mansion Hotel</p>
+          </div>
+          <div>
+            <p class="text-slate-500 font-medium mb-12">Diperiksa Oleh,</p>
+            <p class="font-bold text-slate-900 underline font-mono">Finance & Accounting</p>
+            <p class="text-[10px] text-slate-400">BeSS Mansion Hotel</p>
+          </div>
+          <div>
+            <p class="text-slate-500 font-medium mb-12">Disetujui Oleh,</p>
+            <p class="font-bold text-slate-900 underline font-mono">General Manager</p>
+            <p class="text-[10px] text-slate-400">BeSS Mansion Hotel</p>
+          </div>
+        </div>
+
+        <!-- Catatan Kaki Dokumen Resmi -->
+        <div class="text-[10px] text-slate-400 text-center pt-3 border-t border-slate-100 flex items-center justify-between avoid-break">
+          <span>Dokumen Resmi Sistem Absensi Makan &bull; BeSS Mansion Hotel Surabaya</span>
+          <span>Dicetak otomatis &amp; sah sesuai database hotel</span>
         </div>
 
       </div>
@@ -1364,7 +1389,7 @@
       <!-- TAB 1: REPORT TRAINING SENDIRI -->
       <div id="training-view-report" class="space-y-6">
         <!-- Filter Card -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4 no-print">
           <div class="flex flex-wrap items-center gap-3">
             <div>
               <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Dari Tanggal</label>
@@ -2154,16 +2179,16 @@
     <div class="bg-white rounded-3xl max-w-5xl w-full shadow-2xl border border-slate-100 flex flex-col max-h-[94vh] overflow-hidden animate-bounce-short">
       
       <!-- Top Bar: Info Dokumen & Tombol Aksi -->
-      <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/70">
+      <div id="pdf-preview-modal-header" class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/70">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center text-lg font-bold shadow-2xs">
             <i class="fa-solid fa-file-pdf"></i>
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <h3 class="font-extrabold text-slate-900 text-sm sm:text-base">Pratinjau Dokumen PDF</h3>
+              <h3 class="font-extrabold text-slate-900 text-sm sm:text-base">Pratinjau Dokumen Cetak (A4)</h3>
               <span id="pdf-preview-badge" class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
-                Siap Unduh
+                A4 Portrait (Siap Cetak)
               </span>
             </div>
             <p id="pdf-preview-filename" class="text-xs font-mono text-slate-500 truncate max-w-xs sm:max-w-md">
@@ -2176,7 +2201,7 @@
           <button id="pdf-modal-download-btn" onclick="PDFPreview.downloadCurrentPDF()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition flex items-center gap-2 cursor-pointer">
             <i class="fa-solid fa-download"></i> Unduh File PDF
           </button>
-          <button onclick="PDFPreview.printDirectly()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition flex items-center gap-1.5 cursor-pointer">
+          <button onclick="PDFPreview.printDirectly()" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-xs">
             <i class="fa-solid fa-print"></i> Cetak Kertas
           </button>
           <button onclick="PDFPreview.close()" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 rounded-xl transition cursor-pointer">
@@ -2186,16 +2211,16 @@
       </div>
 
       <!-- Area Tampilan Kertas Pratinjau (A4 Paper Canvas) -->
-      <div class="p-4 sm:p-6 bg-slate-200/80 overflow-y-auto flex-1 flex justify-center">
-        <div id="pdf-preview-paper" class="bg-white w-full max-w-4xl rounded-2xl shadow-xl p-6 sm:p-10 border border-slate-300 min-h-[500px]">
+      <div id="pdf-preview-scroll-container" class="p-4 sm:p-8 bg-slate-800/85 overflow-y-auto flex-1 flex justify-center">
+        <div id="pdf-preview-paper" class="bg-white w-full max-w-[794px] rounded-xs shadow-2xl p-8 sm:p-12 border border-slate-300 min-h-[1123px] transition-all text-slate-900 mx-auto my-2 a4-document-paper">
           <!-- Konten Dokumen yang Di-klon Masuk ke Sini -->
         </div>
       </div>
 
       <!-- Footer Info -->
-      <div class="py-2.5 px-5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-        <span>Format: A4 &bull; Standar Cetak Resolusi Tinggi (html2canvas Scale 2x)</span>
-        <span class="font-medium text-slate-500">Periksa isi dokumen di atas sebelum mengunduh</span>
+      <div id="pdf-preview-modal-footer" class="py-2.5 px-5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+        <span>Format: Kertas Standar A4 &bull; Tampilan Pratinjau 100% Sama Dengan Cetak &amp; PDF</span>
+        <span class="font-medium text-slate-500">Periksa isi dokumen di atas sebelum mengunduh atau mencetak</span>
       </div>
 
     </div>
