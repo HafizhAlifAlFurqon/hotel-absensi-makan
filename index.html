@@ -1148,13 +1148,16 @@
     <!-- ================= HALAMAN 7: LAPORAN ================= -->
     <section id="page-reports" class="page-view hidden space-y-6">
       
-      <!-- Top Bar: Filter Lingkup (Global vs Training), Tanggal & Tombol Cetak sebagai PDF -->
+      <!-- Top Bar: Filter Lingkup (Global vs Training), Format (Dengan/Tanpa Rincian), Tanggal & Tombol Download -->
       <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">Laporan Rekapitulasi Absensi Makan</h2>
             <span id="report-scope-badge" class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
               Global (Semua)
+            </span>
+            <span id="report-format-badge" class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-indigo-100 text-indigo-800 border border-indigo-200">
+              Lengkap (Dengan Rincian)
             </span>
           </div>
           <p class="text-xs text-slate-500 mt-0.5" id="report-period-label">
@@ -1162,14 +1165,24 @@
           </p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-3">
-          <!-- SWITCH TAB LINGKUP LAPORAN SESUAI PERMINTAAN USER: GLOBAL VS HANYA TRAINING -->
+        <div class="flex flex-wrap items-center gap-2.5">
+          <!-- SWITCH TAB LINGKUP LAPORAN: GLOBAL VS HANYA TRAINING -->
           <div class="p-1 bg-slate-100 rounded-xl border border-slate-200 flex items-center gap-1">
             <button id="report-scope-global" type="button" onclick="ReportsManager.setScope('global')" class="px-3.5 py-1.5 text-xs font-extrabold rounded-lg transition bg-emerald-700 text-white shadow-xs flex items-center gap-1.5 cursor-pointer">
-              <i class="fa-solid fa-users"></i> Laporan Global (Semua)
+              <i class="fa-solid fa-users"></i> Laporan Global
             </button>
             <button id="report-scope-training" type="button" onclick="ReportsManager.setScope('training')" class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition text-slate-600 hover:text-slate-900 hover:bg-slate-200 flex items-center gap-1.5 cursor-pointer">
-              <i class="fa-solid fa-graduation-cap text-amber-600"></i> Hanya Training (Magang)
+              <i class="fa-solid fa-graduation-cap text-amber-600"></i> Khusus Training
+            </button>
+          </div>
+
+          <!-- SWITCH FORMAT TAMPILAN: DENGAN RINCIAN VS TANPA RINCIAN -->
+          <div class="p-1 bg-slate-100 rounded-xl border border-slate-200 flex items-center gap-1">
+            <button id="report-format-detailed" type="button" onclick="ReportsManager.setFormat('detailed')" class="px-3 py-1.5 text-xs font-extrabold rounded-lg transition bg-slate-800 text-white shadow-xs flex items-center gap-1.5 cursor-pointer" title="Tampilkan format lengkap beserta tabel rincian data absensi">
+              <i class="fa-solid fa-list-check"></i> Dengan Rincian
+            </button>
+            <button id="report-format-summary" type="button" onclick="ReportsManager.setFormat('summary')" class="px-3 py-1.5 text-xs font-bold rounded-lg transition text-slate-600 hover:text-slate-900 hover:bg-slate-200 flex items-center gap-1.5 cursor-pointer" title="Tampilkan format ringkas / rekapitulasi saja tanpa rincian perorangan">
+              <i class="fa-solid fa-table-list"></i> Tanpa Rincian
             </button>
           </div>
 
@@ -1180,10 +1193,17 @@
             <input type="date" id="report-end-date" onchange="ReportsManager.handleCustomDateChange()" class="px-2.5 py-1.5 text-xs font-medium border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-slate-50">
           </div>
 
-          <!-- BUTTON CETAK SEBAGAI PDF DENGAN PRATINJAU -->
-          <button id="report-btn-pdf" onclick="ReportsManager.openPdfPreview()" class="px-4 py-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-2 cursor-pointer">
-            <i class="fa-solid fa-file-pdf text-sm"></i> Pratinjau & Unduh PDF
-          </button>
+          <!-- BUTTONS DOWNLOAD PDF: DUA TOMBOL SESUAI PERMINTAAN USER -->
+          <div class="flex items-center gap-2">
+            <!-- 1. Tombol Download Tanpa Rincian -->
+            <button id="report-btn-summary" onclick="ReportsManager.openPdfPreview('summary')" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer" title="Pratinjau & Download Rekapitulasi Tanpa Rincian (Ringkasan Eksekutif)">
+              <i class="fa-solid fa-file-invoice"></i> Unduh Tanpa Rincian
+            </button>
+            <!-- 2. Tombol Download Dengan Rincian -->
+            <button id="report-btn-detailed" onclick="ReportsManager.openPdfPreview('detailed')" class="px-3.5 py-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer" title="Pratinjau & Download Laporan Lengkap Beserta Rincian Data Transaksi">
+              <i class="fa-solid fa-file-pdf"></i> Unduh Dengan Rincian
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1261,7 +1281,7 @@
         </div>
 
         <!-- Rincian Detail Log Absensi -->
-        <div class="report-detail-container">
+        <div id="report-detail-section" class="report-detail-container">
           <h3 id="report-detail-heading" class="font-bold text-slate-900 text-sm mb-2 flex items-center gap-2 avoid-break">
             <i class="fa-solid fa-list-check text-slate-600"></i> Rincian Data Absensi
           </h3>
@@ -1409,8 +1429,11 @@
           <div class="flex items-center gap-2">
             <button onclick="TrainingManager.setPreset('today')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition cursor-pointer">Hari Ini</button>
             <button onclick="TrainingManager.setPreset('month')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition cursor-pointer">Bulan Ini</button>
-            <button onclick="TrainingManager.exportPDF()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
-              <i class="fa-solid fa-file-pdf"></i> Ekspor PDF Laporan Training
+            <button onclick="TrainingManager.exportPDF('summary')" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer" title="Ekspor PDF Ringkas (Rekapitulasi Saja Tanpa Log Transaksi)">
+              <i class="fa-solid fa-file-invoice"></i> PDF Tanpa Rincian
+            </button>
+            <button onclick="TrainingManager.exportPDF('detailed')" class="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer" title="Ekspor PDF Lengkap Beserta Seluruh Log Detail Transaksi">
+              <i class="fa-solid fa-file-pdf"></i> PDF Dengan Rincian
             </button>
           </div>
         </div>
@@ -1447,7 +1470,7 @@
         </div>
 
         <!-- Tabel 2: Detail Riwayat Absensi Training -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3">
+        <div id="training-detail-table-card" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 class="font-extrabold text-slate-900 text-sm flex items-center gap-2">
               <i class="fa-solid fa-clock-rotate-left text-amber-600"></i> Log Transaksi Absensi Anak Training
@@ -2179,16 +2202,19 @@
     <div class="bg-white rounded-3xl max-w-5xl w-full shadow-2xl border border-slate-100 flex flex-col max-h-[94vh] overflow-hidden animate-bounce-short">
       
       <!-- Top Bar: Info Dokumen & Tombol Aksi -->
-      <div id="pdf-preview-modal-header" class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/70">
+      <div id="pdf-preview-modal-header" class="p-4 sm:p-5 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-slate-50/70">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center text-lg font-bold shadow-2xs">
             <i class="fa-solid fa-file-pdf"></i>
           </div>
           <div>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
               <h3 class="font-extrabold text-slate-900 text-sm sm:text-base">Pratinjau Dokumen Cetak (A4)</h3>
               <span id="pdf-preview-badge" class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
                 A4 Portrait (Siap Cetak)
+              </span>
+              <span id="pdf-preview-format-badge" class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-800 border border-indigo-200">
+                Dengan Rincian
               </span>
             </div>
             <p id="pdf-preview-filename" class="text-xs font-mono text-slate-500 truncate max-w-xs sm:max-w-md">
@@ -2197,7 +2223,17 @@
           </div>
         </div>
 
-        <div class="flex items-center gap-2 self-end sm:self-center">
+        <div class="flex flex-wrap items-center gap-2 self-start lg:self-center">
+          <!-- Toggle Pilihan Format di Dalam Modal Pratinjau -->
+          <div id="pdf-modal-format-toggle" class="p-1 bg-slate-200/80 rounded-xl flex items-center gap-1 text-xs">
+            <button id="modal-fmt-summary-btn" type="button" onclick="PDFPreview.switchReportFormat('summary')" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 cursor-pointer flex items-center gap-1.5" title="Beralih ke format ringkas (rekapitulasi saja tanpa rincian)">
+              <i class="fa-solid fa-table-list"></i> Tanpa Rincian
+            </button>
+            <button id="modal-fmt-detailed-btn" type="button" onclick="PDFPreview.switchReportFormat('detailed')" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition bg-slate-800 text-white shadow-xs cursor-pointer flex items-center gap-1.5" title="Beralih ke format lengkap beserta rincian log absensi">
+              <i class="fa-solid fa-list-check"></i> Dengan Rincian
+            </button>
+          </div>
+
           <button id="pdf-modal-download-btn" onclick="PDFPreview.downloadCurrentPDF()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition flex items-center gap-2 cursor-pointer">
             <i class="fa-solid fa-download"></i> Unduh File PDF
           </button>

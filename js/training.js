@@ -445,14 +445,19 @@ const TrainingManager = {
     }
   },
 
-  exportPDF() {
+  exportPDF(format = 'detailed') {
     const element = document.getElementById('training-view-report');
     if (!element) return;
-    const filename = `Laporan_Absensi_Training_${this.startDate}_sd_${this.endDate}.pdf`;
+    const isSummary = format === 'summary';
+    const formatName = isSummary ? 'Tanpa_Rincian' : 'Dengan_Rincian';
+    const filename = `Laporan_Absensi_Training_${formatName}_${this.startDate}_sd_${this.endDate}.pdf`;
 
     if (window.PDFPreview) {
-      PDFPreview.open('training-view-report', filename, 'landscape');
+      PDFPreview.open('training-view-report', filename, 'landscape', format);
     } else if (window.html2pdf) {
+      const detailCard = document.getElementById('training-detail-table-card');
+      if (detailCard && isSummary) detailCard.style.display = 'none';
+
       const opt = {
         margin: 10,
         filename: filename,
@@ -460,7 +465,9 @@ const TrainingManager = {
         html2canvas: { scale: 2 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
       };
-      window.html2pdf().set(opt).from(element).save();
+      window.html2pdf().set(opt).from(element).save().then(() => {
+        if (detailCard && isSummary) detailCard.style.display = '';
+      });
     } else {
       window.print();
     }

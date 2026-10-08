@@ -14,6 +14,7 @@ const ReportsManager = {
   endDate: Store.getTodayDateString(),
   activePreset: 'today',
   scope: 'global', // 'global' atau 'training'
+  format: 'detailed', // 'detailed' (Dengan Rincian) atau 'summary' (Tanpa Rincian)
 
   init() {
     const sInput = document.getElementById('report-start-date');
@@ -30,6 +31,7 @@ const ReportsManager = {
     }
     this.setupInputs();
     this.updateScopeUI();
+    this.updateFormatUI();
     this.render();
   },
 
@@ -51,6 +53,51 @@ const ReportsManager = {
     this.updateScopeUI();
     this.render();
     Store.playSound('click');
+  },
+
+  setFormat(newFormat) {
+    this.format = newFormat;
+    this.updateFormatUI();
+    this.render();
+    Store.playSound('click');
+  },
+
+  updateFormatUI() {
+    const btnDetailed = document.getElementById('report-format-detailed');
+    const btnSummary = document.getElementById('report-format-summary');
+    const formatBadge = document.getElementById('report-format-badge');
+    const detailSection = document.getElementById('report-detail-section');
+
+    const isSummary = this.format === 'summary';
+
+    if (btnDetailed) {
+      btnDetailed.className = !isSummary
+        ? 'px-3 py-1.5 text-xs font-extrabold rounded-lg transition bg-slate-800 text-white shadow-xs flex items-center gap-1.5 cursor-pointer'
+        : 'px-3 py-1.5 text-xs font-bold rounded-lg transition text-slate-600 hover:text-slate-900 hover:bg-slate-200 flex items-center gap-1.5 cursor-pointer';
+    }
+    if (btnSummary) {
+      btnSummary.className = isSummary
+        ? 'px-3 py-1.5 text-xs font-extrabold rounded-lg transition bg-emerald-700 text-white shadow-xs flex items-center gap-1.5 cursor-pointer'
+        : 'px-3 py-1.5 text-xs font-bold rounded-lg transition text-slate-600 hover:text-slate-900 hover:bg-slate-200 flex items-center gap-1.5 cursor-pointer';
+    }
+
+    if (formatBadge) {
+      if (isSummary) {
+        formatBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200';
+        formatBadge.innerText = 'Ringkasan (Tanpa Rincian)';
+      } else {
+        formatBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-indigo-100 text-indigo-800 border border-indigo-200';
+        formatBadge.innerText = 'Lengkap (Dengan Rincian)';
+      }
+    }
+
+    if (detailSection) {
+      if (isSummary) {
+        detailSection.classList.add('hidden');
+      } else {
+        detailSection.classList.remove('hidden');
+      }
+    }
   },
 
   updateScopeUI() {
@@ -148,10 +195,44 @@ const ReportsManager = {
       }) + ' WIB';
     }
 
+    const isSummary = this.format === 'summary';
+
     if (pdfSubtitle) {
-      pdfSubtitle.innerText = isGlobal
-        ? 'Laporan Konsumsi & Absensi Makan Karyawan & Training (Global)'
-        : 'Laporan Konsumsi & Absensi Makan Khusus Siswa Magang / Training';
+      if (isGlobal) {
+        pdfSubtitle.innerText = isSummary
+          ? 'Laporan Rekapitulasi Konsumsi Makan Karyawan & Training (Tanpa Rincian)'
+          : 'Laporan Konsumsi & Absensi Makan Karyawan & Training (Lengkap Dengan Rincian)';
+      } else {
+        pdfSubtitle.innerText = isSummary
+          ? 'Laporan Rekapitulasi Konsumsi Makan Khusus Siswa Magang / Training (Tanpa Rincian)'
+          : 'Laporan Konsumsi & Absensi Makan Khusus Siswa Magang / Training (Lengkap Dengan Rincian)';
+      }
+    }
+
+    const printTag = document.getElementById('pdf-print-scope-tag');
+    if (printTag) {
+      if (isGlobal) {
+        printTag.className = isSummary
+          ? 'inline-block px-2.5 py-0.5 mb-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200'
+          : 'inline-block px-2.5 py-0.5 mb-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-800 border border-indigo-200';
+        printTag.innerText = isSummary
+          ? 'Rekapitulasi Global (Tanpa Rincian)'
+          : 'Laporan Lengkap Global (Dengan Rincian)';
+      } else {
+        printTag.className = 'inline-block px-2.5 py-0.5 mb-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300';
+        printTag.innerText = isSummary
+          ? 'Rekapitulasi Training (Tanpa Rincian)'
+          : 'Laporan Lengkap Siswa Training (Dengan Rincian)';
+      }
+    }
+
+    const detailSection = document.getElementById('report-detail-section');
+    if (detailSection) {
+      if (isSummary) {
+        detailSection.classList.add('hidden');
+      } else {
+        detailSection.classList.remove('hidden');
+      }
     }
 
     // 1. Statistik Total Orang Makan & Total Biaya
@@ -437,8 +518,14 @@ const ReportsManager = {
     }).join('');
   },
 
-  // Buka Pratinjau PDF Sebelum Mengunduh Sesuai Permintaan User
-  openPdfPreview() {
+  // Buka Pratinjau PDF Sebelum Mengunduh Sesuai Permintaan User (Dukungan Format Tanpa/Dengan Rincian)
+  openPdfPreview(requestedFormat) {
+    if (requestedFormat && (requestedFormat === 'summary' || requestedFormat === 'detailed')) {
+      this.format = requestedFormat;
+      this.updateFormatUI();
+      this.render();
+    }
+
     const s = Store.getSettings();
     const hotelTitleEl = document.getElementById('pdf-hotel-name');
     const periodHeaderEl = document.getElementById('pdf-report-period');
@@ -450,22 +537,42 @@ const ReportsManager = {
     }
 
     const isGlobal = this.scope === 'global';
+    const isSummary = this.format === 'summary';
     const scopeName = isGlobal ? 'Global' : 'Training';
-    const filename = `Laporan_Absensi_Makan_${scopeName}_${this.startDate}_sd_${this.endDate}.pdf`;
+    const formatName = isSummary ? 'Tanpa_Rincian' : 'Dengan_Rincian';
+    const filename = `Laporan_Absensi_Makan_${scopeName}_${formatName}_${this.startDate}_sd_${this.endDate}.pdf`;
 
     if (window.PDFPreview) {
-      PDFPreview.open('printable-report-area', filename, 'portrait');
+      PDFPreview.open('printable-report-area', filename, 'portrait', this.format);
     } else {
-      this.executeDirectDownload(filename);
+      this.downloadDirect(this.format);
     }
   },
 
-  printAsPDF() {
-    this.openPdfPreview();
+  switchPreviewFormat(newFormat) {
+    this.openPdfPreview(newFormat);
   },
 
-  executeDirectDownload(filename) {
-    this.openPdfPreview();
+  printAsPDF() {
+    this.openPdfPreview(this.format);
+  },
+
+  downloadDirect(format = 'detailed') {
+    if (format && (format === 'summary' || format === 'detailed')) {
+      this.format = format;
+      this.updateFormatUI();
+      this.render();
+    }
+    const isGlobal = this.scope === 'global';
+    const isSummary = this.format === 'summary';
+    const scopeName = isGlobal ? 'Global' : 'Training';
+    const formatName = isSummary ? 'Tanpa_Rincian' : 'Dengan_Rincian';
+    const filename = `Laporan_Absensi_Makan_${scopeName}_${formatName}_${this.startDate}_sd_${this.endDate}.pdf`;
+
+    if (window.PDFPreview) {
+      PDFPreview.open('printable-report-area', filename, 'portrait', this.format);
+      PDFPreview.downloadCurrentPDF();
+    }
   }
 };
 
@@ -474,18 +581,23 @@ const PDFPreview = {
   currentElementId: null,
   currentFilename: 'Laporan.pdf',
   currentOrientation: 'portrait',
+  currentFormat: 'detailed',
 
-  open(elementId, filename, orientation = 'portrait') {
+  open(elementId, filename, orientation = 'portrait', format = 'detailed') {
     this.currentElementId = elementId;
     this.currentFilename = filename || 'Laporan.pdf';
     this.currentOrientation = orientation || 'portrait';
+    this.currentFormat = format || 'detailed';
 
     const sourceEl = document.getElementById(elementId);
     const paperEl = document.getElementById('pdf-preview-paper');
     const modalEl = document.getElementById('pdf-preview-modal');
     const filenameEl = document.getElementById('pdf-preview-filename');
     const badgeEl = document.getElementById('pdf-preview-badge');
+    const formatBadgeEl = document.getElementById('pdf-preview-format-badge');
     const scrollContainer = document.getElementById('pdf-preview-scroll-container');
+    const btnSummary = document.getElementById('modal-fmt-summary-btn');
+    const btnDetailed = document.getElementById('modal-fmt-detailed-btn');
 
     if (!sourceEl || !paperEl || !modalEl) return;
 
@@ -497,6 +609,27 @@ const PDFPreview = {
       badgeEl.className = isLandscape
         ? 'px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300'
         : 'px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200';
+    }
+
+    const isSummary = this.currentFormat === 'summary';
+    if (formatBadgeEl) {
+      if (isSummary) {
+        formatBadgeEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200';
+        formatBadgeEl.innerText = 'Tanpa Rincian';
+      } else {
+        formatBadgeEl.className = 'px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-800 border border-indigo-200';
+        formatBadgeEl.innerText = 'Dengan Rincian';
+      }
+    }
+
+    if (btnSummary && btnDetailed) {
+      if (isSummary) {
+        btnSummary.className = 'px-2.5 py-1.5 rounded-lg text-xs font-bold transition bg-emerald-700 text-white shadow-xs cursor-pointer flex items-center gap-1.5';
+        btnDetailed.className = 'px-2.5 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 cursor-pointer flex items-center gap-1.5';
+      } else {
+        btnSummary.className = 'px-2.5 py-1.5 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 cursor-pointer flex items-center gap-1.5';
+        btnDetailed.className = 'px-2.5 py-1.5 rounded-lg text-xs font-bold transition bg-slate-800 text-white shadow-xs cursor-pointer flex items-center gap-1.5';
+      }
     }
 
     // Set dimensi kertas pratinjau agar 100% presisi standar lembar A4 nyata
@@ -519,6 +652,13 @@ const PDFPreview = {
       }
     });
 
+    // Jika format adalah summary (Tanpa Rincian), buang elemen detail tabel dari clone
+    if (isSummary) {
+      clone.querySelectorAll('#report-detail-section, .report-detail-container, #training-detail-table-card').forEach(el => {
+        el.remove();
+      });
+    }
+
     paperEl.innerHTML = clone.innerHTML;
 
     // Tampilkan jendela modal pratinjau
@@ -530,6 +670,14 @@ const PDFPreview = {
     }
 
     Store.playSound('click');
+  },
+
+  switchReportFormat(newFormat) {
+    if (this.currentElementId === 'training-view-report' && window.TrainingManager) {
+      window.TrainingManager.exportPDF(newFormat);
+    } else if (window.ReportsManager) {
+      window.ReportsManager.switchPreviewFormat(newFormat);
+    }
   },
 
   close() {
