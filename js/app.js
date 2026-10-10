@@ -113,6 +113,10 @@ const App = {
     tenants.forEach(t => {
       document.querySelectorAll(`.label-${t.id}-name`).forEach(el => el.innerText = t.name);
     });
+
+    if (window.ReportsManager && typeof window.ReportsManager.populateTenantSelect === 'function') {
+      window.ReportsManager.populateTenantSelect();
+    }
   },
 
   setupNavigation() {
