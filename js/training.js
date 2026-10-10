@@ -348,9 +348,18 @@ const TrainingManager = {
 
   generateNextTraineeId() {
     const trainees = this.getTrainees();
+    const attendances = (window.Store && typeof Store.getAttendances === 'function') ? Store.getAttendances() : [];
     let maxNum = 0;
     trainees.forEach(t => {
       const match = (t.id || '').match(/TRN-(\d+)/i);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNum) maxNum = num;
+      }
+    });
+    // Pindai juga riwayat absensi agar ID magang lama tidak bentrok jika akun baru dibuat
+    attendances.forEach(a => {
+      const match = (a.employeeId || '').match(/TRN-(\d+)/i);
       if (match) {
         const num = parseInt(match[1], 10);
         if (num > maxNum) maxNum = num;

@@ -435,7 +435,10 @@ const AttendanceManager = {
     const dateInput = document.getElementById(`${tenantKey}-date-input`);
     const targetDate = dateInput ? dateInput.value : Store.getTodayDateString();
     const attendances = Store.getAttendances(targetDate);
-    const alreadyEaten = attendances.find(a => a.employeeId.toLowerCase() === emp.id.toLowerCase());
+    const alreadyEaten = attendances.find(a => 
+      a.employeeId && a.employeeId.toLowerCase() === emp.id.toLowerCase() &&
+      (!a.employeeName || !emp.name || a.employeeName.trim().toLowerCase() === emp.name.trim().toLowerCase())
+    );
 
     let statusMakanBadge = '';
     if (alreadyEaten) {
@@ -1181,7 +1184,10 @@ const AttendanceManager = {
     if (quotaContainer) {
       const todayStr = Store.getTodayDateString();
       const attendances = Store.getAttendances(todayStr);
-      const recordToday = attendances.find(a => a.employeeId.toLowerCase() === emp.id.toLowerCase());
+      const recordToday = attendances.find(a => 
+        a.employeeId && a.employeeId.toLowerCase() === emp.id.toLowerCase() &&
+        (!a.employeeName || !emp.name || a.employeeName.trim().toLowerCase() === emp.name.trim().toLowerCase())
+      );
 
       if (recordToday) {
         quotaContainer.innerHTML = `
@@ -1265,8 +1271,63 @@ const AttendanceManager = {
     if (!tbody) return;
 
     const activeId = Auth.getActiveEmployeeId();
+    if (!activeId) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" class="py-6 text-center text-slate-400 text-xs">
+            <i class="fa-solid fa-utensils text-2xl mb-1 block opacity-40"></i>
+            Silakan pilih atau login sebagai akun karyawan terlebih dahulu.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    const currentEmp = (window.Store && typeof Store.findEmployee === 'function') ? Store.findEmployee(activeId) : null;
+    const currentUser = (window.Auth && typeof Auth.getCurrentUser === 'function') ? Auth.getCurrentUser() : null;
+    const targetName = ((currentEmp && currentEmp.name) || (currentUser && currentUser.name) || '').trim().toLowerCase();
+    const targetCreatedAt = (currentEmp && currentEmp.createdAt) || (currentUser && currentUser.createdAt) || null;
+
     const allRecords = Store.getAttendances();
-    const myRecords = allRecords.filter(r => r.employeeId && r.employeeId.toLowerCase() === activeId.toLowerCase());
+    const myRecords = allRecords.filter(r => {
+      if (!r || !r.employeeId) return false;
+
+      // 1. Strict equality case-insensitive untuk Employee ID
+      if (r.employeeId.trim().toLowerCase() !== activeId.trim().toLowerCase()) {
+        return false;
+      }
+
+      // 2. Verifikasi Nama Karyawan: record harus benar-benar milik akun karyawan ini
+      // Mencegah data dummy/orang lain yang pernah memakai ID yang sama sebelum akun ini dibuat
+      if (targetName && r.employeeName) {
+        const recordName = r.employeeName.trim().toLowerCase();
+        if (recordName !== targetName && !recordName.includes(targetName) && !targetName.includes(recordName)) {
+          return false;
+        }
+      }
+
+      // 3. Verifikasi Tanggal & Waktu Akun Dibuat:
+      // Karyawan tidak boleh melihat transaksi sebelum akunnya dibuat
+      if (targetCreatedAt) {
+        const recDateStr = `${r.date} ${r.time || '00:00:00'}`;
+        const recTs = new Date(recDateStr.replace(/-/g, '/')).getTime();
+        const createdTs = new Date(targetCreatedAt.replace(/-/g, '/')).getTime();
+        if (!isNaN(recTs) && !isNaN(createdTs)) {
+          // Berikan toleransi 60 detik jika simulasi makan dicoba tepat di menit yang sama saat registrasi
+          if (recTs < (createdTs - 60000)) {
+            return false;
+          }
+        } else {
+          // Fallback perbandingan tanggal hari YYYY-MM-DD
+          const createdDateOnly = targetCreatedAt.substring(0, 10);
+          if (r.date < createdDateOnly) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    });
 
     if (myRecords.length === 0) {
       tbody.innerHTML = `

@@ -164,6 +164,15 @@ function ensureSchema($pdo) {
                 a.tenant_name = COALESCE(a.tenant_name, t.name)
             WHERE a.tenant_name IS NULL
         ");
+        // Pisahkan riwayat absensi dari karyawan lama/dihapus agar tidak bertabrakan dengan akun karyawan baru yang dibuat kemudian
+        $pdo->exec("
+            UPDATE meal_attendance a
+            JOIN employees e ON LOWER(a.employee_code) = LOWER(e.employee_code)
+            SET a.employee_code = CONCAT('EX-', a.employee_code)
+            WHERE a.employee_id IS NULL 
+              AND LOWER(TRIM(a.employee_name)) != LOWER(TRIM(e.name))
+              AND a.employee_code NOT LIKE 'EX-%'
+        ");
     } catch (Exception $eBf) {}
 
     // Tabel Settings
@@ -225,6 +234,7 @@ try {
             // Employees (Hanya tampilkan karyawan aktif/non-dihapus di master data)
             $empStmt = $pdo->query("
                 SELECT 
+                    e.id AS dbId,
                     e.employee_code AS id,
                     e.name,
                     COALESCE(e.department, d.name, 'Housekeeping') AS department,
@@ -232,7 +242,8 @@ try {
                     COALESCE(e.institution, '') AS institution,
                     (CASE WHEN e.is_trainee = 1 OR e.department = 'Training' OR d.name = 'Training' THEN 1 ELSE 0 END) AS isTrainee,
                     COALESCE(e.password, 'password123') AS password,
-                    COALESCE(e.status, 'Aktif') AS status
+                    COALESCE(e.status, 'Aktif') AS status,
+                    DATE_FORMAT(e.created_at, '%Y-%m-%d %H:%i:%s') AS createdAt
                 FROM employees e
                 LEFT JOIN departments d ON e.department_id = d.id
                 WHERE e.status != 'Dihapus' AND e.employee_code NOT LIKE '%__DELETED_%'
@@ -250,6 +261,7 @@ try {
                     COALESCE(a.attendance_code, CONCAT('ATT-', a.id)) AS id,
                     DATE_FORMAT(a.meal_date, '%Y-%m-%d') AS date,
                     DATE_FORMAT(a.attended_at, '%H:%i:%s') AS time,
+                    a.employee_id AS employeeDbId,
                     COALESCE(a.employee_code, SUBSTRING_INDEX(e.employee_code, '__DELETED_', 1), e.employee_code, 'EMP-UNKNOWN') AS employeeId,
                     COALESCE(a.employee_name, e.name, 'Karyawan (Dihapus)') AS employeeName,
                     COALESCE(a.department, e.department, d.name, 'Housekeeping') AS department,
@@ -447,24 +459,27 @@ try {
             $empStmt->execute([$id]);
             $emp = $empStmt->fetch();
             if ($emp) {
-                // Pastikan seluruh absensi karyawan ini diisi snapshot datanya agar riwayat di laporan tetap ada
+                // Pastikan seluruh absensi karyawan ini diisi snapshot datanya dan tandai kode arsip EX- agar tidak bentrok dengan akun masa depan
+                $archiveCode = 'EX-' . $emp['employee_code'];
                 $pdo->prepare("
                     UPDATE meal_attendance 
-                    SET employee_code = COALESCE(employee_code, ?),
+                    SET employee_code = ?,
                         employee_name = COALESCE(employee_name, ?),
                         department = COALESCE(department, ?),
                         position = COALESCE(position, ?),
                         institution = COALESCE(institution, ?),
                         is_trainee = COALESCE(is_trainee, ?)
-                    WHERE employee_id = ?
+                    WHERE employee_id = ? OR (LOWER(employee_code) = LOWER(?) AND LOWER(employee_name) = LOWER(?))
                 ")->execute([
-                    $emp['employee_code'],
+                    $archiveCode,
                     $emp['name'],
                     $emp['department'],
                     $emp['position'],
                     $emp['institution'],
                     $emp['is_trainee'],
-                    $emp['id']
+                    $emp['id'],
+                    $emp['employee_code'],
+                    $emp['name']
                 ]);
 
                 // Soft-delete: Jangan pernah hapus data di meal_attendance!

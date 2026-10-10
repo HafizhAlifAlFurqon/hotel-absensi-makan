@@ -149,10 +149,24 @@ const Store = {
     } else {
       try {
         const currentAtts = JSON.parse(localStorage.getItem(STORAGE_KEYS.ATTENDANCE));
-        // Bersihkan sampel absensi bawaan (ATT-1001, ATT-1002, ATT-1003) jika ada
-        if (Array.isArray(currentAtts) && currentAtts.some(a => a.id === 'ATT-1001' || a.id === 'ATT-1002' || a.id === 'ATT-1003')) {
-          const filtered = currentAtts.filter(a => a.id !== 'ATT-1001' && a.id !== 'ATT-1002' && a.id !== 'ATT-1003');
-          localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(filtered));
+        let attsChanged = false;
+        if (Array.isArray(currentAtts)) {
+          // Bersihkan sampel absensi bawaan (ATT-1001, ATT-1002, ATT-1003) jika ada
+          let filtered = currentAtts.filter(a => a.id !== 'ATT-1001' && a.id !== 'ATT-1002' && a.id !== 'ATT-1003');
+          if (filtered.length !== currentAtts.length) attsChanged = true;
+
+          // Perbaiki absensi lama milik Kela atau payeng yang tersisa di localStorage agar berawalan EX-
+          filtered.forEach(a => {
+            if (a.employeeName && (a.employeeName.toLowerCase() === 'payeng' || a.employeeName.toLowerCase() === 'kela')) {
+              if (a.employeeId && !a.employeeId.startsWith('EX-')) {
+                a.employeeId = `EX-${a.employeeId}`;
+                attsChanged = true;
+              }
+            }
+          });
+          if (attsChanged) {
+            localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(filtered));
+          }
         }
       } catch (err) {}
     }
@@ -313,8 +327,15 @@ const Store = {
     if (!employee.password) {
       employee.password = 'password123';
     }
+    if (!employee.createdAt) {
+      employee.createdAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    }
     const existingIndex = employees.findIndex(e => e.id.toLowerCase() === employee.id.toLowerCase());
     if (existingIndex >= 0) {
+      // Pertahankan createdAt asli jika karyawan diedit
+      if (employees[existingIndex].createdAt) {
+        employee.createdAt = employees[existingIndex].createdAt;
+      }
       employees[existingIndex] = { ...employees[existingIndex], ...employee };
     } else {
       employees.push(employee);
@@ -327,9 +348,18 @@ const Store = {
 
   generateNextEmployeeId() {
     const employees = this.getEmployees();
+    const attendances = this.getAttendances();
     let maxNum = 0;
     employees.forEach(e => {
       const match = e.id && e.id.match(/^EMP-(\d+)$/i);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNum) maxNum = num;
+      }
+    });
+    // Pindai juga riwayat absensi agar ID dari riwayat lampau tidak pernah terpakai ulang (mencegah tabrakan akun baru)
+    attendances.forEach(a => {
+      const match = a.employeeId && a.employeeId.match(/^EMP-(\d+)$/i);
       if (match) {
         const num = parseInt(match[1], 10);
         if (num > maxNum) maxNum = num;
@@ -576,13 +606,16 @@ const Store = {
         const attendances = Store.getAttendances();
         let changed = false;
         attendances.forEach(a => {
-          if ((a.employeeId && a.employeeId.toLowerCase() === id.toLowerCase()) || a.employeeName === emp.name) {
+          if ((a.employeeId && a.employeeId.toLowerCase() === id.toLowerCase()) || (a.employeeName && a.employeeName.toLowerCase() === emp.name.toLowerCase())) {
             a.employeeName = a.employeeName || emp.name;
             a.department = a.department || emp.department;
             a.position = a.position || emp.position;
             a.institution = a.institution || emp.institution || '';
             if (a.isTrainee === undefined) {
               a.isTrainee = !!(emp.isTrainee || emp.department === 'Training');
+            }
+            if (!a.employeeId.startsWith('EX-')) {
+              a.employeeId = `EX-${a.employeeId}`;
             }
             changed = true;
           }
@@ -791,7 +824,9 @@ const Store = {
     // 4. Cek Kuota 1x Makan Per Hari (Termasuk Cross-Depot)
     const attendances = Store.getAttendances();
     const existing = attendances.find(
-      a => a.date === targetDate && a.employeeId.toLowerCase() === employee.id.toLowerCase()
+      a => a.date === targetDate && 
+           a.employeeId && a.employeeId.toLowerCase() === employee.id.toLowerCase() &&
+           (!a.employeeName || !employee.name || a.employeeName.trim().toLowerCase() === employee.name.trim().toLowerCase())
     );
 
     if (existing) {
