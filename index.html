@@ -1368,16 +1368,16 @@
       </div>
 
       <!-- AREA LAPORAN YANG AKAN DIEKSPOR KE PDF (Printable Area) -->
-      <div id="printable-report-area" class="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6 a4-document-paper">
+      <div id="printable-report-area" class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-3.5 a4-document-paper">
         
         <!-- Kop Surat Laporan Hotel -->
-        <div class="border-b-2 border-slate-800 pb-4 flex items-center justify-between kop-surat avoid-break">
-          <div class="flex items-center gap-3">
-            <div id="pdf-icon-box" class="w-12 h-12 rounded-xl bg-emerald-800 text-white flex items-center justify-center text-xl font-bold">
+        <div class="border-b-2 border-slate-800 pb-2.5 mb-1 flex items-center justify-between kop-surat avoid-break">
+          <div class="flex items-center gap-2.5">
+            <div id="pdf-icon-box" class="w-10 h-10 rounded-lg bg-emerald-800 text-white flex items-center justify-center text-lg font-bold">
               <i class="fa-solid fa-hotel"></i>
             </div>
             <div>
-              <h2 id="pdf-hotel-name" class="text-lg font-extrabold text-slate-900 tracking-tight uppercase">
+              <h2 id="pdf-hotel-name" class="text-base font-extrabold text-slate-900 tracking-tight uppercase">
                 BeSS Mansion Hotel Surabaya
               </h2>
               <p id="pdf-report-subtitle" class="text-xs font-semibold text-slate-600">
@@ -1386,61 +1386,61 @@
             </div>
           </div>
           <div class="text-right">
-            <div class="flex flex-wrap justify-end gap-1 mb-1">
-              <span id="pdf-print-scope-tag" class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
+            <div class="flex flex-wrap justify-end gap-1 mb-0.5">
+              <span id="pdf-print-scope-tag" class="inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
                 Laporan Global
               </span>
-              <span id="pdf-print-tenant-tag" class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-100 text-teal-800 border border-teal-200">
+              <span id="pdf-print-tenant-tag" class="inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-teal-100 text-teal-800 border border-teal-200">
                 Semua Depot
               </span>
             </div>
             <p id="pdf-report-period" class="text-xs font-bold text-slate-800">Periode: -</p>
-            <p class="text-[11px] text-slate-500">Dicetak pada: <span id="pdf-print-date"></span></p>
+            <p class="text-[10px] text-slate-500">Dicetak pada: <span id="pdf-print-date"></span></p>
           </div>
         </div>
 
         <!-- TOTAL ORANG MAKAN & TOTAL BIAYA DI BAWAHNYA SESUAI PERMINTAAN -->
-        <div class="grid grid-cols-2 gap-4 report-stat-card avoid-break">
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
-            <span id="report-eaten-label" class="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+        <div class="grid grid-cols-2 gap-3 report-stat-card avoid-break">
+          <div class="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <span id="report-eaten-label" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
               Total Orang yang Makan (Hari Ini / Periode Terpilih)
             </span>
-            <div class="mt-1 flex items-baseline gap-2">
-              <span id="report-total-eaten" class="text-2xl font-extrabold text-slate-900 font-mono">0 Orang</span>
+            <div class="mt-0.5 flex items-baseline gap-2">
+              <span id="report-total-eaten" class="text-xl font-extrabold text-slate-900 font-mono">0 Orang</span>
             </div>
-            <span id="report-eaten-subtext" class="text-[11px] text-slate-400 mt-0.5 block">Semua Karyawan & Siswa Training</span>
+            <span id="report-eaten-subtext" class="text-[10px] text-slate-400 mt-0.5 block">Semua Karyawan & Siswa Training</span>
           </div>
 
-          <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
-            <span id="report-cost-label" class="text-xs font-bold text-emerald-800 uppercase tracking-wider block">
+          <div class="p-2.5 sm:p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+            <span id="report-cost-label" class="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block">
               Total Biaya Konsumsi Makan
             </span>
-            <div class="mt-1 flex items-baseline gap-2">
-              <span id="report-total-cost" class="text-2xl font-extrabold text-emerald-900 font-mono">Rp 0</span>
+            <div class="mt-0.5 flex items-baseline gap-2">
+              <span id="report-total-cost" class="text-xl font-extrabold text-emerald-900 font-mono">Rp 0</span>
             </div>
-            <span id="report-cost-subtext" class="text-[11px] text-emerald-600 mt-0.5 block">Seluruh Unit Hotel</span>
+            <span id="report-cost-subtext" class="text-[10px] text-emerald-600 mt-0.5 block">Seluruh Unit Hotel</span>
           </div>
         </div>
 
         <!-- TABEL REKAPITULASI KONSUMSI PER DEPOT / KANTIN -->
         <div id="report-tenant-rekap-container" class="avoid-break report-rekap-container">
-          <h3 id="report-tenant-rekap-heading" class="font-bold text-slate-900 text-sm mb-2 flex items-center justify-between">
-            <span class="flex items-center gap-2">
+          <h3 id="report-tenant-rekap-heading" class="font-bold text-slate-900 text-xs mb-1.5 flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
               <i class="fa-solid fa-store text-emerald-700"></i> Rekapitulasi Konsumsi Per Depot Kantin
             </span>
-            <span id="report-tenant-rekap-badge" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-teal-100 text-teal-800 border border-teal-200">
+            <span id="report-tenant-rekap-badge" class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-teal-100 text-teal-800 border border-teal-200">
               Semua Depot
             </span>
           </h3>
-          <div class="overflow-x-auto rounded-xl border border-slate-200">
+          <div class="overflow-x-auto rounded-lg border border-slate-200">
             <table class="w-full text-left border-collapse report-table">
               <thead id="report-tenant-table-head">
-                <tr class="bg-slate-100 text-slate-700 text-xs uppercase tracking-wider font-bold border-b border-slate-200 avoid-break">
-                  <th class="py-3 px-4 w-12">No</th>
-                  <th class="py-3 px-4">Nama Depot / Tenant</th>
-                  <th class="py-3 px-4 text-center">Jumlah Porsi</th>
-                  <th class="py-3 px-4 text-right">Total Biaya (Rp)</th>
-                  <th class="py-3 px-4 text-center">Kontribusi (%)</th>
+                <tr class="bg-slate-100 text-slate-700 text-[10px] uppercase tracking-wider font-bold border-b border-slate-200 avoid-break">
+                  <th class="py-1.5 px-3 w-10">No</th>
+                  <th class="py-1.5 px-3">Nama Depot / Tenant</th>
+                  <th class="py-1.5 px-3 text-center">Jumlah Porsi</th>
+                  <th class="py-1.5 px-3 text-right">Total Biaya (Rp)</th>
+                  <th class="py-1.5 px-3 text-center">Kontribusi (%)</th>
                 </tr>
               </thead>
               <tbody id="report-tenant-table-body">
@@ -1453,17 +1453,17 @@
 
         <!-- TABEL REKAPITULASI -->
         <div class="avoid-break report-rekap-container">
-          <h3 id="report-rekap-heading" class="font-bold text-slate-900 text-sm mb-2 flex items-center gap-2">
+          <h3 id="report-rekap-heading" class="font-bold text-slate-900 text-xs mb-1.5 flex items-center gap-1.5">
             <i class="fa-solid fa-table-list text-emerald-700"></i> Rekapitulasi Konsumsi Per Departemen
           </h3>
-          <div class="overflow-x-auto rounded-xl border border-slate-200">
+          <div class="overflow-x-auto rounded-lg border border-slate-200">
             <table class="w-full text-left border-collapse report-table">
               <thead id="report-dept-table-head">
-                <tr class="bg-slate-100 text-slate-700 text-xs uppercase tracking-wider font-bold border-b border-slate-200 avoid-break">
-                  <th class="py-3 px-4 w-12">No</th>
-                  <th class="py-3 px-4">Departemen</th>
-                  <th class="py-3 px-4 text-center">Jumlah (Orang)</th>
-                  <th class="py-3 px-4 text-right">Biaya (Rp)</th>
+                <tr class="bg-slate-100 text-slate-700 text-[10px] uppercase tracking-wider font-bold border-b border-slate-200 avoid-break">
+                  <th class="py-1.5 px-3 w-10">No</th>
+                  <th class="py-1.5 px-3">Departemen</th>
+                  <th class="py-1.5 px-3 text-center">Jumlah (Orang)</th>
+                  <th class="py-1.5 px-3 text-right">Biaya (Rp)</th>
                 </tr>
               </thead>
               <tbody id="report-dept-table-body">
@@ -1476,20 +1476,20 @@
 
         <!-- Rincian Detail Log Absensi -->
         <div id="report-detail-section" class="report-detail-container">
-          <h3 id="report-detail-heading" class="font-bold text-slate-900 text-sm mb-2 flex items-center gap-2 avoid-break">
+          <h3 id="report-detail-heading" class="font-bold text-slate-900 text-xs mb-1.5 flex items-center gap-1.5 avoid-break">
             <i class="fa-solid fa-list-check text-slate-600"></i> Rincian Data Absensi
           </h3>
-          <div class="overflow-x-auto rounded-xl border border-slate-200">
+          <div class="overflow-x-auto rounded-lg border border-slate-200">
             <table class="w-full text-left border-collapse report-table">
               <thead id="report-detail-table-head">
-                <tr class="bg-slate-100 text-slate-600 text-[11px] uppercase tracking-wider font-semibold border-b border-slate-200 avoid-break">
-                  <th class="py-2.5 px-3">No</th>
-                  <th class="py-2.5 px-3">Waktu</th>
-                  <th class="py-2.5 px-3">ID Karyawan</th>
-                  <th class="py-2.5 px-3">Nama Lengkap</th>
-                  <th class="py-2.5 px-3">Departemen</th>
-                  <th class="py-2.5 px-3">Depot</th>
-                  <th class="py-2.5 px-3 text-right">Biaya</th>
+                <tr class="bg-slate-100 text-slate-600 text-[10px] uppercase tracking-wider font-semibold border-b border-slate-200 avoid-break">
+                  <th class="py-1.5 px-2.5">No</th>
+                  <th class="py-1.5 px-2.5">Waktu</th>
+                  <th class="py-1.5 px-2.5">ID Karyawan</th>
+                  <th class="py-1.5 px-2.5">Nama Lengkap</th>
+                  <th class="py-1.5 px-2.5">Departemen</th>
+                  <th class="py-1.5 px-2.5">Depot</th>
+                  <th class="py-1.5 px-2.5 text-right">Biaya</th>
                 </tr>
               </thead>
               <tbody id="report-detail-table-body">
@@ -1499,26 +1499,26 @@
         </div>
 
         <!-- Lembar Tanda Tangan / Pengesahan Resmi Laporan Hotel -->
-        <div class="report-signatures pt-6 mt-8 border-t border-slate-200 grid grid-cols-3 gap-6 text-center text-xs avoid-break">
+        <div class="report-signatures pt-2.5 mt-2.5 border-t border-slate-200 grid grid-cols-3 gap-4 text-center text-xs avoid-break">
           <div>
-            <p class="text-slate-500 font-medium mb-12">Dibuat Oleh,</p>
-            <p class="font-bold text-slate-900 underline font-mono">Petugas HRD / Absensi</p>
-            <p class="text-[10px] text-slate-400">BeSS Mansion Hotel</p>
+            <p class="text-slate-500 font-medium mb-7 text-[11px]">Dibuat Oleh,</p>
+            <p class="font-bold text-slate-900 underline font-mono text-[11px]">Petugas HRD / Absensi</p>
+            <p class="text-[9px] text-slate-400">BeSS Mansion Hotel</p>
           </div>
           <div>
-            <p class="text-slate-500 font-medium mb-12">Diperiksa Oleh,</p>
-            <p class="font-bold text-slate-900 underline font-mono">Finance & Accounting</p>
-            <p class="text-[10px] text-slate-400">BeSS Mansion Hotel</p>
+            <p class="text-slate-500 font-medium mb-7 text-[11px]">Diperiksa Oleh,</p>
+            <p class="font-bold text-slate-900 underline font-mono text-[11px]">Finance & Accounting</p>
+            <p class="text-[9px] text-slate-400">BeSS Mansion Hotel</p>
           </div>
           <div>
-            <p class="text-slate-500 font-medium mb-12">Disetujui Oleh,</p>
-            <p class="font-bold text-slate-900 underline font-mono">General Manager</p>
-            <p class="text-[10px] text-slate-400">BeSS Mansion Hotel</p>
+            <p class="text-slate-500 font-medium mb-7 text-[11px]">Disetujui Oleh,</p>
+            <p class="font-bold text-slate-900 underline font-mono text-[11px]">General Manager</p>
+            <p class="text-[9px] text-slate-400">BeSS Mansion Hotel</p>
           </div>
         </div>
 
         <!-- Catatan Kaki Dokumen Resmi -->
-        <div class="text-[10px] text-slate-400 text-center pt-3 border-t border-slate-100 flex items-center justify-between avoid-break">
+        <div class="text-[9px] text-slate-400 text-center pt-2 border-t border-slate-100 flex items-center justify-between avoid-break">
           <span>Dokumen Resmi Sistem Absensi Makan &bull; BeSS Mansion Hotel Surabaya</span>
           <span>Dicetak otomatis &amp; sah sesuai database hotel</span>
         </div>
@@ -1601,7 +1601,7 @@
       </div>
 
       <!-- TAB 1: REPORT TRAINING SENDIRI -->
-      <div id="training-view-report" class="space-y-6">
+      <div id="training-view-report" class="space-y-3.5">
         <!-- Filter Card -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4 no-print">
           <div class="flex flex-wrap items-center gap-3">
@@ -1633,13 +1633,13 @@
         </div>
 
         <!-- Kop Surat Dokumen Cetak / Pratinjau Laporan Training -->
-        <div id="training-kop-surat" class="border-b-2 border-slate-800 pb-4 flex items-center justify-between kop-surat avoid-break bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-xl bg-amber-600 text-white flex items-center justify-center text-xl font-bold">
+        <div id="training-kop-surat" class="border-b-2 border-slate-800 pb-2.5 mb-1 flex items-center justify-between kop-surat avoid-break bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-xs">
+          <div class="flex items-center gap-2.5">
+            <div class="w-10 h-10 rounded-lg bg-amber-600 text-white flex items-center justify-center text-lg font-bold">
               <i class="fa-solid fa-hotel"></i>
             </div>
             <div>
-              <h2 class="text-lg font-extrabold text-slate-900 tracking-tight uppercase hotel-name-display">
+              <h2 class="text-base font-extrabold text-slate-900 tracking-tight uppercase hotel-name-display">
                 BeSS Mansion Hotel Surabaya
               </h2>
               <p class="text-xs font-semibold text-amber-800">
@@ -1648,40 +1648,40 @@
             </div>
           </div>
           <div class="text-right">
-            <div class="flex flex-wrap justify-end gap-1 mb-1">
-              <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
+            <div class="flex flex-wrap justify-end gap-1 mb-0.5">
+              <span class="inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
                 Khusus Training
               </span>
-              <span id="training-pdf-canteen-tag" class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-100 text-teal-800 border border-teal-200">
+              <span id="training-pdf-canteen-tag" class="inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-teal-100 text-teal-800 border border-teal-200">
                 Semua Kantin
               </span>
             </div>
             <p id="training-pdf-period" class="text-xs font-bold text-slate-800">Periode: -</p>
-            <p class="text-[11px] text-slate-500">Dicetak pada: <span id="training-pdf-today-date"></span></p>
+            <p class="text-[10px] text-slate-500">Dicetak pada: <span id="training-pdf-today-date"></span></p>
           </div>
         </div>
 
         <!-- Tabel 1: Rekapitulasi Per Siswa Training -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 class="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+        <div class="bg-white rounded-xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-2.5">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+            <h3 class="font-extrabold text-slate-900 text-xs flex items-center gap-1.5">
               <i class="fa-solid fa-list-ol text-amber-600"></i> Rekapitulasi Per Siswa Magang (Jumlah Porsi & Biaya)
             </h3>
-            <span id="training-rekap-count-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+            <span id="training-rekap-count-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
               0 Siswa
             </span>
           </div>
-          <div class="overflow-x-auto rounded-xl border border-slate-200">
+          <div class="overflow-x-auto rounded-lg border border-slate-200">
             <table class="w-full text-left border-collapse">
               <thead>
-                <tr class="bg-slate-100 text-slate-700 text-xs uppercase tracking-wider font-bold border-b border-slate-200">
-                  <th class="py-3 px-4 w-12">No</th>
-                  <th class="py-3 px-4">ID Siswa</th>
-                  <th class="py-3 px-4">Nama Lengkap</th>
-                  <th class="py-3 px-4">Asal Institusi / Sekolah</th>
-                  <th class="py-3 px-4">Penempatan / Posisi</th>
-                  <th class="py-3 px-4 text-center">Total Makan</th>
-                  <th class="py-3 px-4 text-right">Total Biaya (Rp)</th>
+                <tr class="bg-slate-100 text-slate-700 text-[10px] uppercase tracking-wider font-bold border-b border-slate-200">
+                  <th class="py-1.5 px-3 w-10">No</th>
+                  <th class="py-1.5 px-3">ID Siswa</th>
+                  <th class="py-1.5 px-3">Nama Lengkap</th>
+                  <th class="py-1.5 px-3">Asal Institusi / Sekolah</th>
+                  <th class="py-1.5 px-3">Penempatan / Posisi</th>
+                  <th class="py-1.5 px-3 text-center">Total Makan</th>
+                  <th class="py-1.5 px-3 text-right">Total Biaya (Rp)</th>
                 </tr>
               </thead>
               <tbody id="training-rekap-table-body">
@@ -1693,27 +1693,27 @@
         </div>
 
         <!-- Tabel 2: Detail Riwayat Absensi Training -->
-        <div id="training-detail-table-card" class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs space-y-3">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 class="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+        <div id="training-detail-table-card" class="bg-white rounded-xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-2.5">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+            <h3 class="font-extrabold text-slate-900 text-xs flex items-center gap-1.5">
               <i class="fa-solid fa-clock-rotate-left text-amber-600"></i> Log Transaksi Absensi Anak Training
             </h3>
-            <span id="training-detail-count-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+            <span id="training-detail-count-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
               0 Transaksi
             </span>
           </div>
-          <div class="overflow-x-auto rounded-xl border border-slate-200">
+          <div class="overflow-x-auto rounded-lg border border-slate-200">
             <table class="w-full text-left border-collapse">
               <thead>
-                <tr class="bg-slate-100 text-slate-600 text-[11px] uppercase tracking-wider font-semibold border-b border-slate-200">
-                  <th class="py-2.5 px-3 w-12">No</th>
-                  <th class="py-2.5 px-3">Waktu</th>
-                  <th class="py-2.5 px-3">ID</th>
-                  <th class="py-2.5 px-3">Nama Siswa</th>
-                  <th class="py-2.5 px-3">Asal Sekolah</th>
-                  <th class="py-2.5 px-3">Kantin</th>
-                  <th class="py-2.5 px-3">Shift</th>
-                  <th class="py-2.5 px-3 text-right">Biaya</th>
+                <tr class="bg-slate-100 text-slate-600 text-[10px] uppercase tracking-wider font-semibold border-b border-slate-200">
+                  <th class="py-1.5 px-2.5 w-10">No</th>
+                  <th class="py-1.5 px-2.5">Waktu</th>
+                  <th class="py-1.5 px-2.5">ID</th>
+                  <th class="py-1.5 px-2.5">Nama Siswa</th>
+                  <th class="py-1.5 px-2.5">Asal Sekolah</th>
+                  <th class="py-1.5 px-2.5">Kantin</th>
+                  <th class="py-1.5 px-2.5">Shift</th>
+                  <th class="py-1.5 px-2.5 text-right">Biaya</th>
                 </tr>
               </thead>
               <tbody id="training-detail-table-body">
@@ -1723,16 +1723,16 @@
         </div>
 
         <!-- Tanda Tangan Resmi Pengesahan Laporan Training -->
-        <div id="training-signatures-section" class="grid grid-cols-2 gap-8 pt-6 border-t border-slate-200 text-center report-signatures avoid-break bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+        <div id="training-signatures-section" class="grid grid-cols-2 gap-6 pt-2.5 mt-2.5 border-t border-slate-200 text-center report-signatures avoid-break bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
           <div>
-            <p class="text-xs text-slate-500 mb-14">Mengetahui,<br><span class="font-bold text-slate-700">HRD / Pembina Training</span></p>
-            <div class="w-40 border-b border-slate-400 mx-auto mb-1"></div>
-            <p class="text-xs font-bold text-slate-800">( ........................................ )</p>
+            <p class="text-[11px] text-slate-500 mb-7">Mengetahui,<br><span class="font-bold text-slate-700">HRD / Pembina Training</span></p>
+            <div class="w-36 border-b border-slate-400 mx-auto mb-1"></div>
+            <p class="text-[11px] font-bold text-slate-800">( ........................................ )</p>
           </div>
           <div>
-            <p class="text-xs text-slate-500 mb-14">Surabaya, <span id="training-pdf-signature-date">--/--/----</span><br><span class="font-bold text-slate-700">Pengelola Kantin</span></p>
-            <div class="w-40 border-b border-slate-400 mx-auto mb-1"></div>
-            <p class="text-xs font-bold text-slate-800">( ........................................ )</p>
+            <p class="text-[11px] text-slate-500 mb-7">Surabaya, <span id="training-pdf-signature-date">--/--/----</span><br><span class="font-bold text-slate-700">Pengelola Kantin</span></p>
+            <div class="w-36 border-b border-slate-400 mx-auto mb-1"></div>
+            <p class="text-[11px] font-bold text-slate-800">( ........................................ )</p>
           </div>
         </div>
       </div>
@@ -2434,7 +2434,7 @@
 
       <!-- Area Tampilan Kertas Pratinjau (A4 Paper Canvas) -->
       <div id="pdf-preview-scroll-container" class="p-4 sm:p-8 bg-slate-800/85 overflow-y-auto overflow-x-auto flex-1 block">
-        <div id="pdf-preview-paper" class="bg-white w-full max-w-[794px] rounded-xs shadow-2xl p-8 sm:p-12 border border-slate-300 min-h-[1123px] transition-all text-slate-900 mx-auto my-2 a4-document-paper space-y-6">
+        <div id="pdf-preview-paper" class="bg-white w-full max-w-[794px] rounded-xs shadow-2xl p-5 sm:p-6 border border-slate-300 min-h-[1123px] transition-all text-slate-900 mx-auto my-2 a4-document-paper space-y-3.5">
           <!-- Konten Dokumen yang Di-klon Masuk ke Sini -->
         </div>
       </div>

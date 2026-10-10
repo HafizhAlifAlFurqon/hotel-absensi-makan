@@ -495,20 +495,20 @@ const ReportsManager = {
 
       return `
         <tr class="hover:bg-slate-50 border-b border-slate-100 transition avoid-break ${isSelected ? 'bg-teal-50/70 font-semibold' : ''}">
-          <td class="py-3 px-4 text-xs text-slate-400 font-mono">${idx + 1}</td>
-          <td class="py-3 px-4 text-xs font-bold text-slate-800">
-            <div class="flex items-center gap-2">
-              <div class="w-6 h-6 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-[10px]">
+          <td class="py-1.5 px-3 text-xs text-slate-400 font-mono">${idx + 1}</td>
+          <td class="py-1.5 px-3 text-xs font-bold text-slate-800">
+            <div class="flex items-center gap-1.5">
+              <div class="w-5 h-5 rounded-md bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-[9px]">
                 <i class="fa-solid fa-store"></i>
               </div>
               <span>${t.name}</span>
-              ${isSelected ? '<span class="text-[10px] font-extrabold text-teal-800 bg-teal-100 px-2 py-0.5 rounded-full border border-teal-200">Filter Aktif</span>' : ''}
+              ${isSelected ? '<span class="text-[9px] font-extrabold text-teal-800 bg-teal-100 px-1.5 py-0.5 rounded-full border border-teal-200">Filter Aktif</span>' : ''}
             </div>
           </td>
-          <td class="py-3 px-4 text-xs font-extrabold text-center text-slate-900">${porsi} Porsi</td>
-          <td class="py-3 px-4 text-xs font-bold text-right font-mono text-emerald-700">Rp ${biaya.toLocaleString('id-ID')}</td>
-          <td class="py-3 px-4 text-xs font-semibold text-center text-slate-700">
-            <span class="inline-flex items-center px-2 py-0.5 rounded-md ${Number(percent) > 0 ? 'bg-emerald-50 text-emerald-800 font-bold border border-emerald-200' : 'bg-slate-100 text-slate-400'} text-[11px]">
+          <td class="py-1.5 px-3 text-xs font-extrabold text-center text-slate-900">${porsi} Porsi</td>
+          <td class="py-1.5 px-3 text-xs font-bold text-right font-mono text-emerald-700">Rp ${biaya.toLocaleString('id-ID')}</td>
+          <td class="py-1.5 px-3 text-xs font-semibold text-center text-slate-700">
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded ${Number(percent) > 0 ? 'bg-emerald-50 text-emerald-800 font-bold border border-emerald-200' : 'bg-slate-100 text-slate-400'} text-[10px]">
               ${percent}%
             </span>
           </td>
@@ -518,7 +518,7 @@ const ReportsManager = {
 
     tbody.innerHTML = rowsHtml || `
       <tr>
-        <td colspan="5" class="text-center py-6 text-slate-400 text-xs">
+        <td colspan="5" class="text-center py-4 text-slate-400 text-xs">
           Belum ada riwayat konsumsi makan di depot kantin pada periode ini.
         </td>
       </tr>
@@ -528,10 +528,10 @@ const ReportsManager = {
       const scopeLabelFoot = this.scope === 'employee' ? 'KARYAWAN SAJA' : (this.scope === 'training' ? 'ANAK TRAINING' : 'KESELURUHAN');
       tfoot.innerHTML = `
         <tr class="bg-teal-50/90 font-bold border-t-2 border-teal-600 avoid-break">
-          <td colspan="2" class="py-3.5 px-4 text-xs uppercase tracking-wider text-teal-950 font-extrabold">TOTAL KONSUMSI ${isAll ? 'SEMUA DEPOT' : tenantLabel.toUpperCase()} (${scopeLabelFoot})</td>
-          <td class="py-3.5 px-4 text-xs text-center text-teal-950 font-extrabold text-sm">${grandTotalPorsi} Porsi</td>
-          <td class="py-3.5 px-4 text-xs text-right font-mono text-teal-950 font-extrabold text-sm">Rp ${grandTotalBiaya.toLocaleString('id-ID')}</td>
-          <td class="py-3.5 px-4 text-xs text-center text-teal-950 font-extrabold">${totalScopedPorsi > 0 ? ((grandTotalPorsi / totalScopedPorsi) * 100).toFixed(0) : 100}%</td>
+          <td colspan="2" class="py-2 px-3 text-xs uppercase tracking-wider text-teal-950 font-extrabold">TOTAL KONSUMSI ${isAll ? 'SEMUA DEPOT' : tenantLabel.toUpperCase()} (${scopeLabelFoot})</td>
+          <td class="py-2 px-3 text-xs text-center text-teal-950 font-extrabold text-xs">${grandTotalPorsi} Porsi</td>
+          <td class="py-2 px-3 text-xs text-right font-mono text-teal-950 font-extrabold text-xs">Rp ${grandTotalBiaya.toLocaleString('id-ID')}</td>
+          <td class="py-2 px-3 text-xs text-center text-teal-950 font-extrabold">${totalScopedPorsi > 0 ? ((grandTotalPorsi / totalScopedPorsi) * 100).toFixed(0) : 100}%</td>
         </tr>
       `;
     }
@@ -552,11 +552,11 @@ const ReportsManager = {
       }
       if (thead) {
         thead.innerHTML = `
-          <tr class="bg-slate-100 text-slate-700 text-xs uppercase tracking-wider font-bold border-b border-slate-200">
-            <th class="py-3 px-4 w-12">No</th>
-            <th class="py-3 px-4">Departemen</th>
-            <th class="py-3 px-4 text-center">Jumlah (Orang)</th>
-            <th class="py-3 px-4 text-right">Biaya (Rp)</th>
+          <tr class="bg-slate-100 text-slate-700 text-[10px] uppercase tracking-wider font-bold border-b border-slate-200">
+            <th class="py-1.5 px-3 w-10">No</th>
+            <th class="py-1.5 px-3">Departemen</th>
+            <th class="py-1.5 px-3 text-center">Jumlah (Orang)</th>
+            <th class="py-1.5 px-3 text-right">Biaya (Rp)</th>
           </tr>
         `;
       }
@@ -575,12 +575,12 @@ const ReportsManager = {
         const isTrn = deptName === 'Training';
         return `
           <tr class="hover:bg-slate-50 border-b border-slate-100 transition avoid-break ${isTrn ? 'bg-amber-50/40' : ''}">
-            <td class="py-3 px-4 text-xs text-slate-400 font-mono">${idx + 1}</td>
-            <td class="py-3 px-4 text-xs font-bold text-slate-800">
-              ${deptName} ${isTrn ? '<span class="text-[10px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full ml-1 border border-amber-200"><i class="fa-solid fa-graduation-cap"></i> Training (Magang)</span>' : ''}
+            <td class="py-1.5 px-3 text-xs text-slate-400 font-mono">${idx + 1}</td>
+            <td class="py-1.5 px-3 text-xs font-bold text-slate-800">
+              ${deptName} ${isTrn ? '<span class="text-[9px] font-bold text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded-full ml-1 border border-amber-200"><i class="fa-solid fa-graduation-cap"></i> Training (Magang)</span>' : ''}
             </td>
-            <td class="py-3 px-4 text-xs font-semibold text-center text-slate-900">${jumlah} Orang</td>
-            <td class="py-3 px-4 text-xs font-semibold text-right font-mono text-emerald-700">Rp ${biaya.toLocaleString('id-ID')}</td>
+            <td class="py-1.5 px-3 text-xs font-semibold text-center text-slate-900">${jumlah} Orang</td>
+            <td class="py-1.5 px-3 text-xs font-semibold text-right font-mono text-emerald-700">Rp ${biaya.toLocaleString('id-ID')}</td>
           </tr>
         `;
       }).join('');
@@ -590,9 +590,9 @@ const ReportsManager = {
       if (tfoot) {
         tfoot.innerHTML = `
           <tr class="bg-emerald-50/80 font-bold border-t-2 border-emerald-500 avoid-break">
-            <td colspan="2" class="py-3.5 px-4 text-xs uppercase tracking-wider text-emerald-950 font-extrabold">TOTAL KESELURUHAN (KARYAWAN & TRAINING)</td>
-            <td class="py-3.5 px-4 text-xs text-center text-emerald-950 font-extrabold">${grandTotalJumlah} Orang</td>
-            <td class="py-3.5 px-4 text-xs text-right font-mono text-emerald-950 font-extrabold text-sm">Rp ${grandTotalBiaya.toLocaleString('id-ID')}</td>
+            <td colspan="2" class="py-2 px-3 text-xs uppercase tracking-wider text-emerald-950 font-extrabold">TOTAL KESELURUHAN (KARYAWAN & TRAINING)</td>
+            <td class="py-2 px-3 text-xs text-center text-emerald-950 font-extrabold text-xs">${grandTotalJumlah} Orang</td>
+            <td class="py-2 px-3 text-xs text-right font-mono text-emerald-950 font-extrabold text-xs">Rp ${grandTotalBiaya.toLocaleString('id-ID')}</td>
           </tr>
         `;
       }
@@ -603,11 +603,11 @@ const ReportsManager = {
       }
       if (thead) {
         thead.innerHTML = `
-          <tr class="bg-blue-50 text-blue-950 text-xs uppercase tracking-wider font-bold border-b border-blue-200">
-            <th class="py-3 px-4 w-12">No</th>
-            <th class="py-3 px-4">Departemen Karyawan</th>
-            <th class="py-3 px-4 text-center">Jumlah Karyawan</th>
-            <th class="py-3 px-4 text-right">Biaya (Rp)</th>
+          <tr class="bg-blue-50 text-blue-950 text-[10px] uppercase tracking-wider font-bold border-b border-blue-200">
+            <th class="py-1.5 px-3 w-10">No</th>
+            <th class="py-1.5 px-3">Departemen Karyawan</th>
+            <th class="py-1.5 px-3 text-center">Jumlah Karyawan</th>
+            <th class="py-1.5 px-3 text-right">Biaya (Rp)</th>
           </tr>
         `;
       }
@@ -628,15 +628,15 @@ const ReportsManager = {
 
         return `
           <tr class="hover:bg-blue-50/40 border-b border-slate-100 transition avoid-break">
-            <td class="py-3 px-4 text-xs text-slate-400 font-mono">${idx + 1}</td>
-            <td class="py-3 px-4 text-xs font-bold text-slate-800">
-              <span class="flex items-center gap-2">
+            <td class="py-1.5 px-3 text-xs text-slate-400 font-mono">${idx + 1}</td>
+            <td class="py-1.5 px-3 text-xs font-bold text-slate-800">
+              <span class="flex items-center gap-1.5">
                 <i class="fa-solid fa-building text-blue-600 text-[10px]"></i>
                 ${deptName}
               </span>
             </td>
-            <td class="py-3 px-4 text-xs font-semibold text-center text-slate-900">${jumlah} Orang</td>
-            <td class="py-3 px-4 text-xs font-semibold text-right font-mono text-emerald-700">Rp ${biaya.toLocaleString('id-ID')}</td>
+            <td class="py-1.5 px-3 text-xs font-semibold text-center text-slate-900">${jumlah} Orang</td>
+            <td class="py-1.5 px-3 text-xs font-semibold text-right font-mono text-emerald-700">Rp ${biaya.toLocaleString('id-ID')}</td>
           </tr>
         `;
       }).join('');
@@ -646,9 +646,9 @@ const ReportsManager = {
       if (tfoot) {
         tfoot.innerHTML = `
           <tr class="bg-blue-50 font-bold border-t-2 border-blue-500 avoid-break">
-            <td colspan="2" class="py-3.5 px-4 text-xs uppercase tracking-wider text-blue-950 font-extrabold">TOTAL KONSUMSI KARYAWAN HOTEL (NON-TRAINING)</td>
-            <td class="py-3.5 px-4 text-xs text-center text-blue-950 font-extrabold">${grandTotalJumlah} Orang</td>
-            <td class="py-3.5 px-4 text-xs text-right font-mono text-blue-950 font-extrabold text-sm">Rp ${grandTotalBiaya.toLocaleString('id-ID')}</td>
+            <td colspan="2" class="py-2 px-3 text-xs uppercase tracking-wider text-blue-950 font-extrabold">TOTAL KONSUMSI KARYAWAN HOTEL (NON-TRAINING)</td>
+            <td class="py-2 px-3 text-xs text-center text-blue-950 font-extrabold text-xs">${grandTotalJumlah} Orang</td>
+            <td class="py-2 px-3 text-xs text-right font-mono text-blue-950 font-extrabold text-xs">Rp ${grandTotalBiaya.toLocaleString('id-ID')}</td>
           </tr>
         `;
       }
@@ -659,13 +659,13 @@ const ReportsManager = {
       }
       if (thead) {
         thead.innerHTML = `
-          <tr class="bg-amber-100/70 text-amber-950 text-xs uppercase tracking-wider font-bold border-b border-amber-200">
-            <th class="py-3 px-4 w-12">No</th>
-            <th class="py-3 px-4">Nama Siswa Magang</th>
-            <th class="py-3 px-4">Asal Sekolah / Kampus</th>
-            <th class="py-3 px-4">Penempatan / Posisi</th>
-            <th class="py-3 px-4 text-center">Jumlah Porsi</th>
-            <th class="py-3 px-4 text-right">Total Biaya (Rp)</th>
+          <tr class="bg-amber-100/70 text-amber-950 text-[10px] uppercase tracking-wider font-bold border-b border-amber-200">
+            <th class="py-1.5 px-3 w-10">No</th>
+            <th class="py-1.5 px-3">Nama Siswa Magang</th>
+            <th class="py-1.5 px-3">Asal Sekolah / Kampus</th>
+            <th class="py-1.5 px-3">Penempatan / Posisi</th>
+            <th class="py-1.5 px-3 text-center">Jumlah Porsi</th>
+            <th class="py-1.5 px-3 text-right">Total Biaya (Rp)</th>
           </tr>
         `;
       }
@@ -694,7 +694,7 @@ const ReportsManager = {
       if (traineeList.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="6" class="text-center py-6 text-slate-400 text-xs">
+            <td colspan="6" class="text-center py-4 text-slate-400 text-xs">
               Belum ada riwayat absensi makan untuk siswa training pada periode ini.
             </td>
           </tr>
@@ -711,26 +711,26 @@ const ReportsManager = {
         grandTotalBiaya += t.cost;
         return `
           <tr class="hover:bg-amber-50/50 border-b border-slate-100 transition avoid-break">
-            <td class="py-3 px-4 text-xs text-slate-400 font-mono">${idx + 1}</td>
-            <td class="py-3 px-4 text-xs font-bold text-slate-900">
-              <div class="flex items-center gap-2">
-                <div class="w-6 h-6 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-[10px]">
+            <td class="py-1.5 px-3 text-xs text-slate-400 font-mono">${idx + 1}</td>
+            <td class="py-1.5 px-3 text-xs font-bold text-slate-900">
+              <div class="flex items-center gap-1.5">
+                <div class="w-5 h-5 rounded-md bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-[9px]">
                   <i class="fa-solid fa-graduation-cap"></i>
                 </div>
                 <div>
                   <span class="block">${t.name}</span>
-                  <span class="text-[10px] text-slate-400 font-mono">${t.id}</span>
+                  <span class="text-[9px] text-slate-400 font-mono">${t.id}</span>
                 </div>
               </div>
             </td>
-            <td class="py-3 px-4 text-xs font-medium text-slate-700">
-              <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 text-[11px]">
-                <i class="fa-solid fa-school text-slate-400 mr-1.5 text-[10px]"></i> ${t.institution}
+            <td class="py-1.5 px-3 text-xs font-medium text-slate-700">
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 text-slate-800 text-[10px]">
+                <i class="fa-solid fa-school text-slate-400 mr-1 text-[9px]"></i> ${t.institution}
               </span>
             </td>
-            <td class="py-3 px-4 text-xs text-slate-600 font-medium">${t.position}</td>
-            <td class="py-3 px-4 text-xs font-extrabold text-center text-slate-900">${t.count} Porsi</td>
-            <td class="py-3 px-4 text-xs font-bold text-right font-mono text-emerald-700">Rp ${t.cost.toLocaleString('id-ID')}</td>
+            <td class="py-1.5 px-3 text-xs text-slate-600 font-medium">${t.position}</td>
+            <td class="py-1.5 px-3 text-xs font-extrabold text-center text-slate-900">${t.count} Porsi</td>
+            <td class="py-1.5 px-3 text-xs font-bold text-right font-mono text-emerald-700">Rp ${t.cost.toLocaleString('id-ID')}</td>
           </tr>
         `;
       }).join('');
@@ -740,9 +740,9 @@ const ReportsManager = {
       if (tfoot) {
         tfoot.innerHTML = `
           <tr class="bg-amber-50 font-bold border-t-2 border-amber-500 avoid-break">
-            <td colspan="4" class="py-3.5 px-4 text-xs uppercase tracking-wider text-amber-950 font-extrabold">TOTAL KONSUMSI ANAK TRAINING (MAGANG)</td>
-            <td class="py-3.5 px-4 text-xs text-center text-amber-950 font-extrabold">${grandTotalJumlah} Porsi</td>
-            <td class="py-3.5 px-4 text-xs text-right font-mono text-amber-950 font-extrabold text-sm">Rp ${grandTotalBiaya.toLocaleString('id-ID')}</td>
+            <td colspan="4" class="py-2 px-3 text-xs uppercase tracking-wider text-amber-950 font-extrabold">TOTAL KONSUMSI ANAK TRAINING (MAGANG)</td>
+            <td class="py-2 px-3 text-xs text-center text-amber-950 font-extrabold text-xs">${grandTotalJumlah} Porsi</td>
+            <td class="py-2 px-3 text-xs text-right font-mono text-amber-950 font-extrabold text-xs">Rp ${grandTotalBiaya.toLocaleString('id-ID')}</td>
           </tr>
         `;
       }
@@ -762,14 +762,14 @@ const ReportsManager = {
       }
       if (thead) {
         thead.innerHTML = `
-          <tr class="bg-slate-100 text-slate-600 text-[11px] uppercase tracking-wider font-semibold border-b border-slate-200">
-            <th class="py-2.5 px-3">No</th>
-            <th class="py-2.5 px-3">Waktu</th>
-            <th class="py-2.5 px-3">ID</th>
-            <th class="py-2.5 px-3">Nama Lengkap</th>
-            <th class="py-2.5 px-3">Departemen</th>
-            <th class="py-2.5 px-3">Kantin / Depot</th>
-            <th class="py-2.5 px-3 text-right">Biaya</th>
+          <tr class="bg-slate-100 text-slate-600 text-[10px] uppercase tracking-wider font-semibold border-b border-slate-200">
+            <th class="py-1.5 px-2.5">No</th>
+            <th class="py-1.5 px-2.5">Waktu</th>
+            <th class="py-1.5 px-2.5">ID</th>
+            <th class="py-1.5 px-2.5">Nama Lengkap</th>
+            <th class="py-1.5 px-2.5">Departemen</th>
+            <th class="py-1.5 px-2.5">Kantin / Depot</th>
+            <th class="py-1.5 px-2.5 text-right">Biaya</th>
           </tr>
         `;
       }
@@ -779,14 +779,14 @@ const ReportsManager = {
       }
       if (thead) {
         thead.innerHTML = `
-          <tr class="bg-blue-50 text-blue-900 text-[11px] uppercase tracking-wider font-semibold border-b border-blue-200">
-            <th class="py-2.5 px-3">No</th>
-            <th class="py-2.5 px-3">Waktu</th>
-            <th class="py-2.5 px-3">ID Karyawan</th>
-            <th class="py-2.5 px-3">Nama Karyawan</th>
-            <th class="py-2.5 px-3">Departemen</th>
-            <th class="py-2.5 px-3">Kantin / Depot</th>
-            <th class="py-2.5 px-3 text-right">Biaya</th>
+          <tr class="bg-blue-50 text-blue-900 text-[10px] uppercase tracking-wider font-semibold border-b border-blue-200">
+            <th class="py-1.5 px-2.5">No</th>
+            <th class="py-1.5 px-2.5">Waktu</th>
+            <th class="py-1.5 px-2.5">ID Karyawan</th>
+            <th class="py-1.5 px-2.5">Nama Karyawan</th>
+            <th class="py-1.5 px-2.5">Departemen</th>
+            <th class="py-1.5 px-2.5">Kantin / Depot</th>
+            <th class="py-1.5 px-2.5 text-right">Biaya</th>
           </tr>
         `;
       }
@@ -797,14 +797,14 @@ const ReportsManager = {
       }
       if (thead) {
         thead.innerHTML = `
-          <tr class="bg-amber-100/60 text-amber-950 text-[11px] uppercase tracking-wider font-semibold border-b border-amber-200">
-            <th class="py-2.5 px-3">No</th>
-            <th class="py-2.5 px-3">Waktu</th>
-            <th class="py-2.5 px-3">ID Siswa</th>
-            <th class="py-2.5 px-3">Nama Siswa Magang</th>
-            <th class="py-2.5 px-3">Asal Sekolah / Kampus</th>
-            <th class="py-2.5 px-3">Kantin / Depot</th>
-            <th class="py-2.5 px-3 text-right">Biaya</th>
+          <tr class="bg-amber-100/60 text-amber-950 text-[10px] uppercase tracking-wider font-semibold border-b border-amber-200">
+            <th class="py-1.5 px-2.5">No</th>
+            <th class="py-1.5 px-2.5">Waktu</th>
+            <th class="py-1.5 px-2.5">ID Siswa</th>
+            <th class="py-1.5 px-2.5">Nama Siswa Magang</th>
+            <th class="py-1.5 px-2.5">Asal Sekolah / Kampus</th>
+            <th class="py-1.5 px-2.5">Kantin / Depot</th>
+            <th class="py-1.5 px-2.5 text-right">Biaya</th>
           </tr>
         `;
       }
@@ -813,7 +813,7 @@ const ReportsManager = {
     if (records.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" class="text-center py-6 text-slate-400 text-xs">
+          <td colspan="7" class="text-center py-4 text-slate-400 text-xs">
             Tidak ada riwayat data absensi untuk filter dan rentang tanggal ini.
           </td>
         </tr>
@@ -829,45 +829,45 @@ const ReportsManager = {
 
       if (this.scope === 'global') {
         return `
-          <tr class="hover:bg-slate-50 border-b border-slate-100 text-xs avoid-break ${isTrn ? 'bg-amber-50/25' : ''}">
-            <td class="py-2.5 px-3 text-slate-400 font-mono">${i + 1}</td>
-            <td class="py-2.5 px-3 font-mono font-semibold">${r.date} ${r.time}</td>
-            <td class="py-2.5 px-3 font-mono font-bold text-slate-800">${r.employeeId}</td>
-            <td class="py-2.5 px-3 font-semibold text-slate-900">${r.employeeName}</td>
-            <td class="py-2.5 px-3 text-slate-600">
-              ${isTrn ? '<span class="inline-flex items-center gap-1 font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md text-[10px] border border-amber-200"><i class="fa-solid fa-graduation-cap"></i> Training (Magang)</span>' : r.department}
+          <tr class="hover:bg-slate-50 border-b border-slate-100 text-[11px] avoid-break ${isTrn ? 'bg-amber-50/25' : ''}">
+            <td class="py-1.5 px-2.5 text-slate-400 font-mono">${i + 1}</td>
+            <td class="py-1.5 px-2.5 font-mono font-semibold">${r.date} ${r.time}</td>
+            <td class="py-1.5 px-2.5 font-mono font-bold text-slate-800">${r.employeeId}</td>
+            <td class="py-1.5 px-2.5 font-semibold text-slate-900">${r.employeeName}</td>
+            <td class="py-1.5 px-2.5 text-slate-600">
+              ${isTrn ? '<span class="inline-flex items-center gap-1 font-bold text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded text-[9px] border border-amber-200"><i class="fa-solid fa-graduation-cap"></i> Training</span>' : r.department}
             </td>
-            <td class="py-2.5 px-3 font-semibold text-emerald-800">${r.tenantName}</td>
-            <td class="py-2.5 px-3 font-mono font-semibold text-emerald-700 text-right">Rp ${biaya.toLocaleString('id-ID')}</td>
+            <td class="py-1.5 px-2.5 font-semibold text-emerald-800">${r.tenantName}</td>
+            <td class="py-1.5 px-2.5 font-mono font-semibold text-emerald-700 text-right">Rp ${biaya.toLocaleString('id-ID')}</td>
           </tr>
         `;
       } else if (this.scope === 'employee') {
         return `
-          <tr class="hover:bg-blue-50/30 border-b border-slate-100 text-xs avoid-break">
-            <td class="py-2.5 px-3 text-slate-400 font-mono">${i + 1}</td>
-            <td class="py-2.5 px-3 font-mono font-semibold">${r.date} ${r.time}</td>
-            <td class="py-2.5 px-3 font-mono font-bold text-blue-900">${r.employeeId}</td>
-            <td class="py-2.5 px-3 font-semibold text-slate-900">${r.employeeName}</td>
-            <td class="py-2.5 px-3 text-slate-700 font-medium">${r.department}</td>
-            <td class="py-2.5 px-3 font-semibold text-emerald-800">${r.tenantName}</td>
-            <td class="py-2.5 px-3 font-mono font-semibold text-emerald-700 text-right">Rp ${biaya.toLocaleString('id-ID')}</td>
+          <tr class="hover:bg-blue-50/30 border-b border-slate-100 text-[11px] avoid-break">
+            <td class="py-1.5 px-2.5 text-slate-400 font-mono">${i + 1}</td>
+            <td class="py-1.5 px-2.5 font-mono font-semibold">${r.date} ${r.time}</td>
+            <td class="py-1.5 px-2.5 font-mono font-bold text-blue-900">${r.employeeId}</td>
+            <td class="py-1.5 px-2.5 font-semibold text-slate-900">${r.employeeName}</td>
+            <td class="py-1.5 px-2.5 text-slate-700 font-medium">${r.department}</td>
+            <td class="py-1.5 px-2.5 font-semibold text-emerald-800">${r.tenantName}</td>
+            <td class="py-1.5 px-2.5 font-mono font-semibold text-emerald-700 text-right">Rp ${biaya.toLocaleString('id-ID')}</td>
           </tr>
         `;
       } else {
         // training
         return `
-          <tr class="hover:bg-amber-50/40 border-b border-slate-100 text-xs avoid-break">
-            <td class="py-2.5 px-3 text-slate-400 font-mono">${i + 1}</td>
-            <td class="py-2.5 px-3 font-mono font-semibold">${r.date} ${r.time}</td>
-            <td class="py-2.5 px-3 font-mono font-bold text-amber-900">${r.employeeId}</td>
-            <td class="py-2.5 px-3 font-bold text-slate-900">${r.employeeName}</td>
-            <td class="py-2.5 px-3 text-slate-700 font-medium">
-              <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 text-[11px]">
-                <i class="fa-solid fa-school text-slate-400 mr-1 text-[10px]"></i> ${institution}
+          <tr class="hover:bg-amber-50/40 border-b border-slate-100 text-[11px] avoid-break">
+            <td class="py-1.5 px-2.5 text-slate-400 font-mono">${i + 1}</td>
+            <td class="py-1.5 px-2.5 font-mono font-semibold">${r.date} ${r.time}</td>
+            <td class="py-1.5 px-2.5 font-mono font-bold text-amber-900">${r.employeeId}</td>
+            <td class="py-1.5 px-2.5 font-bold text-slate-900">${r.employeeName}</td>
+            <td class="py-1.5 px-2.5 text-slate-700 font-medium">
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 text-slate-800 text-[10px]">
+                <i class="fa-solid fa-school text-slate-400 mr-1 text-[9px]"></i> ${institution}
               </span>
             </td>
-            <td class="py-2.5 px-3 font-semibold text-emerald-800">${r.tenantName}</td>
-            <td class="py-2.5 px-3 font-mono font-semibold text-emerald-700 text-right">Rp ${biaya.toLocaleString('id-ID')}</td>
+            <td class="py-1.5 px-2.5 font-semibold text-emerald-800">${r.tenantName}</td>
+            <td class="py-1.5 px-2.5 font-mono font-semibold text-emerald-700 text-right">Rp ${biaya.toLocaleString('id-ID')}</td>
           </tr>
         `;
       }
@@ -1017,7 +1017,7 @@ const PDFPreview = {
     }
 
     // Set dimensi kertas pratinjau agar 100% presisi standar lembar A4 nyata
-    paperEl.className = 'bg-white rounded-xs shadow-2xl p-8 sm:p-12 border border-slate-300 transition-all text-slate-900 mx-auto my-2 a4-document-paper space-y-6';
+    paperEl.className = 'bg-white rounded-xs shadow-2xl p-5 sm:p-6 border border-slate-300 transition-all text-slate-900 mx-auto my-2 a4-document-paper space-y-3.5';
     paperEl.style.height = 'auto';
     if (isLandscape) {
       paperEl.style.maxWidth = '1122px';
@@ -1104,7 +1104,7 @@ const PDFPreview = {
 
     if (window.html2pdf) {
       const opt = {
-        margin: [10, 10, 10, 10], // Margin standar 10mm (atas, kiri, bawah, kanan)
+        margin: [8, 8, 8, 8], // Margin presisi 8mm (atas, kiri, bawah, kanan) agar pas 1 halaman
         filename: this.currentFilename,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
@@ -1121,8 +1121,8 @@ const PDFPreview = {
           compress: true
         },
         pagebreak: {
-          mode: ['avoid-all', 'css', 'legacy'],
-          avoid: ['tr', 'thead', 'tfoot', '.avoid-break', '.report-stat-card', '.kop-surat', '.report-signatures', 'h2', 'h3']
+          mode: ['css', 'legacy'],
+          avoid: ['tr', 'thead', 'tfoot', '.avoid-break', '.report-stat-card', '.kop-surat', '.report-signatures']
         }
       };
 
@@ -1230,7 +1230,7 @@ const PDFPreview = {
         </style>
       </head>
       <body>
-        <div class="print-container space-y-6">
+        <div class="print-container space-y-3.5">
           ${paperEl.innerHTML}
         </div>
       </body>

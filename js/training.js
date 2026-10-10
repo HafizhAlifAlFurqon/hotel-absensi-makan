@@ -206,13 +206,13 @@ const TrainingManager = {
 
           return `
             <tr class="hover:bg-slate-50 border-b border-slate-100 transition avoid-break">
-              <td class="py-3 px-4 text-xs text-slate-400 font-mono">${idx + 1}</td>
-              <td class="py-3 px-4 text-xs font-mono font-bold text-amber-900">${trn.id}</td>
-              <td class="py-3 px-4 text-xs font-bold text-slate-800">${trn.name}</td>
-              <td class="py-3 px-4 text-xs text-slate-600 font-medium">${trn.institution || '-'}</td>
-              <td class="py-3 px-4 text-xs text-slate-600">${trn.position || 'Trainee'}</td>
-              <td class="py-3 px-4 text-xs font-extrabold text-center text-emerald-800">${count} Porsi</td>
-              <td class="py-3 px-4 text-xs font-bold text-right font-mono text-amber-900">Rp ${cost.toLocaleString('id-ID')}</td>
+              <td class="py-1.5 px-3 text-xs text-slate-400 font-mono">${idx + 1}</td>
+              <td class="py-1.5 px-3 text-xs font-mono font-bold text-amber-900">${trn.id}</td>
+              <td class="py-1.5 px-3 text-xs font-bold text-slate-800">${trn.name}</td>
+              <td class="py-1.5 px-3 text-xs text-slate-600 font-medium">${trn.institution || '-'}</td>
+              <td class="py-1.5 px-3 text-xs text-slate-600">${trn.position || 'Trainee'}</td>
+              <td class="py-1.5 px-3 text-xs font-extrabold text-center text-emerald-800">${count} Porsi</td>
+              <td class="py-1.5 px-3 text-xs font-bold text-right font-mono text-amber-900">Rp ${cost.toLocaleString('id-ID')}</td>
             </tr>
           `;
         }).join('');
@@ -220,9 +220,9 @@ const TrainingManager = {
         if (rekapTfoot) {
           rekapTfoot.innerHTML = `
             <tr class="bg-amber-50/80 font-bold border-t-2 border-amber-500 avoid-break">
-              <td colspan="5" class="py-3 px-4 text-xs uppercase tracking-wider text-amber-950 font-extrabold">TOTAL KESELURUHAN TRAINING</td>
-              <td class="py-3 px-4 text-xs text-center text-amber-950 font-extrabold text-sm">${grandTotalMakan} Porsi</td>
-              <td class="py-3 px-4 text-xs text-right font-mono text-amber-950 font-extrabold text-sm">Rp ${grandTotalBiaya.toLocaleString('id-ID')}</td>
+              <td colspan="5" class="py-2 px-3 text-xs uppercase tracking-wider text-amber-950 font-extrabold">TOTAL KESELURUHAN TRAINING</td>
+              <td class="py-2 px-3 text-xs text-center text-amber-950 font-extrabold text-xs">${grandTotalMakan} Porsi</td>
+              <td class="py-2 px-3 text-xs text-right font-mono text-amber-950 font-extrabold text-xs">Rp ${grandTotalBiaya.toLocaleString('id-ID')}</td>
             </tr>
           `;
         }
@@ -239,8 +239,8 @@ const TrainingManager = {
       if (records.length === 0) {
         detailTbody.innerHTML = `
           <tr>
-            <td colspan="8" class="py-8 text-center text-slate-400 text-xs">
-              <i class="fa-solid fa-receipt text-3xl mb-2 text-slate-300 block"></i>
+            <td colspan="8" class="py-4 text-center text-slate-400 text-xs">
+              <i class="fa-solid fa-receipt text-2xl mb-1 text-slate-300 block"></i>
               Tidak ada data absensi makan anak training pada periode ini.
             </td>
           </tr>
@@ -251,14 +251,14 @@ const TrainingManager = {
           const inst = (trn && trn.institution) || '-';
           return `
             <tr class="hover:bg-slate-50 border-b border-slate-100 transition avoid-break">
-              <td class="py-2.5 px-3 text-xs text-slate-400 font-mono">${idx + 1}</td>
-              <td class="py-2.5 px-3 text-xs font-mono font-bold text-slate-800">${r.date} ${r.time}</td>
-              <td class="py-2.5 px-3 text-xs font-mono font-bold text-amber-900">${r.employeeId}</td>
-              <td class="py-2.5 px-3 text-xs font-bold text-slate-800">${r.employeeName}</td>
-              <td class="py-2.5 px-3 text-xs text-slate-600">${inst}</td>
-              <td class="py-2.5 px-3 text-xs font-semibold text-emerald-800">${r.tenantName}</td>
-              <td class="py-2.5 px-3 text-xs font-semibold text-indigo-700">${r.shift || '-'}</td>
-              <td class="py-2.5 px-3 text-xs font-mono font-bold text-right text-slate-800">Rp ${(Number(r.cost) || s.mealPrice).toLocaleString('id-ID')}</td>
+              <td class="py-1.5 px-2.5 text-[11px] text-slate-400 font-mono">${idx + 1}</td>
+              <td class="py-1.5 px-2.5 text-[11px] font-mono font-bold text-slate-800">${r.date} ${r.time}</td>
+              <td class="py-1.5 px-2.5 text-[11px] font-mono font-bold text-amber-900">${r.employeeId}</td>
+              <td class="py-1.5 px-2.5 text-[11px] font-bold text-slate-800">${r.employeeName}</td>
+              <td class="py-1.5 px-2.5 text-[11px] text-slate-600">${inst}</td>
+              <td class="py-1.5 px-2.5 text-[11px] font-semibold text-emerald-800">${r.tenantName}</td>
+              <td class="py-1.5 px-2.5 text-[11px] font-semibold text-indigo-700">${r.shift || '-'}</td>
+              <td class="py-1.5 px-2.5 text-[11px] font-mono font-bold text-right text-slate-800">Rp ${(Number(r.cost) || s.mealPrice).toLocaleString('id-ID')}</td>
             </tr>
           `;
         }).join('');
