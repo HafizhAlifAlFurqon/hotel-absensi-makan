@@ -264,6 +264,24 @@ const TrainingManager = {
         }).join('');
       }
     }
+
+    // 3. Update Kop Surat dan Pengesahan Laporan Training
+    const periodEl = document.getElementById('training-pdf-period');
+    if (periodEl) {
+      periodEl.innerText = this.startDate === this.endDate
+        ? `Tanggal: ${this.startDate}`
+        : `Periode: ${this.startDate} s/d ${this.endDate}`;
+    }
+    const canteenTagEl = document.getElementById('training-pdf-canteen-tag');
+    if (canteenTagEl) {
+      const cName = canteenFilter ? Store.getTenantName(canteenFilter) : 'Semua Kantin';
+      canteenTagEl.innerText = cName;
+    }
+    const todayStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    const todayDateEl = document.getElementById('training-pdf-today-date');
+    if (todayDateEl) todayDateEl.innerText = todayStr;
+    const signDateEl = document.getElementById('training-pdf-signature-date');
+    if (signDateEl) signDateEl.innerText = todayStr;
   },
 
   renderTraineesTable() {
@@ -448,6 +466,7 @@ const TrainingManager = {
   exportPDF(format = 'detailed') {
     const element = document.getElementById('training-view-report');
     if (!element) return;
+    this.renderReport();
     const isSummary = format === 'summary';
     const formatName = isSummary ? 'Tanpa_Rincian' : 'Dengan_Rincian';
     const filename = `Laporan_Absensi_Training_${formatName}_${this.startDate}_sd_${this.endDate}.pdf`;

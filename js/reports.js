@@ -1017,6 +1017,7 @@ const PDFPreview = {
     }
 
     // Set dimensi kertas pratinjau agar 100% presisi standar lembar A4 nyata
+    paperEl.className = 'bg-white rounded-xs shadow-2xl p-8 sm:p-12 border border-slate-300 transition-all text-slate-900 mx-auto my-2 a4-document-paper space-y-6';
     if (isLandscape) {
       paperEl.style.maxWidth = '1122px';
       paperEl.style.width = '100%';
@@ -1083,19 +1084,28 @@ const PDFPreview = {
     const isLandscape = this.currentOrientation === 'landscape';
     const targetWidth = isLandscape ? 1122 : 794;
 
-    // Wadah render terisolasi berskala presisi 1:1 lembar A4 agar pemotongan halaman jsPDF akurat
+    // Bersihkan sandbox render sebelumnya jika masih ada
+    const existingSandbox = document.getElementById('pdf-render-sandbox');
+    if (existingSandbox) existingSandbox.remove();
+
+    // Wadah render terisolasi berskala presisi 1:1 lembar A4 di koordinat (0,0) agar html2canvas tidak blank putih
     const renderContainer = document.createElement('div');
-    renderContainer.style.position = 'fixed';
-    renderContainer.style.left = '-9999px';
+    renderContainer.id = 'pdf-render-sandbox';
+    renderContainer.style.boxSizing = 'border-box';
+    renderContainer.style.position = 'absolute';
     renderContainer.style.top = '0';
+    renderContainer.style.left = '0';
     renderContainer.style.width = `${targetWidth}px`;
     renderContainer.style.background = '#ffffff';
     renderContainer.style.color = '#0f172a';
-    renderContainer.style.padding = '32px 36px';
-    renderContainer.style.zIndex = '-9999';
-    renderContainer.style.fontFamily = 'system-ui, -apple-system, sans-serif';
+    renderContainer.style.padding = '16px 20px';
+    renderContainer.style.zIndex = '40'; // Berada di bawah modal (z-50) sehingga tidak terlihat berkedip
+    renderContainer.style.fontFamily = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif";
+    renderContainer.style.pointerEvents = 'none';
 
     const contentClone = paperEl.cloneNode(true);
+    contentClone.id = 'pdf-render-content-clone';
+    contentClone.style.boxSizing = 'border-box';
     contentClone.style.width = '100%';
     contentClone.style.maxWidth = '100%';
     contentClone.style.boxShadow = 'none';
@@ -1103,13 +1113,38 @@ const PDFPreview = {
     contentClone.style.borderRadius = '0';
     contentClone.style.padding = '0';
     contentClone.style.margin = '0';
+    contentClone.style.background = '#ffffff';
+    contentClone.className = 'space-y-6 a4-document-paper';
+
+    // Pastikan tombol / kontrol filter tidak terbawa ke PDF
+    contentClone.querySelectorAll('.no-print, button, input[type="date"], select').forEach(el => {
+      if (el.tagName === 'BUTTON' || el.closest('.no-print')) {
+        el.remove();
+      }
+    });
 
     renderContainer.appendChild(contentClone);
     document.body.appendChild(renderContainer);
 
+    // Simpan posisi scroll sebelum ekspor
+    const prevScrollX = window.scrollX || window.pageXOffset || 0;
+    const prevScrollY = window.scrollY || window.pageYOffset || 0;
+    window.scrollTo(0, 0);
+
+    const cleanup = () => {
+      if (document.body.contains(renderContainer)) {
+        document.body.removeChild(renderContainer);
+      }
+      window.scrollTo(prevScrollX, prevScrollY);
+      if (btn) {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    };
+
     if (window.html2pdf) {
       const opt = {
-        margin: [10, 10, 10, 10], // Margin standar 10mm (atas, kiri, bawah, kanan)
+        margin: [8, 8, 8, 8], // Margin standar 8mm (atas, kiri, bawah, kanan)
         filename: this.currentFilename,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
@@ -1118,7 +1153,9 @@ const PDFPreview = {
           letterRendering: true,
           logging: false,
           scrollY: 0,
-          scrollX: 0
+          scrollX: 0,
+          backgroundColor: '#ffffff',
+          windowWidth: targetWidth
         },
         jsPDF: {
           unit: 'mm',
@@ -1133,11 +1170,10 @@ const PDFPreview = {
       };
 
       html2pdf().set(opt).from(renderContainer).save().then(() => {
-        if (document.body.contains(renderContainer)) {
-          document.body.removeChild(renderContainer);
-        }
+        cleanup();
         if (btn) {
           btn.innerHTML = '<i class="fa-solid fa-circle-check mr-1.5"></i> Berhasil Diunduh!';
+          btn.disabled = true;
           setTimeout(() => {
             btn.innerHTML = originalText;
             btn.disabled = false;
@@ -1146,24 +1182,12 @@ const PDFPreview = {
         Store.playSound('success');
       }).catch(err => {
         console.error('PDF error', err);
-        if (document.body.contains(renderContainer)) {
-          document.body.removeChild(renderContainer);
-        }
-        if (btn) {
-          btn.innerHTML = originalText;
-          btn.disabled = false;
-        }
+        cleanup();
         this.printDirectly();
       });
     } else {
-      if (document.body.contains(renderContainer)) {
-        document.body.removeChild(renderContainer);
-      }
+      cleanup();
       this.printDirectly();
-      if (btn) {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-      }
     }
   },
 
@@ -1249,7 +1273,7 @@ const PDFPreview = {
         </style>
       </head>
       <body>
-        <div class="print-container">
+        <div class="print-container space-y-6">
           ${paperEl.innerHTML}
         </div>
       </body>

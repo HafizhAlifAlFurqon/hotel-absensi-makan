@@ -2,11 +2,12 @@
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
-  background-image: linear-gradient(rgba(252, 252, 252, 0.92), rgba(255, 255, 255, 0.92)), url('../bg.jpg');
+  background-image: linear-gradient(rgba(15, 23, 42, 0.35), rgba(15, 23, 42, 0.35)), url('../bg.jpg');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
   background-repeat: no-repeat;
+  background-color: #0f172a;
 }
 
 code, pre, .font-mono {
