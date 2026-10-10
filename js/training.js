@@ -478,11 +478,12 @@ const TrainingManager = {
       if (detailCard && isSummary) detailCard.style.display = 'none';
 
       const opt = {
-        margin: 10,
+        margin: [10, 10, 10, 10],
         filename: filename,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+        pagebreak: { mode: 'css' }
       };
       window.html2pdf().set(opt).from(element).save().then(() => {
         if (detailCard && isSummary) detailCard.style.display = '';

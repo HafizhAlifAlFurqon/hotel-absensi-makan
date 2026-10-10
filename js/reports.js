@@ -1017,16 +1017,16 @@ const PDFPreview = {
     }
 
     // Set dimensi kertas pratinjau agar 100% presisi standar lembar A4 nyata
-    paperEl.className = 'bg-white rounded-xs shadow-2xl p-5 sm:p-6 border border-slate-300 transition-all text-slate-900 mx-auto my-2 a4-document-paper space-y-3.5';
+    paperEl.className = 'bg-white rounded-xs shadow-2xl p-6 border border-slate-300 transition-all text-slate-900 mx-auto my-2 a4-document-paper space-y-3.5';
     paperEl.style.height = 'auto';
     if (isLandscape) {
-      paperEl.style.maxWidth = '1122px';
+      paperEl.style.maxWidth = '1040px';
       paperEl.style.width = '100%';
-      paperEl.style.minHeight = '794px';
+      paperEl.style.minHeight = '740px';
     } else {
-      paperEl.style.maxWidth = '794px';
+      paperEl.style.maxWidth = '720px';
       paperEl.style.width = '100%';
-      paperEl.style.minHeight = '1123px';
+      paperEl.style.minHeight = '1050px';
     }
 
     // Klon konten dokumen ke kertas pratinjau
@@ -1086,15 +1086,18 @@ const PDFPreview = {
     const prevScroll = scrollContainer ? scrollContainer.scrollTop : 0;
     if (scrollContainer) scrollContainer.scrollTop = 0;
 
-    // Hilangkan efek bayangan & garis luar preview kertas sesaat saat proses render kanvas
+    // Hilangkan efek bayangan, border, dan unset min-height agar ukuran canvas 100% natural
     const prevShadow = paperEl.style.boxShadow;
     const prevBorder = paperEl.style.border;
+    const prevMinHeight = paperEl.style.minHeight;
     paperEl.style.boxShadow = 'none';
     paperEl.style.border = 'none';
+    paperEl.style.minHeight = 'unset';
 
     const cleanup = () => {
       paperEl.style.boxShadow = prevShadow;
       paperEl.style.border = prevBorder;
+      paperEl.style.minHeight = prevMinHeight;
       if (scrollContainer) scrollContainer.scrollTop = prevScroll;
       if (btn) {
         btn.innerHTML = originalText;
@@ -1104,7 +1107,7 @@ const PDFPreview = {
 
     if (window.html2pdf) {
       const opt = {
-        margin: [8, 8, 8, 8], // Margin presisi 8mm (atas, kiri, bawah, kanan) agar pas 1 halaman
+        margin: [10, 10, 10, 10], // Margin 10mm dinaikkan agar proporsional dan nyaman dilihat
         filename: this.currentFilename,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
@@ -1121,8 +1124,7 @@ const PDFPreview = {
           compress: true
         },
         pagebreak: {
-          mode: ['css', 'legacy'],
-          avoid: ['tr', 'thead', 'tfoot', '.avoid-break', '.report-stat-card', '.kop-surat', '.report-signatures']
+          mode: 'css'
         }
       };
 
