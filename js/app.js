@@ -29,19 +29,21 @@ const App = {
     setInterval(() => this.updateClock(), 1000);
     this.updateTenantLabels();
     this.setupNavigation();
-    Auth.enforceRBAC();
 
-    // Default navigasi sesuai peran login
+    // Default navigasi: Jika belum login, tampilkan halaman login mandiri
     const user = Auth.getCurrentUser();
     if (!user) {
-      document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
-      Auth.openLoginModal();
-    } else if (user.role === 'karyawan') {
-      this.navigateTo('employee-portal');
-    } else if (user.role === 'canteen') {
-      this.navigateTo('canteen');
+      Auth.showLoginPage();
     } else {
-      this.navigateTo('dashboard');
+      Auth.hideLoginPage();
+      Auth.enforceRBAC();
+      if (user.role === 'karyawan') {
+        this.navigateTo('employee-portal');
+      } else if (user.role === 'canteen') {
+        this.navigateTo('canteen');
+      } else {
+        this.navigateTo('dashboard');
+      }
     }
 
     this.checkHttpsProtocol();
@@ -64,38 +66,39 @@ const App = {
   },
 
   updateClock() {
-    const clockEl = document.getElementById('header-live-clock');
-    const shiftBadgeEl = document.getElementById('header-shift-badge');
     const now = new Date();
     const timeStr = now.toLocaleTimeString('id-ID', { hour12: false });
     
-    if (clockEl) {
-      clockEl.innerText = `${timeStr} WIB`;
-    }
+    document.querySelectorAll('#header-live-clock, #login-live-clock').forEach(el => {
+      el.innerText = `${timeStr} WIB`;
+    });
 
-    if (shiftBadgeEl) {
+    const shiftBadgeEls = document.querySelectorAll('#header-shift-badge, #login-shift-badge');
+    if (shiftBadgeEls.length > 0) {
       try {
         const evaluation = (window.Store && typeof Store.evaluateShiftAndTime === 'function')
           ? Store.evaluateShiftAndTime(now)
           : { isAllowed: (now.getHours() >= 11 && now.getHours() <= 19), shift: (now.getHours() < 15 ? 'Makan Siang' : 'Makan Sore') };
         const settings = (window.Store && typeof Store.getSettings === 'function') ? Store.getSettings() : {};
 
-        if (evaluation.isAllowed) {
-          if (evaluation.shift && evaluation.shift.includes('Siang')) {
-            shiftBadgeEl.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300';
-            shiftBadgeEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 mr-1.5 animate-pulse"></span> Makan Siang (11:00 - 15:00)`;
+        shiftBadgeEls.forEach(badge => {
+          if (evaluation.isAllowed) {
+            if (evaluation.shift && evaluation.shift.includes('Siang')) {
+              badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-300 shadow-xs';
+              badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 mr-1.5 animate-pulse"></span> Makan Siang (11:00 - 15:00)`;
+            } else {
+              badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-900 border border-indigo-300 shadow-xs';
+              badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-indigo-500 mr-1.5 animate-pulse"></span> Makan Sore (15:01 - 19:00)`;
+            }
           } else {
-            shiftBadgeEl.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800 border border-indigo-300';
-            shiftBadgeEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-indigo-500 mr-1.5 animate-pulse"></span> Makan Sore (15:01 - 19:00)`;
+            badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-900 border border-rose-300 shadow-xs';
+            badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500 mr-1.5"></span> Kantin Tutup (Buka 11:00 - 19:00)`;
           }
-        } else {
-          shiftBadgeEl.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-300';
-          shiftBadgeEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500 mr-1.5"></span> Kantin Tutup (Buka 11:00 - 19:00)`;
-        }
 
-        if (settings.bypassTimeForTesting) {
-          shiftBadgeEl.innerHTML += ` <span class="ml-1 text-[10px] text-emerald-700 font-bold bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-300">SIMULASI</span>`;
-        }
+          if (settings.bypassTimeForTesting) {
+            badge.innerHTML += ` <span class="ml-1 text-[10px] text-emerald-700 font-bold bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-300">SIMULASI</span>`;
+          }
+        });
       } catch (e) {
         console.warn('Clock eval error:', e);
       }
@@ -142,8 +145,7 @@ const App = {
 
     const user = Auth.getCurrentUser();
     if (!user) {
-      document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
-      Auth.openLoginModal();
+      Auth.showLoginPage();
       return;
     }
 

@@ -1,6 +1,6 @@
 /**
  * auth.js - Pengelolaan Autentikasi Nama & Password Serta Hak Akses (RBAC)
- * Semua pihak (Karyawan, Kantin, Admin) login menggunakan Nama / ID dan Password masing-masing.
+ * Mendukung Halaman Login Mandiri (Standalone) & Transisi Otomatis ke Dashboard
  */
 
 const Auth = {
@@ -62,6 +62,47 @@ const Auth = {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=${bg}&color=fff&rounded=true&bold=true`;
   },
 
+  // Tampilkan Halaman Login Sendiri & Sembunyikan Seluruh Shell Aplikasi
+  showLoginPage() {
+    const loginPage = document.getElementById('page-login');
+    const appShell = document.getElementById('app-shell');
+    if (loginPage) loginPage.classList.remove('hidden');
+    if (appShell) appShell.classList.add('hidden');
+
+    // Sembunyikan dialog login modal jika ada
+    const oldModal = document.getElementById('login-modal');
+    if (oldModal) oldModal.classList.add('hidden');
+
+    // Sembunyikan semua page view
+    document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
+
+    // Reset input di form halaman login
+    const idEl = document.getElementById('login-page-identifier');
+    const passEl = document.getElementById('login-page-password');
+    const alertEl = document.getElementById('login-page-alert');
+    if (idEl) {
+      idEl.value = '';
+      setTimeout(() => idEl.focus(), 120);
+    }
+    if (passEl) passEl.value = '';
+    if (alertEl) alertEl.innerHTML = '';
+
+    if (typeof window.renderQuickLoginButtons === 'function') {
+      window.renderQuickLoginButtons();
+    }
+  },
+
+  // Sembunyikan Halaman Login & Tampilkan Shell Aplikasi (Header, Nav, Dashboard)
+  hideLoginPage() {
+    const loginPage = document.getElementById('page-login');
+    const appShell = document.getElementById('app-shell');
+    if (loginPage) loginPage.classList.add('hidden');
+    if (appShell) appShell.classList.remove('hidden');
+
+    const oldModal = document.getElementById('login-modal');
+    if (oldModal) oldModal.classList.add('hidden');
+  },
+
   // Login dengan Password Sendiri (Karyawan, Kasir Kantin, Admin)
   loginWithPassword(identifier, password) {
     const res = Store.verifyCredentials(identifier, password);
@@ -75,14 +116,14 @@ const Auth = {
     }
 
     Auth.setCurrentUser(user);
-    Auth.closeLoginModal();
+    Auth.hideLoginPage();
 
-    // Auto navigasi sesuai peran
+    // Otomatis navigasi: Admin langsung masuk ke DASHBOARD!
     if (window.App) {
       if (user.role === 'karyawan') {
         App.navigateTo('employee-portal');
       } else if (user.role === 'canteen') {
-        App.navigateTo(user.tenantId || 'tenant1');
+        App.navigateTo('canteen');
       } else {
         App.navigateTo('dashboard');
       }
@@ -96,7 +137,7 @@ const Auth = {
     return this.loginWithPassword(identifier, password);
   },
 
-  // Kompatibilitas fungsi login lama (dipetakan langsung ke Nama & Password)
+  // Kompatibilitas fungsi login lama
   loginWithGoogle({ role = 'karyawan', employeeId = null, tenantId = null, name = null }) {
     if (role === 'admin') {
       return this.loginWithPassword('admin', 'admin123');
@@ -115,7 +156,10 @@ const Auth = {
 
   logout() {
     Auth.setCurrentUser(null);
-    Auth.openLoginModal();
+    Auth.showLoginPage();
+    if (window.Store && typeof Store.playSound === 'function') {
+      Store.playSound('click');
+    }
   },
 
   isLoggedIn() {
@@ -125,24 +169,22 @@ const Auth = {
   // Penerapan Hak Akses (Role-Based Access Control)
   enforceRBAC() {
     const user = Auth.getCurrentUser();
+
+    if (!user) {
+      Auth.showLoginPage();
+      return;
+    }
+
+    Auth.hideLoginPage();
+
     const navAdminItems = document.querySelectorAll('.nav-admin-only');
     const navCanteenItems = document.querySelectorAll('.nav-canteen-only');
     const navKaryawanItems = document.querySelectorAll('.nav-karyawan-only');
     const userBadgeEl = document.getElementById('header-user-badge');
     const userSubEl = document.getElementById('header-user-email');
     const userAvatarEl = document.getElementById('header-user-avatar');
-    const closeBtn = document.getElementById('login-dialog-close-btn');
 
-    if (!user) {
-      document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
-      if (closeBtn) closeBtn.classList.add('hidden');
-      Auth.openLoginModal();
-      return;
-    }
-
-    if (closeBtn) closeBtn.classList.remove('hidden');
-
-    // Update info profil di header bar (Nama Lengkap & Info Jabatan / ID, Tanpa Gmail)
+    // Update info profil di header bar
     if (userBadgeEl) userBadgeEl.innerText = user.name || user.badge || 'User';
     if (userSubEl) {
       if (user.role === 'karyawan') {
@@ -161,7 +203,6 @@ const Auth = {
       navCanteenItems.forEach(el => el.classList.add('hidden'));
       navKaryawanItems.forEach(el => el.classList.remove('hidden'));
 
-      // Strict redirect jika sedang membuka halaman lain
       if (window.App && window.App.currentPage && window.App.currentPage !== 'employee-portal') {
         App.navigateTo('employee-portal');
       }
@@ -177,7 +218,6 @@ const Auth = {
       const navCanteenLabel = document.getElementById('nav-canteen-label');
       if (navCanteenLabel) navCanteenLabel.innerText = user.name || 'Kantin';
 
-      // Pastikan kasir di halaman kantin
       if (window.App && window.App.currentPage && window.App.currentPage !== 'canteen') {
         App.navigateTo('canteen');
       }
@@ -193,27 +233,15 @@ const Auth = {
   },
 
   openLoginModal() {
-    const modal = document.getElementById('login-modal') || document.getElementById('google-login-modal');
-    if (modal) modal.classList.remove('hidden');
-    const closeBtn = document.getElementById('login-dialog-close-btn');
-    if (closeBtn) {
-      if (!Auth.isLoggedIn()) {
-        closeBtn.classList.add('hidden');
-      } else {
-        closeBtn.classList.remove('hidden');
-      }
-    }
-    if (typeof window.renderQuickLoginButtons === 'function') {
-      window.renderQuickLoginButtons();
-    }
+    Auth.showLoginPage();
   },
 
   closeLoginModal() {
-    const modal = document.getElementById('login-modal') || document.getElementById('google-login-modal');
-    if (modal) modal.classList.add('hidden');
+    if (Auth.isLoggedIn()) {
+      Auth.hideLoginPage();
+    }
   },
 
-  // Kompatibilitas fungsi lama
   openGoogleModal() {
     this.openLoginModal();
   },

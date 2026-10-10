@@ -45,6 +45,150 @@
     }, 600);
   </script>
 
+  <!-- ================= HALAMAN LOGIN STANDALONE / DEDIKASI HOTEL ================= -->
+  <div id="page-login" class="min-h-screen w-full relative flex flex-col justify-between overflow-x-hidden transition-all duration-300">
+    
+    <!-- BACKGROUND DENGAN BG.JPG & OVERLAY MEWAH KHAS HOTEL -->
+    <div class="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat" style="background-image: url('bg.jpg');"></div>
+    <div class="fixed inset-0 z-0 bg-gradient-to-br from-emerald-950/92 via-slate-950/94 to-slate-900/96 backdrop-blur-[2px]"></div>
+
+    <!-- TOP HEADER BAR PADA HALAMAN LOGIN -->
+    <header class="relative z-10 w-full p-4 sm:p-5 flex items-center justify-between border-b border-white/10 bg-black/25 backdrop-blur-md">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-950/50">
+          <i class="fa-solid fa-hotel text-lg sm:text-xl"></i>
+        </div>
+        <div>
+          <h1 class="font-black text-base sm:text-lg text-white tracking-tight hotel-name-display leading-tight">
+            BeSS Mansion Hotel Surabaya
+          </h1>
+          <p class="text-[11px] sm:text-xs text-emerald-300 font-medium">
+            Sistem Absensi Makan Karyawan & Kantin
+          </p>
+        </div>
+      </div>
+
+      <!-- Status Jam, Shift & Database MySQL -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div id="login-db-status" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-500/50 shadow-xs">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+          <span>MySQL Terhubung</span>
+        </div>
+        <div id="login-shift-badge" class="hidden md:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100/90 text-amber-950 border border-amber-300 shadow-xs">
+          <span class="w-2 h-2 rounded-full bg-amber-500 mr-1.5 animate-pulse"></span> Memeriksa Shift...
+        </div>
+        <div class="bg-black/40 px-3 py-1.5 rounded-xl border border-white/10 font-mono text-xs sm:text-sm font-bold text-emerald-300 flex items-center gap-2 shadow-inner">
+          <i class="fa-regular fa-clock text-emerald-400"></i>
+          <span id="login-live-clock">--:--:-- WIB</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- CENTER AREA: KARTU LOGIN UTAMA -->
+    <main class="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 my-auto">
+      <div class="w-full max-w-md bg-white/95 backdrop-blur-xl rounded-3xl p-6 sm:p-9 shadow-2xl shadow-black/60 border border-white/40 space-y-6 animate-bounce-short">
+        
+        <!-- Icon & Salam Pembuka -->
+        <div class="text-center space-y-2">
+          <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-600/30 flex items-center justify-center mx-auto transform -rotate-3 hover:rotate-0 transition duration-300">
+            <i class="fa-solid fa-lock text-2xl text-white"></i>
+          </div>
+          <h2 class="text-2xl font-black text-slate-900 tracking-tight">Masuk ke Sistem</h2>
+          <p class="text-xs text-slate-500 max-w-xs mx-auto">
+            Silakan masukkan kredensial akun Anda untuk mengakses dashboard dan layanan absensi makan hotel
+          </p>
+        </div>
+
+        <!-- FORM LOGIN MANDIRI -->
+        <form id="standalone-login-form" onsubmit="event.preventDefault(); handleStandaloneLoginSubmit();" class="space-y-4">
+          <div>
+            <label for="login-page-identifier" class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1.5">
+              Nama Karyawan / ID / Username
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-solid fa-user"></i>
+              </div>
+              <input type="text" id="login-page-identifier" required autocomplete="username" placeholder="Contoh: admin / EMP-001 / Nama Karyawan" class="w-full pl-10 pr-3.5 py-3 text-sm font-medium rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition bg-slate-50 focus:bg-white text-slate-900 shadow-2xs">
+            </div>
+          </div>
+
+          <div>
+            <label for="login-page-password" class="block text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-1.5">
+              Password Akun Anda
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-solid fa-key"></i>
+              </div>
+              <input type="password" id="login-page-password" required autocomplete="current-password" placeholder="Masukkan password akun Anda" class="w-full pl-10 pr-10 py-3 text-sm font-medium rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition bg-slate-50 focus:bg-white text-slate-900 shadow-2xs">
+              <button type="button" onclick="togglePasswordVisibility('login-page-password', this)" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-700 transition cursor-pointer" title="Lihat/Sembunyikan Password">
+                <i class="fa-solid fa-eye text-sm"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Alert Error/Success -->
+          <div id="login-page-alert"></div>
+
+          <!-- Tombol Masuk -->
+          <button id="login-submit-btn" type="submit" class="w-full py-3.5 px-5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-sm font-extrabold shadow-md shadow-emerald-700/20 transition flex items-center justify-center gap-2 cursor-pointer transform active:scale-[0.98]">
+            <i class="fa-solid fa-arrow-right-to-bracket text-base"></i>
+            <span>Masuk Sekarang</span>
+          </button>
+        </form>
+
+        <!-- Bantuan Akses & Akun Demo Cepat -->
+        <div class="pt-3 border-t border-slate-100">
+          <details class="group cursor-pointer">
+            <summary class="text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center justify-between list-none">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-circle-question text-emerald-600"></i> Bantuan & Format Login Pengguna
+              </span>
+              <i class="fa-solid fa-chevron-down text-[10px] transition group-open:rotate-180"></i>
+            </summary>
+            <div class="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-2.5">
+              <div class="flex items-start gap-2">
+                <span class="w-5 h-5 rounded-md bg-teal-100 text-teal-800 flex items-center justify-center text-[10px] font-bold shrink-0">1</span>
+                <div>
+                  <span class="font-bold text-slate-800">Administrator:</span> Masukkan <code>admin</code> (Password: <code>admin123</code>) untuk membuka Dashboard & seluruh menu.
+                </div>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="w-5 h-5 rounded-md bg-blue-100 text-blue-800 flex items-center justify-center text-[10px] font-bold shrink-0">2</span>
+                <div>
+                  <span class="font-bold text-slate-800">Kasir Kantin:</span> Masukkan ID atau nama kantin (contoh: <code>tenant1</code> / <code>Depot Bu Mamie</code>) untuk membuka kasir scan.
+                </div>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="w-5 h-5 rounded-md bg-emerald-100 text-emerald-800 flex items-center justify-center text-[10px] font-bold shrink-0">3</span>
+                <div>
+                  <span class="font-bold text-slate-800">Karyawan / Training:</span> Masukkan Nama Karyawan atau ID Karyawan (contoh: <code>EMP-001</code> / <code>TRN-001</code>) untuk membuka Portal Mandiri.
+                </div>
+              </div>
+
+              <!-- Tombol Cepat / Quick Login Buttons Container -->
+              <div class="pt-2 border-t border-slate-200">
+                <p class="text-[11px] font-bold text-slate-500 mb-1.5">Akses Cepat (Klik untuk Mengisi Otomatis):</p>
+                <div id="quick-login-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5"></div>
+              </div>
+            </div>
+          </details>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- FOOTER HALAMAN LOGIN -->
+    <footer class="relative z-10 w-full py-3 px-4 text-center text-xs text-emerald-200/70 border-t border-white/5 bg-black/30 backdrop-blur-md">
+      <p>&copy; 2026 BeSS Mansion Hotel Surabaya &bull; Sistem Absensi Makan Karyawan Terintegrasi</p>
+    </footer>
+
+  </div>
+
+  <!-- ================= SHELL UTAMA APLIKASI (HEADER, NAV, DASHBOARD, DLL.) ================= -->
+  <div id="app-shell" class="min-h-screen flex flex-col hidden">
+
   <!-- ================= TOP HEADER BAR ================= -->
   <header class="bg-emerald-900 text-white shadow-md sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -2003,64 +2147,7 @@
     </div>
   </div>
 
-  <!-- ================= MODAL LOGIN SISTEM DENGAN PASSWORD ================= -->
-  <div id="login-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-slate-100 space-y-5 animate-bounce-short max-h-[90vh] overflow-y-auto">
-      
-      <!-- Header Branding -->
-      <div class="text-center space-y-2">
-        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-700 text-white shadow-md flex items-center justify-center mx-auto">
-          <i class="fa-solid fa-lock text-2xl text-emerald-100"></i>
-        </div>
-        <h3 class="text-xl font-black text-slate-900 tracking-tight">Login Sistem Absensi Makan</h3>
-        <p class="text-xs text-slate-500">
-          Silakan masukkan Nama Karyawan atau ID dan Password akun Anda
-        </p>
-      </div>
 
-      <!-- FORM LOGIN PASSWORD -->
-      <form id="system-login-form" onsubmit="event.preventDefault(); handleSystemPasswordLogin();" class="space-y-3.5">
-        <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-            Nama Karyawan / ID / Username
-          </label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-              <i class="fa-solid fa-user"></i>
-            </div>
-            <input type="text" id="login-identifier" required placeholder="Contoh: Nama Karyawan / EMP-001 / admin" class="w-full pl-10 pr-3.5 py-2.5 text-xs font-medium rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition bg-slate-50 focus:bg-white">
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-            Password Akun Anda
-          </label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-              <i class="fa-solid fa-key"></i>
-            </div>
-            <input type="password" id="login-password" required placeholder="Masukkan password akun Anda" class="w-full pl-10 pr-10 py-2.5 text-xs font-medium rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition bg-slate-50 focus:bg-white">
-            <button type="button" onclick="togglePasswordVisibility('login-password', this)" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition cursor-pointer">
-              <i class="fa-solid fa-eye text-xs"></i>
-            </button>
-          </div>
-        </div>
-
-        <div id="login-form-alert"></div>
-
-        <button type="submit" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
-          <i class="fa-solid fa-arrow-right-to-bracket text-sm"></i> Masuk Sekarang
-        </button>
-      </form>
-
-        <div class="flex items-center justify-between pt-2 text-[11px] text-slate-400 border-t border-slate-100">
-          <span>Sistem Absensi Makan Hotel</span>
-          <button id="login-dialog-close-btn" type="button" onclick="handleCloseLoginDialog()" class="text-slate-500 hover:text-slate-800 underline cursor-pointer">Tutup Dialog</button>
-        </div>
-
-    </div>
-  </div>
 
   <!-- ================= MODAL PANDUAN LENGKAP UPLOAD KE CPANEL HOSTING ================= -->
   <div id="hosting-guide-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
@@ -2338,10 +2425,11 @@
       }
     }
 
-    function handleSystemPasswordLogin() {
-      const idEl = document.getElementById('login-identifier');
-      const passEl = document.getElementById('login-password');
-      const alertEl = document.getElementById('login-form-alert');
+    function handleStandaloneLoginSubmit() {
+      const idEl = document.getElementById('login-page-identifier');
+      const passEl = document.getElementById('login-page-password');
+      const alertEl = document.getElementById('login-page-alert');
+      const btnEl = document.getElementById('login-submit-btn');
 
       const id = idEl ? idEl.value.trim() : '';
       const pass = passEl ? passEl.value.trim() : '';
@@ -2349,36 +2437,58 @@
       if (!id || !pass) {
         if (alertEl) {
           alertEl.innerHTML = `
-            <div class="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-medium flex items-center gap-1.5">
-              <i class="fa-solid fa-circle-exclamation text-rose-500"></i> Silakan isi ID/Username dan Password.
+            <div class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-bold flex items-center gap-2">
+              <i class="fa-solid fa-circle-exclamation text-rose-500 text-base"></i>
+              <span>Silakan isi Nama/ID dan Password akun Anda.</span>
             </div>
           `;
         }
+        if (window.Store && typeof Store.playSound === 'function') Store.playSound('error');
         return;
       }
 
-      const res = Auth.loginWithPassword(id, pass);
-      if (!res.success) {
-        if (alertEl) {
-          alertEl.innerHTML = `
-            <div class="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-medium flex items-center gap-1.5">
-              <i class="fa-solid fa-circle-exclamation text-rose-500"></i> ${res.message}
-            </div>
-          `;
-        }
-        Store.playSound('error');
-      } else {
-        if (alertEl) alertEl.innerHTML = '';
-        Store.playSound('success');
+      const originalBtnHtml = btnEl ? btnEl.innerHTML : '';
+      if (btnEl) {
+        btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-base mr-1.5"></i><span>Memverifikasi...</span>';
+        btnEl.disabled = true;
       }
+
+      setTimeout(() => {
+        const res = Auth.loginWithPassword(id, pass);
+        if (!res.success) {
+          if (alertEl) {
+            alertEl.innerHTML = `
+              <div class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-bold flex items-center gap-2">
+                <i class="fa-solid fa-circle-exclamation text-rose-500 text-base"></i>
+                <span>${res.message || 'ID/Username atau Password salah!'}</span>
+              </div>
+            `;
+          }
+          if (btnEl) {
+            btnEl.innerHTML = originalBtnHtml;
+            btnEl.disabled = false;
+          }
+          if (window.Store && typeof Store.playSound === 'function') Store.playSound('error');
+        } else {
+          if (alertEl) {
+            alertEl.innerHTML = `
+              <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl font-bold flex items-center gap-2">
+                <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
+                <span>Login berhasil! Membuka Dashboard...</span>
+              </div>
+            `;
+          }
+          if (window.Store && typeof Store.playSound === 'function') Store.playSound('success');
+        }
+      }, 100);
     }
 
     function quickFillAndLogin(id, pass) {
-      const idEl = document.getElementById('login-identifier');
-      const passEl = document.getElementById('login-password');
+      const idEl = document.getElementById('login-page-identifier');
+      const passEl = document.getElementById('login-page-password');
       if (idEl) idEl.value = id;
       if (passEl) passEl.value = pass;
-      handleSystemPasswordLogin();
+      handleStandaloneLoginSubmit();
     }
 
     function handleCloseLoginDialog() {
@@ -2393,7 +2503,7 @@
       const container = document.getElementById('quick-login-grid');
       if (!container) return;
       const tenants = (window.Store && typeof Store.getTenants === 'function') ? Store.getTenants() : [
-        { id: 'tenant1', name: 'Depot Bu A', password: 'depota123' },
+        { id: 'tenant1', name: 'Depot Bu Mamie', password: 'depota123' },
         { id: 'tenant2', name: 'Depot Bu Yuli', password: 'depotyuli123' }
       ];
       const emps = (window.Store && typeof Store.getEmployees === 'function') ? Store.getEmployees().filter(e => e.status === 'Aktif') : [];
@@ -2465,6 +2575,8 @@
       <p class="text-[11px] text-slate-400">Shift Siang (11.00-15.00) &bull; Shift Sore (15.01-19.00) &bull; 1x Makan Per Hari</p>
     </div>
   </footer>
+
+  </div> <!-- END #app-shell -->
 
   <!-- ================= SCRIPTS ================= -->
   <!-- Library Pustaka Lokal (Cepat & Bebas Lag Internet) -->

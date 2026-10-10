@@ -31,12 +31,12 @@ const DEFAULT_SETTINGS = {
   hotelName: 'BeSS Mansion Hotel Surabaya',
   adminUsername: 'admin',
   adminPassword: 'admin123',
-  tenant1Name: 'Depot Bu A',
+  tenant1Name: 'Depot Bu Mamie',
   tenant2Name: 'Depot Bu Yuli',
   mealPrice: 15000, // Rp 15.000 per porsi
   bypassTimeForTesting: false, // Mode simulasi waktu
   tenants: [
-    { id: 'tenant1', name: 'Depot Bu A', password: 'depota123', status: 'Aktif' },
+    { id: 'tenant1', name: 'Depot Bu Mamie', password: 'depota123', status: 'Aktif' },
     { id: 'tenant2', name: 'Depot Bu Yuli', password: 'depotyuli123', status: 'Aktif' }
   ]
 };
@@ -125,7 +125,7 @@ const Store = {
         }
         if (!currentSettings.tenants || !Array.isArray(currentSettings.tenants) || currentSettings.tenants.length === 0) {
           currentSettings.tenants = [
-            { id: 'tenant1', name: currentSettings.tenant1Name || 'Depot Bu A', password: 'depota123', status: 'Aktif' },
+            { id: 'tenant1', name: currentSettings.tenant1Name || 'Depot Bu Mamie', password: 'depota123', status: 'Aktif' },
             { id: 'tenant2', name: currentSettings.tenant2Name || 'Depot Bu Yuli', password: 'depotyuli123', status: 'Aktif' }
           ];
           sChanged = true;
@@ -219,6 +219,17 @@ const Store = {
         indicator.innerHTML = '<span class="inline-flex items-center text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-200"><i class="fa-solid fa-circle-check text-emerald-600 mr-2"></i> MySQL Aktif &amp; Terhubung (absen_makan_hotel)</span>';
       } else {
         indicator.innerHTML = '<span class="inline-flex items-center text-xs font-bold text-amber-700 bg-amber-100 px-3 py-1.5 rounded-xl border border-amber-200"><i class="fa-solid fa-triangle-exclamation text-amber-600 mr-2"></i> MySQL Offline (Menggunakan LocalStorage)</span>';
+      }
+    }
+
+    const loginDbBadge = document.getElementById('login-db-status');
+    if (loginDbBadge) {
+      if (isConnected) {
+        loginDbBadge.className = 'hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-500/50 shadow-xs';
+        loginDbBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span><span>MySQL Terhubung</span>';
+      } else {
+        loginDbBadge.className = 'hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-950/80 text-amber-300 border border-amber-500/50 shadow-xs';
+        loginDbBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400 mr-1.5"></span><span>Offline (LocalStorage)</span>';
       }
     }
   },
@@ -640,7 +651,7 @@ const Store = {
       return s.tenants;
     }
     return [
-      { id: 'tenant1', name: s.tenant1Name || 'Depot Bu A', status: 'Aktif' },
+      { id: 'tenant1', name: s.tenant1Name || 'Depot Bu Mamie', status: 'Aktif' },
       { id: 'tenant2', name: s.tenant2Name || 'Depot Bu Yuli', status: 'Aktif' }
     ];
   },
@@ -651,7 +662,7 @@ const Store = {
     if (t) return t.name;
 
     const s = Store.getSettings();
-    if (tenantKey === 'tenant1') return s.tenant1Name || 'Depot Bu A';
+    if (tenantKey === 'tenant1') return s.tenant1Name || 'Depot Bu Mamie';
     if (tenantKey === 'tenant2') return s.tenant2Name || 'Depot Bu Yuli';
     return tenantKey;
   },
