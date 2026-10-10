@@ -76,16 +76,22 @@ const Auth = {
     // Sembunyikan semua page view
     document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
 
-    // Reset input di form halaman login
+    // Reset input di form halaman login & kembalikan tombol ke state normal
     const idEl = document.getElementById('login-page-identifier');
     const passEl = document.getElementById('login-page-password');
     const alertEl = document.getElementById('login-page-alert');
+    const btnEl = document.getElementById('login-submit-btn');
+
     if (idEl) {
       idEl.value = '';
       setTimeout(() => idEl.focus(), 120);
     }
     if (passEl) passEl.value = '';
     if (alertEl) alertEl.innerHTML = '';
+    if (btnEl) {
+      btnEl.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket text-base"></i><span>Masuk Sekarang</span>';
+      btnEl.disabled = false;
+    }
 
     if (typeof window.renderQuickLoginButtons === 'function') {
       window.renderQuickLoginButtons();
@@ -101,6 +107,13 @@ const Auth = {
 
     const oldModal = document.getElementById('login-modal');
     if (oldModal) oldModal.classList.add('hidden');
+
+    // Kembalikan tombol ke state normal agar saat pengguna logout tidak stuck
+    const btnEl = document.getElementById('login-submit-btn');
+    if (btnEl) {
+      btnEl.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket text-base"></i><span>Masuk Sekarang</span>';
+      btnEl.disabled = false;
+    }
   },
 
   // Login dengan Password Sendiri (Karyawan, Kasir Kantin, Admin)

@@ -2477,6 +2477,13 @@
       const id = idEl ? idEl.value.trim() : '';
       const pass = passEl ? passEl.value.trim() : '';
 
+      const resetBtn = () => {
+        if (btnEl) {
+          btnEl.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket text-base"></i><span>Masuk Sekarang</span>';
+          btnEl.disabled = false;
+        }
+      };
+
       if (!id || !pass) {
         if (alertEl) {
           alertEl.innerHTML = `
@@ -2486,42 +2493,46 @@
             </div>
           `;
         }
+        resetBtn();
         if (window.Store && typeof Store.playSound === 'function') Store.playSound('error');
         return;
       }
 
-      const originalBtnHtml = btnEl ? btnEl.innerHTML : '';
       if (btnEl) {
         btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-base mr-1.5"></i><span>Memverifikasi...</span>';
         btnEl.disabled = true;
       }
 
       setTimeout(() => {
-        const res = Auth.loginWithPassword(id, pass);
-        if (!res.success) {
-          if (alertEl) {
-            alertEl.innerHTML = `
-              <div class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-bold flex items-center gap-2">
-                <i class="fa-solid fa-circle-exclamation text-rose-500 text-base"></i>
-                <span>${res.message || 'ID/Username atau Password salah!'}</span>
-              </div>
-            `;
+        try {
+          const res = Auth.loginWithPassword(id, pass);
+          if (!res.success) {
+            if (alertEl) {
+              alertEl.innerHTML = `
+                <div class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-bold flex items-center gap-2">
+                  <i class="fa-solid fa-circle-exclamation text-rose-500 text-base"></i>
+                  <span>${res.message || 'ID/Username atau Password salah!'}</span>
+                </div>
+              `;
+            }
+            resetBtn();
+            if (window.Store && typeof Store.playSound === 'function') Store.playSound('error');
+          } else {
+            if (alertEl) {
+              alertEl.innerHTML = `
+                <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl font-bold flex items-center gap-2">
+                  <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
+                  <span>Login berhasil! Membuka Dashboard...</span>
+                </div>
+              `;
+            }
+            // Langsung kembalikan tombol ke keadaan normal agar saat pengguna logout/switch akun, tombol tidak tersangkut
+            resetBtn();
+            if (window.Store && typeof Store.playSound === 'function') Store.playSound('success');
           }
-          if (btnEl) {
-            btnEl.innerHTML = originalBtnHtml;
-            btnEl.disabled = false;
-          }
-          if (window.Store && typeof Store.playSound === 'function') Store.playSound('error');
-        } else {
-          if (alertEl) {
-            alertEl.innerHTML = `
-              <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl font-bold flex items-center gap-2">
-                <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
-                <span>Login berhasil! Membuka Dashboard...</span>
-              </div>
-            `;
-          }
-          if (window.Store && typeof Store.playSound === 'function') Store.playSound('success');
+        } catch (e) {
+          console.error('Login error:', e);
+          resetBtn();
         }
       }, 100);
     }
@@ -2529,10 +2540,36 @@
     function quickFillAndLogin(id, pass) {
       const idEl = document.getElementById('login-page-identifier');
       const passEl = document.getElementById('login-page-password');
+      const btnEl = document.getElementById('login-submit-btn');
+      if (btnEl) {
+        btnEl.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket text-base"></i><span>Masuk Sekarang</span>';
+        btnEl.disabled = false;
+      }
       if (idEl) idEl.value = id;
       if (passEl) passEl.value = pass;
       handleStandaloneLoginSubmit();
     }
+
+    // Listener otomatis untuk membuka kembali tombol jika user mengetik / fokus ke input login
+    document.addEventListener('DOMContentLoaded', () => {
+      const idEl = document.getElementById('login-page-identifier');
+      const passEl = document.getElementById('login-page-password');
+      const unlockBtn = () => {
+        const btn = document.getElementById('login-submit-btn');
+        if (btn && btn.disabled) {
+          btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket text-base"></i><span>Masuk Sekarang</span>';
+          btn.disabled = false;
+        }
+      };
+      if (idEl) {
+        idEl.addEventListener('input', unlockBtn);
+        idEl.addEventListener('focus', unlockBtn);
+      }
+      if (passEl) {
+        passEl.addEventListener('input', unlockBtn);
+        passEl.addEventListener('focus', unlockBtn);
+      }
+    });
 
     function handleCloseLoginDialog() {
       if (!Auth.isLoggedIn()) {
