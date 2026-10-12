@@ -184,12 +184,12 @@ const QRCardsManager = {
             align-items: center;
             justify-content: center;
             min-height: 90vh;
-            background: #f4f5f7;
+            background: #f4f3f0;
           }
           .card {
             width: 300px;
             background: #ffffff;
-            border: 2px solid #10b981;
+            border: 2px solid #7c5432;
             border-radius: 16px;
             padding: 24px;
             text-align: center;
@@ -211,7 +211,7 @@ const QRCardsManager = {
           }
           .emp-pos {
             font-size: 13px;
-            color: #059669;
+            color: #7c5432;
             font-weight: 600;
             margin: 0 0 16px 0;
           }
