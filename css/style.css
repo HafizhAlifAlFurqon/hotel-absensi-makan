@@ -2,7 +2,12 @@
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
-  background-color: #f4f3f0;
+  background-image: linear-gradient(rgba(28, 20, 14, 0.35), rgba(28, 20, 14, 0.35)), url('../bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-color: #1a120c;
   color: #2b2723;
 }
 
