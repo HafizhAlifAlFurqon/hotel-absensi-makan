@@ -461,8 +461,8 @@ const EmployeesManager = {
         <td style="padding: 7px 8px; font-weight: bold; color: #0f172a;">${emp.name}</td>
         <td style="padding: 7px 8px; color: #334155;">${emp.department}</td>
         <td style="padding: 7px 8px; color: #475569;">${emp.position || '-'}</td>
-        <td style="padding: 7px 8px; font-family: monospace; font-weight: bold; color: #654224; background: #f8f4ef;">${emp.password || 'password123'}</td>
-        <td style="padding: 7px 8px; text-align: center; font-weight: 600; color: ${emp.status === 'Aktif' ? '#654224' : '#be123c'};">${emp.status}</td>
+        <td style="padding: 7px 8px; font-family: monospace; font-weight: bold; color: #047857; background: #ecfdf5;">${emp.password || 'password123'}</td>
+        <td style="padding: 7px 8px; text-align: center; font-weight: 600; color: ${emp.status === 'Aktif' ? '#047857' : '#be123c'};">${emp.status}</td>
       </tr>
     `).join('');
 
@@ -479,12 +479,12 @@ const EmployeesManager = {
           .header h1 { font-size: 18px; margin: 0; text-transform: uppercase; color: #0f172a; letter-spacing: -0.5px; }
           .header p { margin: 2px 0 0 0; font-size: 12px; color: #475569; }
           .meta { font-size: 11px; color: #64748b; text-align: right; }
-          .summary-card { background: #f4f3f0; border: 1px solid #e7e5e0; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 11px; display: flex; justify-content: space-between; align-items: center; }
+          .summary-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 11px; display: flex; justify-content: space-between; align-items: center; }
           table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-          th { background: #f4f3f0; color: #334155; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px; border-bottom: 2px solid #e7e5e0; text-align: left; }
-          .instructions { background: #faf7f2; border: 1px solid #d9c0aa; border-radius: 8px; padding: 12px 14px; margin-top: 16px; }
-          .instructions h3 { margin: 0 0 6px 0; font-size: 12px; color: #654224; }
-          .instructions ol { margin: 0; padding-left: 20px; font-size: 11px; color: #4e3119; }
+          th { background: #f1f5f9; color: #334155; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px; border-bottom: 2px solid #cbd5e1; text-align: left; }
+          .instructions { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 12px 14px; margin-top: 16px; }
+          .instructions h3 { margin: 0 0 6px 0; font-size: 12px; color: #166534; }
+          .instructions ol { margin: 0; padding-left: 20px; font-size: 11px; color: #14532d; }
           .instructions li { margin-bottom: 3px; }
           .footer { margin-top: 24px; font-size: 10px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 8px; }
           @media print {
@@ -495,7 +495,7 @@ const EmployeesManager = {
       </head>
       <body>
         <div class="no-print" style="margin-bottom: 16px; display: flex; gap: 8px;">
-          <button onclick="window.print()" style="padding: 8px 16px; background: #7c5432; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Cetak Sekarang</button>
+          <button onclick="window.print()" style="padding: 8px 16px; background: #059669; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Cetak Sekarang</button>
           <button onclick="window.close()" style="padding: 8px 16px; background: #64748b; color: white; border: none; border-radius: 6px; cursor: pointer;">Tutup</button>
         </div>
 
@@ -512,7 +512,7 @@ const EmployeesManager = {
 
         <div class="summary-card">
           <span><b>Catatan Administrator:</b> Bagikan kredensial ID / Nama dan Password di bawah ini kepada masing-masing karyawan untuk login.</span>
-          <span style="font-weight: bold; color: #654224;">Rahasia & Internal</span>
+          <span style="font-weight: bold; color: #047857;">Rahasia & Internal</span>
         </div>
 
         <table>

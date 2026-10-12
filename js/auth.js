@@ -58,7 +58,7 @@ const Auth = {
     }
   },
 
-  getAvatar(name, bg = '7c5432') {
+  getAvatar(name, bg = '047857') {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=${bg}&color=fff&rounded=true&bold=true`;
   },
 

@@ -2,13 +2,12 @@
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
-  background-image: linear-gradient(rgba(28, 20, 14, 0.35), rgba(28, 20, 14, 0.35)), url('../bg.jpg');
+  background-image: linear-gradient(rgba(15, 23, 42, 0.35), rgba(15, 23, 42, 0.35)), url('../bg.jpg');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
   background-repeat: no-repeat;
-  background-color: #1a120c;
-  color: #2b2723;
+  background-color: #0f172a;
 }
 
 code, pre, .font-mono {
@@ -38,7 +37,7 @@ code, pre, .font-mono {
 #canteen-qr-reader, #tenant1-qr-reader, #tenant2-qr-reader, #emp-portal-qr-reader {
   border-radius: 16px;
   overflow: hidden;
-  border: 2px solid #7c5432 !important;
+  border: 2px solid #10b981 !important;
 }
 
 #canteen-qr-reader video, #tenant1-qr-reader video, #tenant2-qr-reader video, #emp-portal-qr-reader video {

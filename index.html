@@ -10,74 +10,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap">
 
-  <!-- Tailwind CSS CDN & Luxury Theme Configuration (Light Gray & Brown) -->
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            // Abu-abu Muda Mewah (Warm Stone Light Gray Neutrals)
-            slate: {
-              50: '#faf9f7',
-              100: '#f4f3f0',
-              200: '#e7e5e0',
-              300: '#d7d4cd',
-              400: '#a8a49c',
-              500: '#78736a',
-              600: '#57524a',
-              700: '#433e37',
-              800: '#2b2723',
-              900: '#1b1815',
-              950: '#100e0c',
-            },
-            // Coklat Mewah (Luxury Hotel Mocha & Rich Espresso Brown)
-            emerald: {
-              50: '#fdfbf9',
-              100: '#f8f4ef',
-              200: '#ebdccf',
-              300: '#dcbfab',
-              400: '#bc9677',
-              500: '#9b714f',
-              600: '#7c5432',
-              700: '#654224',
-              800: '#4e3119',
-              900: '#3a2311',
-              950: '#231307',
-            },
-            // Aksen Emas & Perunggu Hangat (Warm Golden Bronze)
-            teal: {
-              50: '#faf7f2',
-              100: '#f5eee4',
-              200: '#e7d8c6',
-              300: '#d4ba9f',
-              400: '#b8936f',
-              500: '#9e754e',
-              600: '#835c36',
-              700: '#694627',
-              800: '#52341b',
-              900: '#3e2511',
-              950: '#261509',
-            },
-            // Skala Brown Eksplisit
-            brown: {
-              50: '#fdfbf9',
-              100: '#f8f4ef',
-              200: '#ebdccf',
-              300: '#dcbfab',
-              400: '#bc9677',
-              500: '#9b714f',
-              600: '#7c5432',
-              700: '#654224',
-              800: '#4e3119',
-              900: '#3a2311',
-              950: '#231307',
-            }
-          }
-        }
-      }
-    };
-  </script>
   <!-- FontAwesome Icons CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
@@ -253,7 +187,7 @@
   </div>
 
   <!-- ================= SHELL UTAMA APLIKASI (HEADER, NAV, DASHBOARD, DLL.) ================= -->
-  <div id="app-shell" class="min-h-screen flex flex-col hidden text-slate-800">
+  <div id="app-shell" class="min-h-screen flex flex-col hidden">
 
   <!-- ================= TOP HEADER BAR ================= -->
   <header class="bg-emerald-900 text-white shadow-md sticky top-0 z-30">
@@ -317,7 +251,7 @@
 
           <!-- Profil Pengguna & Hak Akses -->
           <div class="flex items-center gap-2 bg-emerald-950/70 border border-emerald-700/80 px-2.5 py-1 rounded-xl">
-            <img id="header-user-avatar" src="https://ui-avatars.com/api/?name=Admin&background=7c5432&color=fff&rounded=true" alt="Avatar" class="w-7 h-7 rounded-full border border-emerald-400 object-cover">
+            <img id="header-user-avatar" src="https://ui-avatars.com/api/?name=Admin&background=0f766e&color=fff&rounded=true" alt="Avatar" class="w-7 h-7 rounded-full border border-emerald-400 object-cover">
             <div class="hidden sm:block text-left">
               <div class="flex items-center gap-1.5 leading-none">
                 <span id="header-user-badge" class="font-extrabold text-xs text-white">Administrator</span>

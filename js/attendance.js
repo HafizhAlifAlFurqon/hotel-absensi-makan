@@ -750,12 +750,12 @@ const AttendanceManager = {
             align-items: center;
             justify-content: center;
             min-height: 90vh;
-            background: #f4f3f0;
+            background: #f8fafc;
           }
           .stand-card {
             width: 360px;
             background: #ffffff;
-            border: 3px solid #7c5432;
+            border: 3px solid #0f766e;
             border-radius: 24px;
             padding: 28px;
             text-align: center;
@@ -764,7 +764,7 @@ const AttendanceManager = {
           .hotel-header {
             font-size: 13px;
             font-weight: 800;
-            color: #654224;
+            color: #047857;
             text-transform: uppercase;
             letter-spacing: 1.5px;
             margin-bottom: 6px;
