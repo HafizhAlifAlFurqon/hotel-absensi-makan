@@ -386,6 +386,19 @@ const ReportsManager = {
     // Format Rupiah Helper
     const fmtRp = (num) => 'Rp ' + new Intl.NumberFormat('id-ID').format(num);
 
+    // Definisi Colgroup Standar 7 Kolom (Total Lebar: 920px - Fit Tepat di A4 Portrait 1 Halaman)
+    const colgroupHtml = `
+      <colgroup>
+        <col width="45" style="width: 45px;">
+        <col width="135" style="width: 135px;">
+        <col width="200" style="width: 200px;">
+        <col width="140" style="width: 140px;">
+        <col width="115" style="width: 115px;">
+        <col width="135" style="width: 135px;">
+        <col width="150" style="width: 150px;">
+      </colgroup>
+    `;
+
     let html = `
       <html xmlns:o="urn:schemas-microsoft-com:office:office"
             xmlns:x="urn:schemas-microsoft-com:office:excel"
@@ -400,6 +413,16 @@ const ReportsManager = {
                 <x:Name>Rekap Absensi Makan</x:Name>
                 <x:WorksheetOptions>
                   <x:DisplayGridlines/>
+                  <x:FitToPage/>
+                  <x:Print>
+                    <x:FitWidth>1</x:FitWidth>
+                    <x:FitHeight>0</x:FitHeight>
+                    <x:ValidPrinterInfo/>
+                    <x:PaperSizeIndex>9</x:PaperSizeIndex>
+                    <x:Scale>100</x:Scale>
+                    <x:HorizontalResolution>600</x:HorizontalResolution>
+                    <x:VerticalResolution>600</x:VerticalResolution>
+                  </x:Print>
                 </x:WorksheetOptions>
               </x:ExcelWorksheet>
             </x:ExcelWorksheets>
@@ -407,56 +430,58 @@ const ReportsManager = {
         </xml>
         <![endif]-->
         <style>
-          body { font-family: Calibri, 'Segoe UI', Arial, sans-serif; font-size: 11pt; color: #1e293b; }
-          table { border-collapse: collapse; width: 100%; margin-bottom: 24px; }
-          th { background-color: #047857; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #0f766e; padding: 8px 12px; font-size: 10pt; }
-          td { border: 1px solid #cbd5e1; padding: 6px 10px; font-size: 10pt; vertical-align: middle; }
+          body { font-family: 'Segoe UI', Calibri, -apple-system, Arial, sans-serif; font-size: 10pt; color: #0f172a; background: #ffffff; }
+          table { border-collapse: collapse; width: 100%; margin-bottom: 20px; table-layout: fixed; }
+          th { background-color: #047857; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #065f46; padding: 7px 8px; font-size: 9.5pt; vertical-align: middle; }
+          td { border: 1px solid #cbd5e1; padding: 5px 8px; font-size: 9.5pt; vertical-align: middle; mso-number-format: '\\@'; white-space: nowrap; }
           .text-center { text-align: center; }
           .text-right { text-align: right; }
           .text-left { text-align: left; }
           .bold { font-weight: bold; }
-          .title { font-size: 16pt; font-weight: bold; color: #064e3b; text-align: left; }
-          .subtitle { font-size: 12pt; font-weight: bold; color: #1e293b; text-align: left; }
-          .meta-row { font-size: 10pt; color: #475569; }
-          .section-header { font-size: 11pt; font-weight: bold; padding: 8px 10px; border: 1px solid #94a3b8; }
+          .title { font-size: 14pt; font-weight: bold; color: #064e3b; text-align: left; border: none; }
+          .subtitle { font-size: 10.5pt; font-weight: bold; color: #1e293b; text-align: left; border: none; }
+          .meta-row { font-size: 9pt; color: #475569; border: none; }
+          .section-header { font-size: 10pt; font-weight: bold; padding: 7px 8px; border: 1px solid #94a3b8; }
           .sec-shift { background-color: #e0f2fe; color: #0369a1; }
           .sec-tenant { background-color: #fef3c7; color: #92400e; }
           .sec-dept { background-color: #f3e8ff; color: #6b21a8; }
           .sec-detail { background-color: #ecfdf5; color: #065f46; }
-          .total-row { background-color: #f1f5f9; font-weight: bold; }
-          .total-row td { border-top: 2px solid #64748b; border-bottom: 2px solid #64748b; }
+          .total-row { background-color: #f8fafc; font-weight: bold; }
+          .total-row td { border-top: 2px solid #64748b; border-bottom: 2px solid #64748b; font-weight: bold; }
           .grand-total { background-color: #dcfce7; font-weight: bold; color: #166534; }
-          .signature-box { border: none !important; text-align: center; vertical-align: top; }
+          .grand-total td { border-top: 2px solid #059669; border-bottom: 2px solid #059669; font-weight: bold; }
           .signature-box td { border: none !important; }
         </style>
       </head>
       <body>
-        <!-- KOP LAPORAN RESMI HOTEL -->
+        <!-- KOP LAPORAN RESMI HOTEL (7 KOLOM) -->
         <table>
-          <tr><td colspan="10" class="title" style="border:none;">${hotelName.toUpperCase()}</td></tr>
-          <tr><td colspan="10" class="subtitle" style="border:none;">LAPORAN REKAPITULASI &amp; KONSUMSI ABSENSI MAKAN KARYAWAN</td></tr>
-          <tr><td colspan="10" class="meta-row" style="border:none;"><b>Periode:</b> ${periodText} &nbsp;|&nbsp; <b>Lingkup:</b> ${scopeLabel} &nbsp;|&nbsp; <b>Filter Depot:</b> ${tenantLabel}</td></tr>
-          <tr><td colspan="10" class="meta-row" style="border:none;"><b>Tarif Per Porsi:</b> ${fmtRp(mealPrice)} &nbsp;|&nbsp; <b>Waktu Ekspor:</b> ${exportTime}</td></tr>
-          <tr><td colspan="10" style="border:none; height: 12px;"></td></tr>
+          ${colgroupHtml}
+          <tr><td colspan="7" class="title">${hotelName.toUpperCase()}</td></tr>
+          <tr><td colspan="7" class="subtitle">LAPORAN REKAPITULASI &amp; KONSUMSI ABSENSI MAKAN KARYAWAN</td></tr>
+          <tr><td colspan="7" class="meta-row"><b>Periode:</b> ${periodText} &nbsp;|&nbsp; <b>Lingkup:</b> ${scopeLabel} &nbsp;|&nbsp; <b>Filter Depot:</b> ${tenantLabel}</td></tr>
+          <tr><td colspan="7" class="meta-row"><b>Tarif Per Porsi:</b> ${fmtRp(mealPrice)} &nbsp;|&nbsp; <b>Waktu Ekspor:</b> ${exportTime}</td></tr>
+          <tr><td colspan="7" style="border:none; height: 10px;"></td></tr>
         </table>
 
         <!-- ======================================================== -->
-        <!-- TABEL 1: REKAPITULASI SHIFT MAKAN (SIANG & SORE) -->
+        <!-- TABEL 1: REKAPITULASI SHIFT MAKAN (7 KOLOM) -->
         <!-- ======================================================== -->
         <table>
+          ${colgroupHtml}
           <tr>
             <td colspan="7" class="section-header sec-shift">
               1. REKAPITULASI SHIFT MAKAN (MAKAN SIANG &amp; MAKAN SORE)
             </td>
           </tr>
           <tr>
-            <th style="width: 40px;">No</th>
-            <th style="width: 180px;">Shift Makan</th>
-            <th style="width: 160px;">Jam Operasional</th>
-            <th style="width: 120px;">Jumlah Porsi</th>
-            <th style="width: 140px;">Tarif / Porsi</th>
-            <th style="width: 160px;">Subtotal Biaya (Rp)</th>
-            <th style="width: 100px;">Kontribusi (%)</th>
+            <th>No</th>
+            <th>Shift Makan</th>
+            <th>Jam Operasional</th>
+            <th>Jumlah Porsi</th>
+            <th>Tarif / Porsi</th>
+            <th>Subtotal Biaya (Rp)</th>
+            <th>Kontribusi (%)</th>
           </tr>
           <tr>
             <td class="text-center">1</td>
@@ -486,22 +511,23 @@ const ReportsManager = {
         </table>
 
         <!-- ======================================================== -->
-        <!-- TABEL 2: REKAPITULASI PER DEPOT KANTIN -->
+        <!-- TABEL 2: REKAPITULASI PER DEPOT KANTIN (7 KOLOM) -->
         <!-- ======================================================== -->
         <table>
+          ${colgroupHtml}
           <tr>
             <td colspan="7" class="section-header sec-tenant">
               2. REKAPITULASI PER DEPOT KANTIN (TAGIHAN KANTIN)
             </td>
           </tr>
           <tr>
-            <th style="width: 40px;">No</th>
-            <th style="width: 220px;">Nama Depot / Kantin</th>
-            <th style="width: 120px;">ID Depot</th>
-            <th style="width: 120px;">Porsi Terjual</th>
-            <th style="width: 140px;">Tarif / Porsi</th>
-            <th style="width: 160px;">Total Tagihan (Rp)</th>
-            <th style="width: 100px;">Kontribusi (%)</th>
+            <th>No</th>
+            <th>Nama Depot / Kantin</th>
+            <th>ID Depot</th>
+            <th>Porsi Terjual</th>
+            <th>Tarif / Porsi</th>
+            <th>Total Tagihan (Rp)</th>
+            <th>Kontribusi (%)</th>
           </tr>
     `;
 
@@ -518,7 +544,7 @@ const ReportsManager = {
         <tr>
           <td class="text-center">${tIdx++}</td>
           <td class="bold">${t.name}</td>
-          <td class="text-center" style="mso-number-format:'\\@';">${tid}</td>
+          <td class="text-center">${tid}</td>
           <td class="text-right bold">${t.count} Porsi</td>
           <td class="text-right">${fmtRp(mealPrice)}</td>
           <td class="text-right bold">${fmtRp(t.cost)}</td>
@@ -538,21 +564,22 @@ const ReportsManager = {
         </table>
 
         <!-- ======================================================== -->
-        <!-- TABEL 3: REKAPITULASI PER DEPARTEMEN -->
+        <!-- TABEL 3: REKAPITULASI PER DEPARTEMEN (7 KOLOM) -->
         <!-- ======================================================== -->
         <table>
+          ${colgroupHtml}
           <tr>
-            <td colspan="6" class="section-header sec-dept">
+            <td colspan="7" class="section-header sec-dept">
               3. REKAPITULASI KONSUMSI PER DEPARTEMEN &amp; UNIT KERJA
             </td>
           </tr>
           <tr>
-            <th style="width: 40px;">No</th>
-            <th style="width: 260px;">Nama Departemen / Unit Kerja</th>
-            <th style="width: 140px;">Jumlah Transaksi</th>
-            <th style="width: 140px;">Tarif / Porsi</th>
-            <th style="width: 180px;">Total Biaya Departemen (Rp)</th>
-            <th style="width: 100px;">Porsi (%)</th>
+            <th>No</th>
+            <th colspan="2">Nama Departemen / Unit Kerja</th>
+            <th>Jumlah Transaksi</th>
+            <th>Tarif / Porsi</th>
+            <th>Total Biaya Departemen (Rp)</th>
+            <th>Porsi (%)</th>
           </tr>
     `;
 
@@ -561,7 +588,7 @@ const ReportsManager = {
       html += `
         <tr>
           <td class="text-center">${dIdx + 1}</td>
-          <td class="bold">${d.name}</td>
+          <td colspan="2" class="bold">${d.name}</td>
           <td class="text-right bold">${d.count} Porsi</td>
           <td class="text-right">${fmtRp(mealPrice)}</td>
           <td class="text-right bold">${fmtRp(d.cost)}</td>
@@ -572,7 +599,7 @@ const ReportsManager = {
 
     html += `
           <tr class="total-row">
-            <td colspan="2" class="text-right bold">TOTAL KONSUMSI DEPARTEMEN</td>
+            <td colspan="3" class="text-right bold">TOTAL KONSUMSI SELURUH DEPARTEMEN</td>
             <td class="text-right bold">${totalPorsi} Porsi</td>
             <td class="text-center">-</td>
             <td class="text-right bold">${fmtRp(totalBiaya)}</td>
@@ -581,25 +608,23 @@ const ReportsManager = {
         </table>
 
         <!-- ======================================================== -->
-        <!-- TABEL 4: RINCIAN LENGKAP TRANSAKSI ABSENSI MAKAN -->
+        <!-- TABEL 4: RINCIAN LENGKAP TRANSAKSI ABSENSI MAKAN (7 KOLOM) -->
         <!-- ======================================================== -->
         <table>
+          ${colgroupHtml}
           <tr>
-            <td colspan="10" class="section-header sec-detail">
+            <td colspan="7" class="section-header sec-detail">
               4. RINCIAN LENGKAP TRANSAKSI ABSENSI MAKAN PERORANGAN
             </td>
           </tr>
           <tr>
-            <th style="width: 40px;">No</th>
-            <th style="width: 90px;">Tanggal</th>
-            <th style="width: 80px;">Waktu</th>
-            <th style="width: 110px;">ID Karyawan</th>
-            <th style="width: 180px;">Nama Lengkap</th>
-            <th style="width: 140px;">Departemen</th>
-            <th style="width: 140px;">Jabatan / Instansi</th>
-            <th style="width: 110px;">Shift Makan</th>
-            <th style="width: 140px;">Depot Kantin</th>
-            <th style="width: 110px;">Tarif (Rp)</th>
+            <th>No</th>
+            <th>Tanggal &amp; Waktu</th>
+            <th>ID &amp; Nama Karyawan</th>
+            <th>Departemen &amp; Jabatan</th>
+            <th>Shift Makan</th>
+            <th>Depot Kantin</th>
+            <th>Tarif / Biaya (Rp)</th>
           </tr>
     `;
 
@@ -610,16 +635,14 @@ const ReportsManager = {
       const tenant = r.tenantName || Store.getTenantName(r.tenantId || r.tenantKey) || 'Kantin';
       const shift = r.shift || (r.time && r.time < '15:01:00' ? 'Makan Siang' : 'Makan Sore');
       const pr = Number(r.price) || mealPrice;
+      const timeStr = r.time ? r.time.substring(0, 5) : '';
 
       html += `
         <tr>
           <td class="text-center">${rIdx + 1}</td>
-          <td class="text-center" style="mso-number-format:'\\@';">${r.date}</td>
-          <td class="text-center" style="mso-number-format:'\\@';">${r.time || '-'}</td>
-          <td class="text-center bold" style="mso-number-format:'\\@';">${r.employeeId || '-'}</td>
-          <td>${r.employeeName || '-'}</td>
-          <td>${dept}</td>
-          <td>${pos}</td>
+          <td class="text-center">${r.date} ${timeStr}</td>
+          <td><b>${r.employeeName || '-'}</b> (${r.employeeId || '-'})</td>
+          <td>${dept} ${pos && pos !== '-' ? '• ' + pos : ''}</td>
           <td class="text-center">${shift}</td>
           <td>${tenant}</td>
           <td class="text-right bold">${fmtRp(pr)}</td>
@@ -629,37 +652,38 @@ const ReportsManager = {
 
     html += `
           <tr class="grand-total">
-            <td colspan="9" class="text-right bold" style="font-size: 11pt;">GRAND TOTAL TAGIHAN SELURUH TRANSAKSI</td>
-            <td class="text-right bold" style="font-size: 11pt;">${fmtRp(totalBiaya)}</td>
+            <td colspan="6" class="text-right bold" style="font-size: 10.5pt; padding: 8px;">GRAND TOTAL KESELURUHAN BIAYA TRANSAKSI</td>
+            <td class="text-right bold" style="font-size: 10.5pt; padding: 8px;">${fmtRp(totalBiaya)}</td>
           </tr>
         </table>
 
         <!-- ======================================================== -->
-        <!-- LEMBAR TANDA TANGAN ATASAN (3 PIHAK RESMI HOTEL) -->
+        <!-- LEMBAR TANDA TANGAN ATASAN (3 PIHAK RESMI HOTEL - 7 KOLOM) -->
         <!-- ======================================================== -->
-        <table style="margin-top: 36px; border:none;">
+        <table style="margin-top: 24px; border:none;">
+          ${colgroupHtml}
           <tr>
-            <td colspan="10" style="border:none; height: 16px;"></td>
+            <td colspan="7" style="border:none; height: 12px;"></td>
           </tr>
           <tr class="signature-box">
-            <td colspan="3" style="width: 33%; text-align: center; border:none;">
+            <td colspan="2" style="text-align: center; border:none; vertical-align: top;">
               <b>Dibuat Oleh,</b><br>
               Petugas HRD / Absensi<br>
-              BeSS Mansion Hotel Surabaya<br><br><br><br><br>
+              ${hotelName}<br><br><br><br><br>
               <u>( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</u><br>
               Staff HRD / Personalia
             </td>
-            <td colspan="4" style="width: 34%; text-align: center; border:none;">
+            <td colspan="3" style="text-align: center; border:none; vertical-align: top;">
               <b>Diperiksa Oleh,</b><br>
               Finance &amp; Accounting<br>
-              BeSS Mansion Hotel Surabaya<br><br><br><br><br>
+              ${hotelName}<br><br><br><br><br>
               <u>( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</u><br>
               Accounting &amp; Finance Spv
             </td>
-            <td colspan="3" style="width: 33%; text-align: center; border:none;">
+            <td colspan="2" style="text-align: center; border:none; vertical-align: top;">
               <b>Disetujui Oleh,</b><br>
               General Manager<br>
-              BeSS Mansion Hotel Surabaya<br><br><br><br><br>
+              ${hotelName}<br><br><br><br><br>
               <u>( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</u><br>
               General Manager Hotel
             </td>
@@ -807,17 +831,89 @@ const ReportsManager = {
       if (costSubtext) costSubtext.innerText = `Beban Konsumsi Siswa Training${tenantInfoNote}`;
     }
 
-    // 4. Render Tabel Rekapitulasi Per Depot Kantin
+    // 4. Render Tabel Rekapitulasi Shift Makan (Siang & Sore)
+    this.renderShiftRekapTable(records, s);
+
+    // 5. Render Tabel Rekapitulasi Per Depot Kantin
     this.renderTenantRekapTable(scopedRecords, s);
 
-    // 5. Render Tabel Rekapitulasi Per Departemen / Per Siswa Training
+    // 6. Render Tabel Rekapitulasi Per Departemen / Per Siswa Training
     this.renderRekapTable(records, s);
 
-    // 6. Render Tabel Rincian Data Absensi
+    // 7. Render Tabel Rincian Data Absensi
     this.renderDetailTable(records, s);
   },
 
-  // Render Rekapitulasi Konsumsi Per Depot / Kantin
+  // 1. Render Rekapitulasi Shift Makan (Makan Siang & Makan Sore)
+  renderShiftRekapTable(records, s) {
+    const tbody = document.getElementById('report-shift-table-body');
+    const tfoot = document.getElementById('report-shift-table-footer');
+    if (!tbody) return;
+
+    const mealPrice = Number(s.mealPrice) || 15000;
+    const totalPorsi = records.length;
+    const countSiang = records.filter(r => r.shift && r.shift.includes('Siang')).length;
+    const countSore = records.filter(r => r.shift && r.shift.includes('Sore')).length;
+    const biayaSiang = countSiang * mealPrice;
+    const biayaSore = countSore * mealPrice;
+    const totalBiaya = totalPorsi * mealPrice;
+
+    const pctSiang = totalPorsi > 0 ? ((countSiang / totalPorsi) * 100).toFixed(1) : '0.0';
+    const pctSore = totalPorsi > 0 ? ((countSore / totalPorsi) * 100).toFixed(1) : '0.0';
+
+    tbody.innerHTML = `
+      <tr class="hover:bg-slate-50 border-b border-slate-100 transition avoid-break">
+        <td class="py-1.5 px-3 text-xs text-slate-400 font-mono">1</td>
+        <td class="py-1.5 px-3 text-xs font-bold text-slate-800">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block shadow-xs"></span>
+            <span>Makan Siang</span>
+          </div>
+        </td>
+        <td class="py-1.5 px-3 text-xs text-slate-600 text-center font-mono">11:00 - 15:00 WIB</td>
+        <td class="py-1.5 px-3 text-xs font-extrabold text-center text-slate-900">${countSiang} Porsi</td>
+        <td class="py-1.5 px-3 text-xs font-semibold text-right font-mono text-slate-600">Rp ${mealPrice.toLocaleString('id-ID')}</td>
+        <td class="py-1.5 px-3 text-xs font-bold text-right font-mono text-emerald-700">Rp ${biayaSiang.toLocaleString('id-ID')}</td>
+        <td class="py-1.5 px-3 text-xs font-semibold text-center text-slate-700">
+          <span class="inline-flex items-center px-1.5 py-0.5 rounded ${Number(pctSiang) > 0 ? 'bg-amber-50 text-amber-800 font-bold border border-amber-200' : 'bg-slate-100 text-slate-400'} text-[10px]">
+            ${pctSiang}%
+          </span>
+        </td>
+      </tr>
+      <tr class="hover:bg-slate-50 border-b border-slate-100 transition avoid-break">
+        <td class="py-1.5 px-3 text-xs text-slate-400 font-mono">2</td>
+        <td class="py-1.5 px-3 text-xs font-bold text-slate-800">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block shadow-xs"></span>
+            <span>Makan Sore</span>
+          </div>
+        </td>
+        <td class="py-1.5 px-3 text-xs text-slate-600 text-center font-mono">15:01 - 19:00 WIB</td>
+        <td class="py-1.5 px-3 text-xs font-extrabold text-center text-slate-900">${countSore} Porsi</td>
+        <td class="py-1.5 px-3 text-xs font-semibold text-right font-mono text-slate-600">Rp ${mealPrice.toLocaleString('id-ID')}</td>
+        <td class="py-1.5 px-3 text-xs font-bold text-right font-mono text-emerald-700">Rp ${biayaSore.toLocaleString('id-ID')}</td>
+        <td class="py-1.5 px-3 text-xs font-semibold text-center text-slate-700">
+          <span class="inline-flex items-center px-1.5 py-0.5 rounded ${Number(pctSore) > 0 ? 'bg-indigo-50 text-indigo-800 font-bold border border-indigo-200' : 'bg-slate-100 text-slate-400'} text-[10px]">
+            ${pctSore}%
+          </span>
+        </td>
+      </tr>
+    `;
+
+    if (tfoot) {
+      tfoot.innerHTML = `
+        <tr class="bg-sky-50/90 font-bold border-t-2 border-sky-600 avoid-break">
+          <td colspan="3" class="py-2 px-3 text-xs uppercase tracking-wider text-sky-950 font-extrabold">TOTAL KESELURUHAN SHIFT</td>
+          <td class="py-2 px-3 text-xs text-center text-sky-950 font-extrabold text-xs">${totalPorsi} Porsi</td>
+          <td class="py-2 px-3 text-xs text-center text-sky-950 font-extrabold">-</td>
+          <td class="py-2 px-3 text-xs text-right font-mono text-sky-950 font-extrabold text-xs">Rp ${totalBiaya.toLocaleString('id-ID')}</td>
+          <td class="py-2 px-3 text-xs text-center text-sky-950 font-extrabold">100%</td>
+        </tr>
+      `;
+    }
+  },
+
+  // 2. Render Rekapitulasi Konsumsi Per Depot / Kantin
   renderTenantRekapTable(scopedRecords, s) {
     const thead = document.getElementById('report-tenant-table-head');
     const tbody = document.getElementById('report-tenant-table-body');
@@ -1563,8 +1659,10 @@ const PDFPreview = {
       <html lang="id">
       <head>
         <title>${this.currentFilename || 'Laporan Absensi Makan'}</title>
-        <meta charset="UTF-8">
-        <script src="https://cdn.tailwindcss.com"><\/script>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap">
+        <script src="https://cdn.tailwindcss.com"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
         <style>
           @page {
@@ -1576,7 +1674,8 @@ const PDFPreview = {
             padding: 0;
             background: #ffffff !important;
             color: #0f172a !important;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            text-rendering: optimizeLegibility !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }

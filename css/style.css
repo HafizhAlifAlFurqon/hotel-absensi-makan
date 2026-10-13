@@ -1,7 +1,12 @@
 /* Font diimpor dengan preconnect di index.html untuk performa maksimal */
-body {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+html, body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
   background-image: linear-gradient(rgba(15, 23, 42, 0.35), rgba(15, 23, 42, 0.35)), url('../bg.jpg');
   background-size: cover;
   background-position: center;
@@ -12,6 +17,24 @@ body {
 
 code, pre, .font-mono {
   font-family: 'JetBrains Mono', monospace;
+  font-feature-settings: "liga" 0;
+}
+
+table, th, td, button, input, select, textarea {
+  font-family: inherit;
+}
+
+/* Penajaman Teks & Tabel Dokumen Web */
+.report-table th {
+  letter-spacing: 0.03em;
+  font-weight: 700;
+  color: #334155;
+}
+
+.report-table td {
+  letter-spacing: -0.01em;
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
 }
 
 

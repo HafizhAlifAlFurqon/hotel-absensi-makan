@@ -10,8 +10,20 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap">
 
-  <!-- Tailwind CSS CDN -->
+  <!-- Tailwind CSS CDN & Config -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
   <!-- FontAwesome Icons CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
@@ -1457,11 +1469,42 @@
           </div>
         </div>
 
-        <!-- TABEL REKAPITULASI KONSUMSI PER DEPOT / KANTIN -->
+        <!-- TABEL 1: REKAPITULASI SHIFT MAKAN (MAKAN SIANG & MAKAN SORE) -->
+        <div id="report-shift-rekap-container" class="avoid-break report-rekap-container">
+          <h3 id="report-shift-rekap-heading" class="font-bold text-slate-900 text-xs mb-1.5 flex items-center justify-between">
+            <span class="flex items-center gap-1.5">
+              <i class="fa-solid fa-clock-rotate-left text-sky-700"></i> 1. Rekapitulasi Shift Makan (Makan Siang &amp; Makan Sore)
+            </span>
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-sky-100 text-sky-800 border border-sky-200">
+              Shift Operasional
+            </span>
+          </h3>
+          <div class="overflow-x-auto rounded-lg border border-slate-200">
+            <table class="w-full text-left border-collapse report-table">
+              <thead id="report-shift-table-head">
+                <tr class="bg-slate-100 text-slate-700 text-[10px] uppercase tracking-wider font-bold border-b border-slate-200 avoid-break">
+                  <th class="py-1.5 px-3 w-10">No</th>
+                  <th class="py-1.5 px-3">Shift Makan</th>
+                  <th class="py-1.5 px-3 text-center">Jam Operasional</th>
+                  <th class="py-1.5 px-3 text-center">Jumlah Porsi</th>
+                  <th class="py-1.5 px-3 text-right">Tarif / Porsi</th>
+                  <th class="py-1.5 px-3 text-right">Subtotal Biaya (Rp)</th>
+                  <th class="py-1.5 px-3 text-center">Kontribusi (%)</th>
+                </tr>
+              </thead>
+              <tbody id="report-shift-table-body">
+              </tbody>
+              <tfoot id="report-shift-table-footer">
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- TABEL 2: REKAPITULASI KONSUMSI PER DEPOT / KANTIN -->
         <div id="report-tenant-rekap-container" class="avoid-break report-rekap-container">
           <h3 id="report-tenant-rekap-heading" class="font-bold text-slate-900 text-xs mb-1.5 flex items-center justify-between">
             <span class="flex items-center gap-1.5">
-              <i class="fa-solid fa-store text-emerald-700"></i> Rekapitulasi Konsumsi Per Depot Kantin
+              <i class="fa-solid fa-store text-emerald-700"></i> 2. Rekapitulasi Konsumsi Per Depot Kantin
             </span>
             <span id="report-tenant-rekap-badge" class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-teal-100 text-teal-800 border border-teal-200">
               Semua Depot
@@ -1486,10 +1529,10 @@
           </div>
         </div>
 
-        <!-- TABEL REKAPITULASI -->
+        <!-- TABEL 3: REKAPITULASI DEPARTEMEN -->
         <div class="avoid-break report-rekap-container">
           <h3 id="report-rekap-heading" class="font-bold text-slate-900 text-xs mb-1.5 flex items-center gap-1.5">
-            <i class="fa-solid fa-table-list text-emerald-700"></i> Rekapitulasi Konsumsi Per Departemen
+            <i class="fa-solid fa-table-list text-purple-700"></i> 3. Rekapitulasi Konsumsi Per Departemen
           </h3>
           <div class="overflow-x-auto rounded-lg border border-slate-200">
             <table class="w-full text-left border-collapse report-table">
@@ -1509,10 +1552,10 @@
           </div>
         </div>
 
-        <!-- Rincian Detail Log Absensi -->
+        <!-- TABEL 4: Rincian Detail Log Absensi -->
         <div id="report-detail-section" class="report-detail-container">
           <h3 id="report-detail-heading" class="font-bold text-slate-900 text-xs mb-1.5 flex items-center gap-1.5 avoid-break">
-            <i class="fa-solid fa-list-check text-slate-600"></i> Rincian Data Absensi
+            <i class="fa-solid fa-list-check text-emerald-700"></i> 4. Rincian Data Absensi Perorangan
           </h3>
           <div class="overflow-x-auto rounded-lg border border-slate-200">
             <table class="w-full text-left border-collapse report-table">
