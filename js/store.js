@@ -36,8 +36,8 @@ const DEFAULT_SETTINGS = {
   mealPrice: 15000, // Rp 15.000 per porsi
   bypassTimeForTesting: false, // Mode simulasi waktu
   tenants: [
-    { id: 'tenant1', name: 'Depot Bu Mamie', password: 'depota123', status: 'Aktif' },
-    { id: 'tenant2', name: 'Depot Bu Yuli', password: 'depotyuli123', status: 'Aktif' }
+    { id: 'tenant1', name: 'Depot Bu Mamie', password: 'depota123', status: 'Aktif', price: 13000 },
+    { id: 'tenant2', name: 'Depot Bu Yuli', password: 'depotyuli123', status: 'Aktif', price: 13000 }
   ]
 };
 
@@ -719,13 +719,31 @@ const Store = {
 
   getTenants() {
     const s = Store.getSettings();
+    const defaultPrice = Number(s.mealPrice) || 15000;
     if (s.tenants && Array.isArray(s.tenants) && s.tenants.length > 0) {
-      return s.tenants;
+      return s.tenants.map(t => ({
+        ...t,
+        price: (t.price !== undefined && t.price !== null && !isNaN(Number(t.price)) && Number(t.price) > 0)
+          ? Number(t.price)
+          : defaultPrice
+      }));
     }
     return [
-      { id: 'tenant1', name: s.tenant1Name || 'Depot Bu Mamie', status: 'Aktif' },
-      { id: 'tenant2', name: s.tenant2Name || 'Depot Bu Yuli', status: 'Aktif' }
+      { id: 'tenant1', name: s.tenant1Name || 'Depot Bu Mamie', status: 'Aktif', price: defaultPrice },
+      { id: 'tenant2', name: s.tenant2Name || 'Depot Bu Yuli', status: 'Aktif', price: defaultPrice }
     ];
+  },
+
+  getTenantPrice(tenantKey) {
+    if (!tenantKey) return Number(Store.getSettings().mealPrice) || 15000;
+    const tenants = Store.getTenants();
+    const cleanKey = String(tenantKey).trim().toLowerCase();
+    const t = tenants.find(item => item.id.toLowerCase() === cleanKey || item.name.toLowerCase() === cleanKey);
+    if (t && t.price !== undefined && t.price !== null && !isNaN(Number(t.price)) && Number(t.price) > 0) {
+      return Number(t.price);
+    }
+    const s = Store.getSettings();
+    return Number(s.mealPrice) || 15000;
   },
 
   getTenantName(tenantKey) {
@@ -739,14 +757,19 @@ const Store = {
     return tenantKey;
   },
 
-  addTenant(name, password = null) {
+  addTenant(name, password = null, price = null) {
     if (!name || !name.trim()) return null;
+    const s = Store.getSettings();
     const tenants = Store.getTenants();
     const newId = 'tenant_' + Date.now().toString(36);
+    const tenantPrice = (price !== null && price !== undefined && !isNaN(Number(price)) && Number(price) > 0)
+      ? Number(price)
+      : (Number(s.mealPrice) || 15000);
     const newTenant = {
       id: newId,
       name: name.trim(),
       password: password ? password.trim() : 'kantin123',
+      price: tenantPrice,
       status: 'Aktif'
     };
     tenants.push(newTenant);
@@ -754,12 +777,18 @@ const Store = {
     return newTenant;
   },
 
-  updateTenant(id, newName) {
-    if (!id || !newName || !newName.trim()) return null;
+  updateTenant(id, newName, newPrice = null, newPassword = null) {
+    if (!id) return null;
     const tenants = Store.getTenants();
     const t = tenants.find(item => item.id === id);
     if (t) {
-      t.name = newName.trim();
+      if (newName && newName.trim()) t.name = newName.trim();
+      if (newPrice !== null && newPrice !== undefined && !isNaN(Number(newPrice)) && Number(newPrice) > 0) {
+        t.price = Number(newPrice);
+      }
+      if (newPassword && newPassword.trim()) {
+        t.password = newPassword.trim();
+      }
       const s = Store.getSettings();
       if (id === 'tenant1') s.tenant1Name = t.name;
       if (id === 'tenant2') s.tenant2Name = t.name;
@@ -768,6 +797,11 @@ const Store = {
       return t;
     }
     return null;
+  },
+
+  updateTenantPrice(id, newPrice) {
+    if (!id || isNaN(Number(newPrice)) || Number(newPrice) <= 0) return false;
+    return !!this.updateTenant(id, null, Number(newPrice));
   },
 
   deleteTenant(id) {
@@ -922,7 +956,8 @@ const Store = {
       tenantId: tenantKey,
       tenantName: tenantName,
       shift: validation.shift,
-      cost: Number(settings.mealPrice) || 15000
+      price: Store.getTenantPrice(tenantKey),
+      cost: Store.getTenantPrice(tenantKey)
     };
 
     const attendances = Store.getAttendances();

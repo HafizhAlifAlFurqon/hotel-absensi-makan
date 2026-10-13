@@ -119,7 +119,7 @@ const TrainingManager = {
     const traineeIds = trainees.map(t => t.id.toLowerCase());
     const todayTraineeRecords = allRecords.filter(r => r.date === todayStr && (r.department === 'Training' || traineeIds.includes((r.employeeId || '').toLowerCase())));
 
-    const totalCost = todayTraineeRecords.reduce((sum, r) => sum + (Number(r.cost) || Store.getSettings().mealPrice || 15000), 0);
+    const totalCost = todayTraineeRecords.reduce((sum, r) => sum + (Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey) || 15000), 0);
 
     const statTotal = document.getElementById('training-stat-total');
     const statToday = document.getElementById('training-stat-today-eaten');
@@ -199,7 +199,7 @@ const TrainingManager = {
         rekapTbody.innerHTML = trainees.map((trn, idx) => {
           const trnRecords = records.filter(r => (r.employeeId && r.employeeId.toLowerCase() === trn.id.toLowerCase()) || r.employeeName === trn.name);
           const count = trnRecords.length;
-          const cost = trnRecords.reduce((sum, r) => sum + (Number(r.cost) || s.mealPrice), 0);
+          const cost = trnRecords.reduce((sum, r) => sum + (Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey)), 0);
 
           grandTotalMakan += count;
           grandTotalBiaya += cost;
@@ -249,6 +249,7 @@ const TrainingManager = {
         detailTbody.innerHTML = records.map((r, idx) => {
           const trn = trainees.find(t => t.id.toLowerCase() === (r.employeeId || '').toLowerCase());
           const inst = (trn && trn.institution) || '-';
+          const rowPrice = Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey);
           return `
             <tr class="hover:bg-slate-50 border-b border-slate-100 transition avoid-break">
               <td class="py-1.5 px-2.5 text-[11px] text-slate-400 font-mono">${idx + 1}</td>
@@ -258,7 +259,7 @@ const TrainingManager = {
               <td class="py-1.5 px-2.5 text-[11px] text-slate-600">${inst}</td>
               <td class="py-1.5 px-2.5 text-[11px] font-semibold text-emerald-800">${r.tenantName}</td>
               <td class="py-1.5 px-2.5 text-[11px] font-semibold text-indigo-700">${r.shift || '-'}</td>
-              <td class="py-1.5 px-2.5 text-[11px] font-mono font-bold text-right text-slate-800">Rp ${(Number(r.cost) || s.mealPrice).toLocaleString('id-ID')}</td>
+              <td class="py-1.5 px-2.5 text-[11px] font-mono font-bold text-right text-slate-800">Rp ${rowPrice.toLocaleString('id-ID')}</td>
             </tr>
           `;
         }).join('');

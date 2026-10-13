@@ -110,6 +110,7 @@ const TenantManager = {
   addNewCanteen() {
     const input = document.getElementById('new-canteen-name');
     const passInput = document.getElementById('new-canteen-pass');
+    const priceInput = document.getElementById('new-canteen-price');
     if (!input || !input.value.trim()) {
       alert('Silakan masukkan nama kantin / depot baru.');
       return;
@@ -117,23 +118,26 @@ const TenantManager = {
 
     const name = input.value.trim();
     const pass = passInput && passInput.value.trim() ? passInput.value.trim() : 'kantin123';
-    const created = Store.addTenant(name, pass);
+    const price = priceInput && priceInput.value ? Number(priceInput.value) : null;
+    const created = Store.addTenant(name, pass, price);
 
     if (created) {
       input.value = '';
       if (passInput) passInput.value = '';
+      if (priceInput) priceInput.value = '';
       this.renderTenantsList();
       this.renderQuickCredentials();
       if (window.App) window.App.updateTenantLabels();
       if (window.Dashboard) window.Dashboard.updateData();
       if (window.AttendanceManager) window.AttendanceManager.renderCanteenSimulationButtons();
+      if (window.ReportsManager) window.ReportsManager.render();
 
       const alertBox = document.getElementById('new-canteen-alert');
       if (alertBox) {
         alertBox.innerHTML = `
           <div class="p-3 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-800 text-xs flex items-center gap-2">
             <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
-            <span>Kantin baru <b>"${created.name}"</b> (Password: <b>${pass}</b>) berhasil ditambahkan ke sistem!</span>
+            <span>Kantin baru <b>"${created.name}"</b> (Tarif: <b>Rp ${(created.price || 15000).toLocaleString('id-ID')}</b>, Password: <b>${pass}</b>) berhasil ditambahkan ke sistem!</span>
           </div>
         `;
         setTimeout(() => { if (alertBox) alertBox.innerHTML = ''; }, 3500);
@@ -152,12 +156,32 @@ const TenantManager = {
         if (window.App) window.App.updateTenantLabels();
         if (window.Dashboard) window.Dashboard.updateData();
         if (window.AttendanceManager) window.AttendanceManager.renderCanteenSimulationButtons();
+        if (window.ReportsManager) window.ReportsManager.render();
+      }
+    }
+  },
+
+  promptEditPrice(tenantId) {
+    const tName = Store.getTenantName(tenantId);
+    const currentPrice = Store.getTenantPrice(tenantId);
+    const val = prompt(`Ubah Tarif Makan per Porsi untuk "${tName}" (Rupiah):`, currentPrice);
+    if (val !== null && val.trim() !== '') {
+      const num = Number(val.replace(/[^0-9]/g, ''));
+      if (!isNaN(num) && num > 0) {
+        Store.updateTenantPrice(tenantId, num);
+        this.renderTenantsList();
+        if (window.ReportsManager) window.ReportsManager.render();
+        if (window.Dashboard) window.Dashboard.updateData();
+        Store.playSound('success');
+      } else {
+        alert('Tarif harus berupa angka lebih dari 0.');
       }
     }
   },
 
   editCanteen(tenantId) {
     const currentName = Store.getTenantName(tenantId);
+    const currentPrice = Store.getTenantPrice(tenantId);
     const newName = prompt('Ubah Nama Kantin / Depot:', currentName);
     if (newName && newName.trim() && newName.trim() !== currentName) {
       Store.updateTenant(tenantId, newName.trim());
@@ -166,6 +190,7 @@ const TenantManager = {
       if (window.App) window.App.updateTenantLabels();
       if (window.Dashboard) window.Dashboard.updateData();
       if (window.AttendanceManager) window.AttendanceManager.renderCanteenSimulationButtons();
+      if (window.ReportsManager) window.ReportsManager.render();
     }
   },
 
@@ -180,6 +205,7 @@ const TenantManager = {
 
     tbody.innerHTML = tenants.map((t, idx) => {
       const pass = t.password || (t.id === 'tenant1' ? 'depota123' : (t.id === 'tenant2' ? 'depotyuli123' : 'kantin123'));
+      const price = t.price || Store.getTenantPrice(t.id);
       return `
         <tr class="hover:bg-slate-50 border-b border-slate-100 transition">
           <td class="py-3 px-3 text-xs text-slate-400 font-mono">${idx + 1}</td>
@@ -196,6 +222,14 @@ const TenantManager = {
                   <span class="text-amber-700 font-bold"><i class="fa-solid fa-key text-[9px]"></i> ${pass}</span>
                 </span>
               </div>
+            </div>
+          </td>
+          <td class="py-3 px-3 text-xs font-mono font-bold text-emerald-800">
+            <div class="flex items-center gap-1.5">
+              <span class="bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">Rp ${price.toLocaleString('id-ID')}</span>
+              <button onclick="TenantManager.promptEditPrice('${t.id}')" title="Ubah Tarif Depot Ini" class="w-6 h-6 rounded-md bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-800 text-[10px] inline-flex items-center justify-center cursor-pointer transition">
+                <i class="fa-solid fa-pen"></i>
+              </button>
             </div>
           </td>
           <td class="py-3 px-3 text-xs font-mono font-bold text-slate-600">

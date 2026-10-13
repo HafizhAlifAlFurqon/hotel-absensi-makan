@@ -326,10 +326,9 @@ const ReportsManager = {
     }
 
     const s = Store.getSettings();
-    const mealPrice = Number(s.mealPrice) || 15000;
+    const defaultMealPrice = Number(s.mealPrice) || 15000;
     const hotelName = s.hotelName || 'BeSS Mansion Hotel Surabaya';
     const totalPorsi = records.length;
-    const totalBiaya = totalPorsi * mealPrice;
 
     const periodText = (this.startDate === this.endDate)
       ? this.startDate
@@ -343,39 +342,49 @@ const ReportsManager = {
       ? 'Semua Depot Kantin' 
       : Store.getTenantName(this.tenantId);
 
-    // 1. Hitung Shift Data
-    const countSiang = records.filter(r => r.shift && r.shift.includes('Siang')).length;
-    const countSore = records.filter(r => r.shift && r.shift.includes('Sore')).length;
-    const biayaSiang = countSiang * mealPrice;
-    const biayaSore = countSore * mealPrice;
-    const pctSiang = totalPorsi > 0 ? ((countSiang / totalPorsi) * 100).toFixed(1) + '%' : '0%';
-    const pctSore = totalPorsi > 0 ? ((countSore / totalPorsi) * 100).toFixed(1) + '%' : '0%';
+    // Format Rupiah Helper
+    const fmtRp = (num) => 'Rp ' + new Intl.NumberFormat('id-ID').format(num);
 
-    // 2. Hitung Per Depot Kantin
+    // 1. Hitung Per Depot Kantin (Masing-masing Tarif Depot)
     const tenants = Store.getTenants();
     const tenantStats = {};
     tenants.forEach(t => {
-      tenantStats[t.id] = { name: t.name, count: 0, cost: 0 };
+      const tPrice = Store.getTenantPrice(t.id);
+      tenantStats[t.id] = { name: t.name, count: 0, cost: 0, price: tPrice };
     });
     records.forEach(r => {
       const tid = r.tenantId || r.tenantKey || 'tenant1';
+      const rPrice = Number(r.price || r.cost) || Store.getTenantPrice(tid);
       if (!tenantStats[tid]) {
-        tenantStats[tid] = { name: r.tenantName || tid, count: 0, cost: 0 };
+        tenantStats[tid] = { name: r.tenantName || tid, count: 0, cost: 0, price: rPrice };
       }
       tenantStats[tid].count++;
-      tenantStats[tid].cost += (Number(r.price) || mealPrice);
+      tenantStats[tid].cost += rPrice;
     });
+
+    // 2. Hitung Total Biaya Keseluruhan & Shift Data
+    const siangRecords = records.filter(r => r.shift && r.shift.includes('Siang'));
+    const soreRecords = records.filter(r => r.shift && r.shift.includes('Sore'));
+    const countSiang = siangRecords.length;
+    const countSore = soreRecords.length;
+    const biayaSiang = siangRecords.reduce((sum, r) => sum + (Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey)), 0);
+    const biayaSore = soreRecords.reduce((sum, r) => sum + (Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey)), 0);
+    const totalBiaya = records.reduce((sum, r) => sum + (Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey)), 0);
+
+    const pctSiang = totalPorsi > 0 ? ((countSiang / totalPorsi) * 100).toFixed(1) + '%' : '0%';
+    const pctSore = totalPorsi > 0 ? ((countSore / totalPorsi) * 100).toFixed(1) + '%' : '0%';
 
     // 3. Hitung Per Departemen
     const deptStats = {};
     records.forEach(r => {
       const isTrn = this.isTraineeRecord(r);
       const d = isTrn ? 'Training / Magang' : (r.department || 'Lainnya');
+      const rPrice = Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey);
       if (!deptStats[d]) {
         deptStats[d] = { name: d, count: 0, cost: 0 };
       }
       deptStats[d].count++;
-      deptStats[d].cost += (Number(r.price) || mealPrice);
+      deptStats[d].cost += rPrice;
     });
     const sortedDepts = Object.values(deptStats).sort((a, b) => b.count - a.count);
 
@@ -383,8 +392,12 @@ const ReportsManager = {
       day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
     }) + ' WIB';
 
-    // Format Rupiah Helper
-    const fmtRp = (num) => 'Rp ' + new Intl.NumberFormat('id-ID').format(num);
+    // Ringkasan Teks Tarif untuk Kop Surat
+    const activeTenants = Object.values(tenantStats);
+    const uniquePrices = Array.from(new Set(activeTenants.map(t => t.price)));
+    const priceHeaderText = uniquePrices.length === 1
+      ? fmtRp(uniquePrices[0])
+      : activeTenants.map(t => `${t.name}: ${fmtRp(t.price)}`).join(' | ');
 
     // Definisi Colgroup Standar 7 Kolom (Total Lebar: 920px - Fit Tepat di A4 Portrait 1 Halaman)
     const colgroupHtml = `
@@ -430,10 +443,10 @@ const ReportsManager = {
         </xml>
         <![endif]-->
         <style>
-          body { font-family: 'Segoe UI', Calibri, -apple-system, Arial, sans-serif; font-size: 10pt; color: #0f172a; background: #ffffff; }
+          body { font-family: 'Segoe UI', Calibri, -apple-system, Arial, sans-serif; font-size: 10pt; color: #000000; margin: 0; padding: 0; }
           table { border-collapse: collapse; width: 100%; margin-bottom: 20px; table-layout: fixed; }
-          th { background-color: #047857; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #065f46; padding: 7px 8px; font-size: 9.5pt; vertical-align: middle; }
-          td { border: 1px solid #cbd5e1; padding: 5px 8px; font-size: 9.5pt; vertical-align: middle; mso-number-format: '\\@'; white-space: nowrap; }
+          th { background-color: #047857; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #000000; padding: 7px 8px; font-size: 9.5pt; vertical-align: middle; }
+          td { border: 1px solid #000000; padding: 5px 8px; font-size: 9.5pt; vertical-align: middle; mso-number-format: '\\@'; white-space: nowrap; }
           .text-center { text-align: center; }
           .text-right { text-align: right; }
           .text-left { text-align: left; }
@@ -441,15 +454,15 @@ const ReportsManager = {
           .title { font-size: 14pt; font-weight: bold; color: #064e3b; text-align: left; border: none; }
           .subtitle { font-size: 10.5pt; font-weight: bold; color: #1e293b; text-align: left; border: none; }
           .meta-row { font-size: 9pt; color: #475569; border: none; }
-          .section-header { font-size: 10pt; font-weight: bold; padding: 7px 8px; border: 1px solid #94a3b8; }
+          .section-header { font-size: 10pt; font-weight: bold; padding: 7px 8px; border: 1px solid #000000; }
           .sec-shift { background-color: #e0f2fe; color: #0369a1; }
           .sec-tenant { background-color: #fef3c7; color: #92400e; }
           .sec-dept { background-color: #f3e8ff; color: #6b21a8; }
           .sec-detail { background-color: #ecfdf5; color: #065f46; }
-          .total-row { background-color: #f8fafc; font-weight: bold; }
-          .total-row td { border-top: 2px solid #64748b; border-bottom: 2px solid #64748b; font-weight: bold; }
+          .total-row { background-color: #f1f5f9; font-weight: bold; }
+          .total-row td { border: 1px solid #000000; border-top: 2px solid #000000; border-bottom: 2px solid #000000; font-weight: bold; }
           .grand-total { background-color: #dcfce7; font-weight: bold; color: #166534; }
-          .grand-total td { border-top: 2px solid #059669; border-bottom: 2px solid #059669; font-weight: bold; }
+          .grand-total td { border: 1px solid #000000; border-top: 2px solid #000000; border-bottom: 2px solid #000000; font-weight: bold; }
           .signature-box td { border: none !important; }
         </style>
       </head>
@@ -457,10 +470,10 @@ const ReportsManager = {
         <!-- KOP LAPORAN RESMI HOTEL (7 KOLOM) -->
         <table>
           ${colgroupHtml}
-          <tr><td colspan="7" class="title">${hotelName.toUpperCase()}</td></tr>
-          <tr><td colspan="7" class="subtitle">LAPORAN REKAPITULASI &amp; KONSUMSI ABSENSI MAKAN KARYAWAN</td></tr>
-          <tr><td colspan="7" class="meta-row"><b>Periode:</b> ${periodText} &nbsp;|&nbsp; <b>Lingkup:</b> ${scopeLabel} &nbsp;|&nbsp; <b>Filter Depot:</b> ${tenantLabel}</td></tr>
-          <tr><td colspan="7" class="meta-row"><b>Tarif Per Porsi:</b> ${fmtRp(mealPrice)} &nbsp;|&nbsp; <b>Waktu Ekspor:</b> ${exportTime}</td></tr>
+          <tr><td colspan="7" class="title" style="border:none;">${hotelName.toUpperCase()}</td></tr>
+          <tr><td colspan="7" class="subtitle" style="border:none;">LAPORAN REKAPITULASI &amp; KONSUMSI ABSENSI MAKAN KARYAWAN</td></tr>
+          <tr><td colspan="7" class="meta-row" style="border:none;"><b>Periode:</b> ${periodText} &nbsp;|&nbsp; <b>Lingkup:</b> ${scopeLabel} &nbsp;|&nbsp; <b>Filter Depot:</b> ${tenantLabel}</td></tr>
+          <tr><td colspan="7" class="meta-row" style="border:none;"><b>Tarif Makan:</b> ${priceHeaderText} &nbsp;|&nbsp; <b>Waktu Ekspor:</b> ${exportTime}</td></tr>
           <tr><td colspan="7" style="border:none; height: 10px;"></td></tr>
         </table>
 
@@ -470,43 +483,43 @@ const ReportsManager = {
         <table>
           ${colgroupHtml}
           <tr>
-            <td colspan="7" class="section-header sec-shift">
+            <td colspan="7" class="section-header sec-shift" style="border: 1px solid #000000;">
               1. REKAPITULASI SHIFT MAKAN (MAKAN SIANG &amp; MAKAN SORE)
             </td>
           </tr>
           <tr>
-            <th>No</th>
-            <th>Shift Makan</th>
-            <th>Jam Operasional</th>
-            <th>Jumlah Porsi</th>
-            <th>Tarif / Porsi</th>
-            <th>Subtotal Biaya (Rp)</th>
-            <th>Kontribusi (%)</th>
+            <th style="border: 1px solid #000000;">No</th>
+            <th style="border: 1px solid #000000;">Shift Makan</th>
+            <th style="border: 1px solid #000000;">Jam Operasional</th>
+            <th style="border: 1px solid #000000;">Jumlah Porsi</th>
+            <th style="border: 1px solid #000000;">Tarif / Porsi</th>
+            <th style="border: 1px solid #000000;">Subtotal Biaya (Rp)</th>
+            <th style="border: 1px solid #000000;">Kontribusi (%)</th>
           </tr>
           <tr>
-            <td class="text-center">1</td>
-            <td class="bold">Makan Siang</td>
-            <td class="text-center">11:00 - 15:00 WIB</td>
-            <td class="text-right bold">${countSiang} Porsi</td>
-            <td class="text-right">${fmtRp(mealPrice)}</td>
-            <td class="text-right bold">${fmtRp(biayaSiang)}</td>
-            <td class="text-center bold">${pctSiang}</td>
+            <td class="text-center" style="border: 1px solid #000000;">1</td>
+            <td class="bold" style="border: 1px solid #000000;">Makan Siang</td>
+            <td class="text-center" style="border: 1px solid #000000;">11:00 - 15:00 WIB</td>
+            <td class="text-right bold" style="border: 1px solid #000000;">${countSiang} Porsi</td>
+            <td class="text-right" style="border: 1px solid #000000;">${uniquePrices.length === 1 ? fmtRp(uniquePrices[0]) : 'Sesuai Depot'}</td>
+            <td class="text-right bold" style="border: 1px solid #000000;">${fmtRp(biayaSiang)}</td>
+            <td class="text-center bold" style="border: 1px solid #000000;">${pctSiang}</td>
           </tr>
           <tr>
-            <td class="text-center">2</td>
-            <td class="bold">Makan Sore</td>
-            <td class="text-center">15:01 - 19:00 WIB</td>
-            <td class="text-right bold">${countSore} Porsi</td>
-            <td class="text-right">${fmtRp(mealPrice)}</td>
-            <td class="text-right bold">${fmtRp(biayaSore)}</td>
-            <td class="text-center bold">${pctSore}</td>
+            <td class="text-center" style="border: 1px solid #000000;">2</td>
+            <td class="bold" style="border: 1px solid #000000;">Makan Sore</td>
+            <td class="text-center" style="border: 1px solid #000000;">15:01 - 19:00 WIB</td>
+            <td class="text-right bold" style="border: 1px solid #000000;">${countSore} Porsi</td>
+            <td class="text-right" style="border: 1px solid #000000;">${uniquePrices.length === 1 ? fmtRp(uniquePrices[0]) : 'Sesuai Depot'}</td>
+            <td class="text-right bold" style="border: 1px solid #000000;">${fmtRp(biayaSore)}</td>
+            <td class="text-center bold" style="border: 1px solid #000000;">${pctSore}</td>
           </tr>
           <tr class="total-row">
-            <td colspan="3" class="text-right bold">TOTAL KESELURUHAN SHIFT</td>
-            <td class="text-right bold">${totalPorsi} Porsi</td>
-            <td class="text-center">-</td>
-            <td class="text-right bold">${fmtRp(totalBiaya)}</td>
-            <td class="text-center bold">100.0%</td>
+            <td colspan="3" class="text-right bold" style="border: 1px solid #000000; border-top: 2px solid #000000; border-bottom: 2px solid #000000;">TOTAL KESELURUHAN SHIFT</td>
+            <td class="text-right bold" style="border: 1px solid #000000; border-top: 2px solid #000000; border-bottom: 2px solid #000000;">${totalPorsi} Porsi</td>
+            <td class="text-center" style="border: 1px solid #000000; border-top: 2px solid #000000; border-bottom: 2px solid #000000;">-</td>
+            <td class="text-right bold" style="border: 1px solid #000000; border-top: 2px solid #000000; border-bottom: 2px solid #000000;">${fmtRp(totalBiaya)}</td>
+            <td class="text-center bold" style="border: 1px solid #000000; border-top: 2px solid #000000; border-bottom: 2px solid #000000;">100.0%</td>
           </tr>
         </table>
 
@@ -516,18 +529,18 @@ const ReportsManager = {
         <table>
           ${colgroupHtml}
           <tr>
-            <td colspan="7" class="section-header sec-tenant">
-              2. REKAPITULASI PER DEPOT KANTIN (TAGIHAN KANTIN)
+            <td colspan="7" class="section-header sec-tenant" style="border: 1px solid #000000;">
+              2. REKAPITULASI PER DEPOT KANTIN (TAGIHAN MASING-MASING KANTIN)
             </td>
           </tr>
           <tr>
-            <th>No</th>
-            <th>Nama Depot / Kantin</th>
-            <th>ID Depot</th>
-            <th>Porsi Terjual</th>
-            <th>Tarif / Porsi</th>
-            <th>Total Tagihan (Rp)</th>
-            <th>Kontribusi (%)</th>
+            <th style="border: 1px solid #000000;">No</th>
+            <th style="border: 1px solid #000000;">Nama Depot / Kantin</th>
+            <th style="border: 1px solid #000000;">ID Depot</th>
+            <th style="border: 1px solid #000000;">Porsi Terjual</th>
+            <th style="border: 1px solid #000000;">Tarif / Porsi</th>
+            <th style="border: 1px solid #000000;">Total Tagihan (Rp)</th>
+            <th style="border: 1px solid #000000;">Kontribusi (%)</th>
           </tr>
     `;
 
@@ -542,24 +555,24 @@ const ReportsManager = {
       const pct = totalPorsi > 0 ? ((t.count / totalPorsi) * 100).toFixed(1) + '%' : '0%';
       html += `
         <tr>
-          <td class="text-center">${tIdx++}</td>
-          <td class="bold">${t.name}</td>
-          <td class="text-center">${tid}</td>
-          <td class="text-right bold">${t.count} Porsi</td>
-          <td class="text-right">${fmtRp(mealPrice)}</td>
-          <td class="text-right bold">${fmtRp(t.cost)}</td>
-          <td class="text-center bold">${pct}</td>
+          <td class="text-center" style="border: 1px solid #000000;">${tIdx++}</td>
+          <td class="bold" style="border: 1px solid #000000;">${t.name}</td>
+          <td class="text-center" style="border: 1px solid #000000;">${tid}</td>
+          <td class="text-right bold" style="border: 1px solid #000000;">${t.count} Porsi</td>
+          <td class="text-right bold" style="border: 1px solid #000000;">${fmtRp(t.price)}</td>
+          <td class="text-right bold" style="border: 1px solid #000000;">${fmtRp(t.cost)}</td>
+          <td class="text-center bold" style="border: 1px solid #000000;">${pct}</td>
         </tr>
       `;
     });
 
     html += `
           <tr class="total-row">
-            <td colspan="3" class="text-right bold">TOTAL TAGIHAN DEPOT KANTIN</td>
-            <td class="text-right bold">${tTotalCount} Porsi</td>
-            <td class="text-center">-</td>
-            <td class="text-right bold">${fmtRp(tTotalCost)}</td>
-            <td class="text-center bold">100.0%</td>
+            <td colspan="3" class="text-right bold" style="border: 1px solid #000000; border-top: 2px solid #000000; border-bottom: 2px solid #000000;">TOTAL TAGIHAN SELURUH DEPOT KANTIN</td>
+            <td class="text-right bold" style="border: 1px solid #000000; border-top: 2px solid #000000; border-bottom: 2px solid #000000;">${tTotalCount} Porsi</td>
+            <td class="text-center" style="border: 1px solid #000000; border-top: 2px solid #000000; border-bottom: 2px solid #000000;">-</td>
+            <td class="text-right bold" style="border: 1px solid #000000; border-top: 2px solid #000000; border-bottom: 2px solid #000000;">${fmtRp(tTotalCost)}</td>
+            <td class="text-center bold" style="border: 1px solid #000000; border-top: 2px solid #000000; border-bottom: 2px solid #000000;">100.0%</td>
           </tr>
         </table>
 
@@ -569,17 +582,17 @@ const ReportsManager = {
         <table>
           ${colgroupHtml}
           <tr>
-            <td colspan="7" class="section-header sec-dept">
+            <td colspan="7" class="section-header sec-dept" style="border: 1px solid #000000;">
               3. REKAPITULASI KONSUMSI PER DEPARTEMEN &amp; UNIT KERJA
             </td>
           </tr>
           <tr>
-            <th>No</th>
-            <th colspan="2">Nama Departemen / Unit Kerja</th>
-            <th>Jumlah Transaksi</th>
-            <th>Tarif / Porsi</th>
-            <th>Total Biaya Departemen (Rp)</th>
-            <th>Porsi (%)</th>
+            <th style="border: 1px solid #000000;">No</th>
+            <th colspan="2" style="border: 1px solid #000000;">Nama Departemen / Unit Kerja</th>
+            <th style="border: 1px solid #000000;">Jumlah Transaksi</th>
+            <th style="border: 1px solid #000000;">Tarif / Porsi</th>
+            <th style="border: 1px solid #000000;">Total Biaya Departemen (Rp)</th>
+            <th style="border: 1px solid #000000;">Porsi (%)</th>
           </tr>
     `;
 
@@ -587,23 +600,23 @@ const ReportsManager = {
       const pct = totalPorsi > 0 ? ((d.count / totalPorsi) * 100).toFixed(1) + '%' : '0%';
       html += `
         <tr>
-          <td class="text-center">${dIdx + 1}</td>
-          <td colspan="2" class="bold">${d.name}</td>
-          <td class="text-right bold">${d.count} Porsi</td>
-          <td class="text-right">${fmtRp(mealPrice)}</td>
-          <td class="text-right bold">${fmtRp(d.cost)}</td>
-          <td class="text-center bold">${pct}</td>
+          <td class="text-center" style="border: 1px solid #000000;">${dIdx + 1}</td>
+          <td colspan="2" class="bold" style="border: 1px solid #000000;">${d.name}</td>
+          <td class="text-right bold" style="border: 1px solid #000000;">${d.count} Porsi</td>
+          <td class="text-right" style="border: 1px solid #000000;">${uniquePrices.length === 1 ? fmtRp(uniquePrices[0]) : 'Sesuai Depot'}</td>
+          <td class="text-right bold" style="border: 1px solid #000000;">${fmtRp(d.cost)}</td>
+          <td class="text-center bold" style="border: 1px solid #000000;">${pct}</td>
         </tr>
       `;
     });
 
     html += `
           <tr class="total-row">
-            <td colspan="3" class="text-right bold">TOTAL KONSUMSI SELURUH DEPARTEMEN</td>
-            <td class="text-right bold">${totalPorsi} Porsi</td>
-            <td class="text-center">-</td>
-            <td class="text-right bold">${fmtRp(totalBiaya)}</td>
-            <td class="text-center bold">100.0%</td>
+            <td colspan="3" class="text-right bold" style="border: 1px solid #000000; border-top: 2px solid #000000; border-bottom: 2px solid #000000;">TOTAL KONSUMSI SELURUH DEPARTEMEN</td>
+            <td class="text-right bold" style="border: 1px solid #000000; border-top: 2px solid #000000; border-bottom: 2px solid #000000;">${totalPorsi} Porsi</td>
+            <td class="text-center" style="border: 1px solid #000000; border-top: 2px solid #000000; border-bottom: 2px solid #000000;">-</td>
+            <td class="text-right bold" style="border: 1px solid #000000; border-top: 2px solid #000000; border-bottom: 2px solid #000000;">${fmtRp(totalBiaya)}</td>
+            <td class="text-center bold" style="border: 1px solid #000000; border-top: 2px solid #000000; border-bottom: 2px solid #000000;">100.0%</td>
           </tr>
         </table>
 
@@ -613,18 +626,18 @@ const ReportsManager = {
         <table>
           ${colgroupHtml}
           <tr>
-            <td colspan="7" class="section-header sec-detail">
+            <td colspan="7" class="section-header sec-detail" style="border: 1px solid #000000;">
               4. RINCIAN LENGKAP TRANSAKSI ABSENSI MAKAN PERORANGAN
             </td>
           </tr>
           <tr>
-            <th>No</th>
-            <th>Tanggal &amp; Waktu</th>
-            <th>ID &amp; Nama Karyawan</th>
-            <th>Departemen &amp; Jabatan</th>
-            <th>Shift Makan</th>
-            <th>Depot Kantin</th>
-            <th>Tarif / Biaya (Rp)</th>
+            <th style="border: 1px solid #000000;">No</th>
+            <th style="border: 1px solid #000000;">Tanggal &amp; Waktu</th>
+            <th style="border: 1px solid #000000;">ID &amp; Nama Karyawan</th>
+            <th style="border: 1px solid #000000;">Departemen &amp; Jabatan</th>
+            <th style="border: 1px solid #000000;">Shift Makan</th>
+            <th style="border: 1px solid #000000;">Depot Kantin</th>
+            <th style="border: 1px solid #000000;">Tarif / Biaya (Rp)</th>
           </tr>
     `;
 
@@ -634,26 +647,26 @@ const ReportsManager = {
       const pos = isTrn ? (r.institution || 'Siswa Magang') : (r.position || '-');
       const tenant = r.tenantName || Store.getTenantName(r.tenantId || r.tenantKey) || 'Kantin';
       const shift = r.shift || (r.time && r.time < '15:01:00' ? 'Makan Siang' : 'Makan Sore');
-      const pr = Number(r.price) || mealPrice;
+      const pr = Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey);
       const timeStr = r.time ? r.time.substring(0, 5) : '';
 
       html += `
         <tr>
-          <td class="text-center">${rIdx + 1}</td>
-          <td class="text-center">${r.date} ${timeStr}</td>
-          <td><b>${r.employeeName || '-'}</b> (${r.employeeId || '-'})</td>
-          <td>${dept} ${pos && pos !== '-' ? '• ' + pos : ''}</td>
-          <td class="text-center">${shift}</td>
-          <td>${tenant}</td>
-          <td class="text-right bold">${fmtRp(pr)}</td>
+          <td class="text-center" style="border: 1px solid #000000;">${rIdx + 1}</td>
+          <td class="text-center" style="border: 1px solid #000000;">${r.date} ${timeStr}</td>
+          <td style="border: 1px solid #000000;"><b>${r.employeeName || '-'}</b> (${r.employeeId || '-'})</td>
+          <td style="border: 1px solid #000000;">${dept} ${pos && pos !== '-' ? '• ' + pos : ''}</td>
+          <td class="text-center" style="border: 1px solid #000000;">${shift}</td>
+          <td style="border: 1px solid #000000;">${tenant}</td>
+          <td class="text-right bold" style="border: 1px solid #000000;">${fmtRp(pr)}</td>
         </tr>
       `;
     });
 
     html += `
           <tr class="grand-total">
-            <td colspan="6" class="text-right bold" style="font-size: 10.5pt; padding: 8px;">GRAND TOTAL KESELURUHAN BIAYA TRANSAKSI</td>
-            <td class="text-right bold" style="font-size: 10.5pt; padding: 8px;">${fmtRp(totalBiaya)}</td>
+            <td colspan="6" class="text-right bold" style="font-size: 10.5pt; padding: 8px; border: 1px solid #000000; border-top: 2px solid #000000; border-bottom: 2px solid #000000;">GRAND TOTAL KESELURUHAN BIAYA TRANSAKSI</td>
+            <td class="text-right bold" style="font-size: 10.5pt; padding: 8px; border: 1px solid #000000; border-top: 2px solid #000000; border-bottom: 2px solid #000000;">${fmtRp(totalBiaya)}</td>
           </tr>
         </table>
 
@@ -797,7 +810,7 @@ const ReportsManager = {
 
     // 3. Statistik Total Orang Makan & Total Biaya
     const totalEaten = records.length;
-    const totalBiaya = records.reduce((sum, r) => sum + (Number(r.cost) || s.mealPrice || 15000), 0);
+    const totalBiaya = records.reduce((sum, r) => sum + (Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey)), 0);
 
     const totalEatenEl = document.getElementById('report-total-eaten');
     const totalCostEl = document.getElementById('report-total-cost');
@@ -850,13 +863,18 @@ const ReportsManager = {
     const tfoot = document.getElementById('report-shift-table-footer');
     if (!tbody) return;
 
-    const mealPrice = Number(s.mealPrice) || 15000;
     const totalPorsi = records.length;
-    const countSiang = records.filter(r => r.shift && r.shift.includes('Siang')).length;
-    const countSore = records.filter(r => r.shift && r.shift.includes('Sore')).length;
-    const biayaSiang = countSiang * mealPrice;
-    const biayaSore = countSore * mealPrice;
-    const totalBiaya = totalPorsi * mealPrice;
+    const siangRecords = records.filter(r => r.shift && r.shift.includes('Siang'));
+    const soreRecords = records.filter(r => r.shift && r.shift.includes('Sore'));
+    const countSiang = siangRecords.length;
+    const countSore = soreRecords.length;
+    const biayaSiang = siangRecords.reduce((sum, r) => sum + (Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey)), 0);
+    const biayaSore = soreRecords.reduce((sum, r) => sum + (Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey)), 0);
+    const totalBiaya = records.reduce((sum, r) => sum + (Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey)), 0);
+
+    const tenants = Store.getTenants();
+    const uniquePrices = Array.from(new Set(tenants.map(t => t.price || Store.getTenantPrice(t.id))));
+    const priceText = uniquePrices.length === 1 ? `Rp ${uniquePrices[0].toLocaleString('id-ID')}` : 'Sesuai Depot';
 
     const pctSiang = totalPorsi > 0 ? ((countSiang / totalPorsi) * 100).toFixed(1) : '0.0';
     const pctSore = totalPorsi > 0 ? ((countSore / totalPorsi) * 100).toFixed(1) : '0.0';
@@ -872,7 +890,7 @@ const ReportsManager = {
         </td>
         <td class="py-1.5 px-3 text-xs text-slate-600 text-center font-mono">11:00 - 15:00 WIB</td>
         <td class="py-1.5 px-3 text-xs font-extrabold text-center text-slate-900">${countSiang} Porsi</td>
-        <td class="py-1.5 px-3 text-xs font-semibold text-right font-mono text-slate-600">Rp ${mealPrice.toLocaleString('id-ID')}</td>
+        <td class="py-1.5 px-3 text-xs font-semibold text-right font-mono text-slate-600">${priceText}</td>
         <td class="py-1.5 px-3 text-xs font-bold text-right font-mono text-emerald-700">Rp ${biayaSiang.toLocaleString('id-ID')}</td>
         <td class="py-1.5 px-3 text-xs font-semibold text-center text-slate-700">
           <span class="inline-flex items-center px-1.5 py-0.5 rounded ${Number(pctSiang) > 0 ? 'bg-amber-50 text-amber-800 font-bold border border-amber-200' : 'bg-slate-100 text-slate-400'} text-[10px]">
@@ -890,7 +908,7 @@ const ReportsManager = {
         </td>
         <td class="py-1.5 px-3 text-xs text-slate-600 text-center font-mono">15:01 - 19:00 WIB</td>
         <td class="py-1.5 px-3 text-xs font-extrabold text-center text-slate-900">${countSore} Porsi</td>
-        <td class="py-1.5 px-3 text-xs font-semibold text-right font-mono text-slate-600">Rp ${mealPrice.toLocaleString('id-ID')}</td>
+        <td class="py-1.5 px-3 text-xs font-semibold text-right font-mono text-slate-600">${priceText}</td>
         <td class="py-1.5 px-3 text-xs font-bold text-right font-mono text-emerald-700">Rp ${biayaSore.toLocaleString('id-ID')}</td>
         <td class="py-1.5 px-3 text-xs font-semibold text-center text-slate-700">
           <span class="inline-flex items-center px-1.5 py-0.5 rounded ${Number(pctSore) > 0 ? 'bg-indigo-50 text-indigo-800 font-bold border border-indigo-200' : 'bg-slate-100 text-slate-400'} text-[10px]">
@@ -946,8 +964,8 @@ const ReportsManager = {
     });
 
     const fullTenantList = [
-      ...tenants.map(t => ({ id: t.id, name: t.name })),
-      ...Array.from(extraTenantNames).map(name => ({ id: name, name: name }))
+      ...tenants.map(t => ({ id: t.id, name: t.name, price: t.price || Store.getTenantPrice(t.id) })),
+      ...Array.from(extraTenantNames).map(name => ({ id: name, name: name, price: Store.getTenantPrice(name) }))
     ];
 
     // Filter daftar yang ditampilkan jika pengguna memilih spesifik 1 depot
@@ -962,9 +980,10 @@ const ReportsManager = {
     let grandTotalBiaya = 0;
 
     const rowsHtml = effectiveList.map((t, idx) => {
+      const tPrice = Store.getTenantPrice(t.id);
       const tRecords = scopedRecords.filter(r => this.matchesTenant(r, t.id));
       const porsi = tRecords.length;
-      const biaya = tRecords.reduce((sum, r) => sum + (Number(r.cost) || s.mealPrice || 15000), 0);
+      const biaya = tRecords.reduce((sum, r) => sum + (Number(r.price || r.cost) || tPrice), 0);
       const percent = totalScopedPorsi > 0 ? ((porsi / totalScopedPorsi) * 100).toFixed(1) : '0.0';
 
       grandTotalPorsi += porsi;
@@ -985,6 +1004,7 @@ const ReportsManager = {
             </div>
           </td>
           <td class="py-1.5 px-3 text-xs font-extrabold text-center text-slate-900">${porsi} Porsi</td>
+          <td class="py-1.5 px-3 text-xs font-semibold text-right font-mono text-slate-700">Rp ${tPrice.toLocaleString('id-ID')}</td>
           <td class="py-1.5 px-3 text-xs font-bold text-right font-mono text-emerald-700">Rp ${biaya.toLocaleString('id-ID')}</td>
           <td class="py-1.5 px-3 text-xs font-semibold text-center text-slate-700">
             <span class="inline-flex items-center px-1.5 py-0.5 rounded ${Number(percent) > 0 ? 'bg-emerald-50 text-emerald-800 font-bold border border-emerald-200' : 'bg-slate-100 text-slate-400'} text-[10px]">
@@ -997,7 +1017,7 @@ const ReportsManager = {
 
     tbody.innerHTML = rowsHtml || `
       <tr>
-        <td colspan="5" class="text-center py-4 text-slate-400 text-xs">
+        <td colspan="6" class="text-center py-4 text-slate-400 text-xs">
           Belum ada riwayat konsumsi makan di depot kantin pada periode ini.
         </td>
       </tr>
@@ -1009,6 +1029,7 @@ const ReportsManager = {
         <tr class="bg-teal-50/90 font-bold border-t-2 border-teal-600 avoid-break">
           <td colspan="2" class="py-2 px-3 text-xs uppercase tracking-wider text-teal-950 font-extrabold">TOTAL KONSUMSI ${isAll ? 'SEMUA DEPOT' : tenantLabel.toUpperCase()} (${scopeLabelFoot})</td>
           <td class="py-2 px-3 text-xs text-center text-teal-950 font-extrabold text-xs">${grandTotalPorsi} Porsi</td>
+          <td class="py-2 px-3 text-xs text-center text-teal-950 font-extrabold text-xs">-</td>
           <td class="py-2 px-3 text-xs text-right font-mono text-teal-950 font-extrabold text-xs">Rp ${grandTotalBiaya.toLocaleString('id-ID')}</td>
           <td class="py-2 px-3 text-xs text-center text-teal-950 font-extrabold">${totalScopedPorsi > 0 ? ((grandTotalPorsi / totalScopedPorsi) * 100).toFixed(0) : 100}%</td>
         </tr>
@@ -1046,7 +1067,7 @@ const ReportsManager = {
       const rowsHtml = window.DEPARTMENTS.map((deptName, idx) => {
         const deptRecords = records.filter(r => r.department === deptName);
         const jumlah = deptRecords.length;
-        const biaya = deptRecords.reduce((sum, r) => sum + (Number(r.cost) || s.mealPrice || 15000), 0);
+        const biaya = deptRecords.reduce((sum, r) => sum + (Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey)), 0);
 
         grandTotalJumlah += jumlah;
         grandTotalBiaya += biaya;
@@ -1100,7 +1121,7 @@ const ReportsManager = {
       const rowsHtml = deptList.map((deptName, idx) => {
         const deptRecords = records.filter(r => r.department === deptName);
         const jumlah = deptRecords.length;
-        const biaya = deptRecords.reduce((sum, r) => sum + (Number(r.cost) || s.mealPrice || 15000), 0);
+        const biaya = deptRecords.reduce((sum, r) => sum + (Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey)), 0);
 
         grandTotalJumlah += jumlah;
         grandTotalBiaya += biaya;
@@ -1165,7 +1186,7 @@ const ReportsManager = {
           };
         }
         traineeMap[id].count++;
-        traineeMap[id].cost += (Number(r.cost) || s.mealPrice || 15000);
+        traineeMap[id].cost += (Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey));
       });
 
       const traineeList = Object.values(traineeMap);
@@ -1304,7 +1325,7 @@ const ReportsManager = {
       const isTrn = this.isTraineeRecord(r);
       const emp = Store.findEmployee(r.employeeId);
       const institution = (emp && emp.institution) ? emp.institution : (r.institution || '-');
-      const biaya = Number(r.cost) || s.mealPrice || 15000;
+      const biaya = Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey);
 
       if (this.scope === 'global') {
         return `

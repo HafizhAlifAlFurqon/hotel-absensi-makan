@@ -143,7 +143,7 @@ const Dashboard = {
     }
 
     // Biaya total
-    const totalBiaya = records.reduce((sum, r) => sum + (Number(r.cost) || s.mealPrice), 0);
+    const totalBiaya = records.reduce((sum, r) => sum + (Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey)), 0);
 
     // Hitung per depot secara dinamis untuk seluruh kantin terdaftar
     const tenants = Store.getTenants();
@@ -167,6 +167,7 @@ const Dashboard = {
           { border: 'border-amber-200', bg: 'bg-amber-100', text: 'text-amber-700', badge: 'text-amber-600', icon: 'fa-kitchen-set' }
         ];
         const c = colors[idx % colors.length];
+        const tPrice = Store.getTenantPrice(tc.id);
         return `
           <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:${c.border} transition">
             <div class="flex items-center justify-between">
@@ -179,7 +180,7 @@ const Dashboard = {
               <span class="text-2xl font-extrabold text-slate-900 font-mono">${tc.count}</span>
               <span class="text-xs font-semibold ${c.badge}">Porsi</span>
             </div>
-            <p class="text-[11px] text-slate-400 mt-1">Total konsumsi kantin</p>
+            <p class="text-[11px] text-slate-400 mt-1">Tarif: Rp ${tPrice.toLocaleString('id-ID')} / porsi</p>
           </div>
         `;
       }).join('');
