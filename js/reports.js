@@ -298,6 +298,105 @@ const ReportsManager = {
     return `Laporan_Absensi_Makan_${scopePart}_${tenantPart}_${formatPart}_${this.startDate}_sd_${this.endDate}.pdf`;
   },
 
+  getFilteredRecords() {
+    const sInput = document.getElementById('report-start-date');
+    const eInput = document.getElementById('report-end-date');
+    if (sInput && sInput.value) this.startDate = sInput.value;
+    if (eInput && eInput.value) this.endDate = eInput.value;
+
+    const allRecords = Store.getAttendances(this.startDate, this.endDate);
+
+    let scopedRecords = allRecords;
+    if (this.scope === 'employee') {
+      scopedRecords = allRecords.filter(r => !this.isTraineeRecord(r));
+    } else if (this.scope === 'training') {
+      scopedRecords = allRecords.filter(r => this.isTraineeRecord(r));
+    }
+
+    return (this.tenantId === 'all' || !this.tenantId)
+      ? scopedRecords
+      : scopedRecords.filter(r => this.matchesTenant(r, this.tenantId));
+  },
+
+  exportToExcel() {
+    const records = this.getFilteredRecords();
+    if (!records || records.length === 0) {
+      alert('Tidak ada data absensi untuk diekspor pada filter dan periode ini.');
+      return;
+    }
+
+    const s = Store.getSettings();
+    const mealPrice = Number(s.mealPrice) || 15000;
+    const hotelName = s.hotelName || 'BeSS Mansion Hotel Surabaya';
+    const totalBiaya = records.length * mealPrice;
+
+    const periodText = (this.startDate === this.endDate)
+      ? this.startDate
+      : `${this.startDate} s/d ${this.endDate}`;
+
+    const scopeLabel = this.scope === 'employee' 
+      ? 'Karyawan Saja' 
+      : (this.scope === 'training' ? 'Anak Training' : 'Global (Semua)');
+    
+    const tenantLabel = (this.tenantId === 'all' || !this.tenantId) 
+      ? 'Semua Depot Kantin' 
+      : Store.getTenantName(this.tenantId);
+
+    // Hitung rincian shift
+    const countSiang = records.filter(r => r.shift && r.shift.includes('Siang')).length;
+    const countSore = records.filter(r => r.shift && r.shift.includes('Sore')).length;
+
+    // Buat CSV Format (dengan UTF-8 BOM \uFEFF agar terbaca mulus di Excel tanpa karakter rusak)
+    let csv = '\uFEFF';
+    csv += `LAPORAN REKAPITULASI & KONSUMSI ABSENSI MAKAN\n`;
+    csv += `Hotel,"${hotelName.replace(/"/g, '""')}"\n`;
+    csv += `Periode,"${periodText}"\n`;
+    csv += `Lingkup Laporan,"${scopeLabel}"\n`;
+    csv += `Depot Kantin,"${tenantLabel.replace(/"/g, '""')}"\n`;
+    csv += `Total Porsi,"${records.length} Porsi"\n`;
+    csv += `Makan Siang (11:00-15:00),"${countSiang} Porsi"\n`;
+    csv += `Makan Sore (15:01-19:00),"${countSore} Porsi"\n`;
+    csv += `Total Nominal Tagihan (Rp),"Rp ${new Intl.NumberFormat('id-ID').format(totalBiaya)}"\n`;
+    csv += `Tanggal Ekspor,"${new Date().toLocaleString('id-ID')} WIB"\n\n`;
+
+    // Header Kolom Tabel
+    csv += `"No","Tanggal","Waktu (WIB)","ID Karyawan","Nama Karyawan","Departemen","Jabatan / Instansi","Shift Makan","Kantin / Depot","Tarif Porsi (Rp)","Kategori Peserta"\n`;
+
+    // Data Baris Transaksi
+    records.forEach((r, idx) => {
+      const isTrn = this.isTraineeRecord(r);
+      const category = isTrn ? 'Anak Training' : 'Karyawan';
+      const dept = r.department || '-';
+      const pos = isTrn ? (r.institution || 'Siswa Magang') : (r.position || '-');
+      const tenant = r.tenantName || Store.getTenantName(r.tenantId || r.tenantKey) || 'Kantin';
+      const shift = r.shift || (r.time && r.time < '15:01:00' ? 'Makan Siang' : 'Makan Sore');
+      const pr = Number(r.price) || mealPrice;
+
+      csv += `"${idx + 1}",`;
+      csv += `"${r.date}",`;
+      csv += `"${r.time || '-'}",`;
+      csv += `"${(r.employeeId || '').replace(/"/g, '""')}",`;
+      csv += `"${(r.employeeName || '').replace(/"/g, '""')}",`;
+      csv += `"${dept.replace(/"/g, '""')}",`;
+      csv += `"${pos.replace(/"/g, '""')}",`;
+      csv += `"${shift}",`;
+      csv += `"${tenant.replace(/"/g, '""')}",`;
+      csv += `"${pr}",`;
+      csv += `"${category}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const filename = `Laporan_Absensi_Makan_${this.startDate}_sd_${this.endDate}.csv`;
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
+
   render() {
     const sInput = document.getElementById('report-start-date');
     const eInput = document.getElementById('report-end-date');

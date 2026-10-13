@@ -608,13 +608,18 @@
 
             <!-- TAB 1: Kasir Scan Karyawan (Scanner Kamera & Manual ID) -->
             <div id="canteen-tab-scanner" class="space-y-4">
-              <h3 class="font-bold text-slate-900 text-sm flex items-center justify-between">
+              <h3 class="font-bold text-slate-900 text-sm flex flex-wrap items-center justify-between gap-2">
                 <span class="flex items-center gap-2">
                   <i class="fa-solid fa-qrcode text-emerald-600"></i> Scan QR atau Masukkan ID Karyawan
                 </span>
-                <button id="canteen-btn-toggle-cam" onclick="AttendanceManager.toggleCanteenScanner()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
-                  <i class="fa-solid fa-camera"></i> Buka Kamera Scan QR
-                </button>
+                <div class="flex items-center gap-1.5">
+                  <button type="button" onclick="Store.playSound('success')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200 transition flex items-center gap-1 cursor-pointer" title="Uji Coba Suara Beep Scanner">
+                    <i class="fa-solid fa-volume-high text-emerald-600"></i> <span class="hidden sm:inline">Tes Audio</span>
+                  </button>
+                  <button id="canteen-btn-toggle-cam" onclick="AttendanceManager.toggleCanteenScanner()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-camera"></i> Buka Kamera Scan QR
+                  </button>
+                </div>
               </h3>
 
               <div id="canteen-qr-reader" class="hidden w-full bg-black rounded-xl overflow-hidden relative"></div>
@@ -1111,6 +1116,32 @@
                 <i class="fa-solid fa-arrows-rotate"></i> Sinkronkan Manual Sekarang
               </button>
             </div>
+          <!-- Card Cadangan & Ekspor Database (Backup / Restore) -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center justify-between border-b border-slate-100 pb-3">
+              <span class="flex items-center gap-2"><i class="fa-solid fa-cloud-arrow-down text-emerald-600"></i> Backup &amp; Ekspor Database</span>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold">Aman</span>
+            </h3>
+            <p class="text-xs text-slate-500 leading-relaxed">
+              Unduh salinan cadangan lengkap data absensi, akun karyawan, siswa training, dan pengaturan sistem sewaktu-waktu.
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              <button onclick="Store.exportBackupJSON()" class="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs" title="Unduh backup seluruh data dalam format JSON">
+                <i class="fa-solid fa-file-code"></i> Unduh JSON
+              </button>
+              <button onclick="Store.exportSQLDump()" class="py-2.5 px-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs" title="Unduh data riwayat absensi dalam format SQL INSERT untuk phpMyAdmin">
+                <i class="fa-solid fa-database"></i> Ekspor SQL
+              </button>
+            </div>
+            <div class="pt-2 border-t border-slate-100">
+              <label class="text-[11px] font-bold text-slate-600 block mb-1">Pulihkan Data dari File Backup (JSON):</label>
+              <div class="flex items-center gap-2">
+                <input type="file" id="backup-restore-file" accept=".json" class="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
+                <button onclick="Store.importBackupJSON()" class="px-3 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold text-xs rounded-lg transition shrink-0 cursor-pointer">
+                  Pulihkan
+                </button>
+              </div>
+            </div>
           </div>
 
           <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
@@ -1353,15 +1384,19 @@
             <input type="date" id="report-end-date" onchange="ReportsManager.handleCustomDateChange()" class="px-2.5 py-1.5 text-xs font-medium border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-slate-50">
           </div>
 
-          <!-- BUTTONS DOWNLOAD PDF: DUA TOMBOL SESUAI PERMINTAAN USER -->
-          <div class="flex items-center gap-2">
+          <!-- BUTTONS DOWNLOAD PDF & EXCEL -->
+          <div class="flex flex-wrap items-center gap-2">
             <!-- 1. Tombol Download Tanpa Rincian -->
-            <button id="report-btn-summary" onclick="ReportsManager.openPdfPreview('summary')" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer" title="Pratinjau & Download Rekapitulasi Tanpa Rincian (Ringkasan Eksekutif)">
+            <button id="report-btn-summary" onclick="ReportsManager.openPdfPreview('summary')" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer" title="Pratinjau & Download Rekapitulasi Tanpa Rincian (Ringkasan Eksekutif)">
               <i class="fa-solid fa-file-invoice"></i> Unduh Tanpa Rincian
             </button>
             <!-- 2. Tombol Download Dengan Rincian -->
-            <button id="report-btn-detailed" onclick="ReportsManager.openPdfPreview('detailed')" class="px-3.5 py-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer" title="Pratinjau & Download Laporan Lengkap Beserta Rincian Data Transaksi">
+            <button id="report-btn-detailed" onclick="ReportsManager.openPdfPreview('detailed')" class="px-3 py-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer" title="Pratinjau & Download Laporan Lengkap Beserta Rincian Data Transaksi">
               <i class="fa-solid fa-file-pdf"></i> Unduh Dengan Rincian
+            </button>
+            <!-- 3. Tombol Ekspor Excel (.csv) -->
+            <button id="report-btn-excel" onclick="ReportsManager.exportToExcel()" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white font-extrabold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer" title="Ekspor data rekapitulasi dan rincian transaksi ke file Excel (.csv) untuk tim Finance">
+              <i class="fa-solid fa-file-excel text-emerald-400"></i> Ekspor Excel (CSV)
             </button>
           </div>
         </div>

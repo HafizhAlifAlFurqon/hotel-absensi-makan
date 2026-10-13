@@ -45,36 +45,75 @@ const Store = {
   isMySQL: false,
   isSyncing: false,
 
-  // --- Audio Feedback (Web Audio API Synthesizer) ---
+  audioCtx: null,
+
+  getAudioContext() {
+    if (!this.audioCtx) {
+      const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtxClass) {
+        this.audioCtx = new AudioCtxClass();
+      }
+    }
+    if (this.audioCtx && this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume().catch(() => {});
+    }
+    return this.audioCtx;
+  },
+
+  // --- Audio Feedback (Web Audio API Synthesizer Respon Cepat) ---
   playSound(type = 'success') {
     try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      const audioCtx = this.getAudioContext();
+      if (!audioCtx) return;
+
+      const now = audioCtx.currentTime;
 
       if (type === 'success') {
-        // Melodi sukses dua nada (beep-boop naik)
+        // Nada Beep Retail POS Sukses (Jernih & Nyaring: B5 987Hz -> E6 1318Hz)
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); // A5
-        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.35);
+        osc.frequency.setValueAtTime(987.77, now); // B5
+        osc.frequency.setValueAtTime(1318.51, now + 0.08); // E6
+
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+
+        osc.start(now);
+        osc.stop(now + 0.28);
       } else {
-        // Nada error buzz rendah
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(180, audioCtx.currentTime);
-        osc.frequency.setValueAtTime(140, audioCtx.currentTime + 0.15);
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.35);
+        // Nada Warning / Error Buzz Ganda (Ditolak / Sudah Makan Hari Ini: 220Hz & 180Hz)
+        const osc1 = audioCtx.createOscillator();
+        const gain1 = audioCtx.createGain();
+        osc1.connect(gain1);
+        gain1.connect(audioCtx.destination);
+
+        osc1.type = 'sawtooth';
+        osc1.frequency.setValueAtTime(220, now);
+        gain1.gain.setValueAtTime(0.35, now);
+        gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+
+        osc1.start(now);
+        osc1.stop(now + 0.12);
+
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+
+        osc2.type = 'sawtooth';
+        osc2.frequency.setValueAtTime(180, now + 0.16);
+        gain2.gain.setValueAtTime(0.35, now + 0.16);
+        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.32);
+
+        osc2.start(now + 0.16);
+        osc2.stop(now + 0.32);
       }
     } catch (e) {
-      console.warn('Audio feedback not available', e);
+      console.warn('Audio feedback error:', e);
     }
   },
 
@@ -943,6 +982,10 @@ const Store = {
 
   // Ekspor seluruh database ke file JSON (Backup Mandiri)
   exportAllDataJSON() {
+    this.exportBackupJSON();
+  },
+
+  exportBackupJSON() {
     const backupData = {
       version: '2.0.0',
       exportedAt: new Date().toISOString(),
@@ -953,14 +996,145 @@ const Store = {
       employees: Store.getEmployees(),
       attendances: Store.getAttendances()
     };
-    const jsonStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const dlAnchor = document.createElement('a');
-    dlAnchor.setAttribute("href", jsonStr);
+    dlAnchor.setAttribute("href", url);
     const dateStamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    dlAnchor.setAttribute("download", `backup_absen_makan_hotel_${dateStamp}.json`);
+    dlAnchor.setAttribute("download", `backup_absen_hotel_${dateStamp}.json`);
     document.body.appendChild(dlAnchor);
     dlAnchor.click();
-    dlAnchor.remove();
+    document.body.removeChild(dlAnchor);
+    URL.revokeObjectURL(url);
+  },
+
+  // Ekspor seluruh data absensi & master ke file SQL Dump untuk phpMyAdmin
+  exportSQLDump() {
+    const s = Store.getSettings();
+    const hotelName = s.hotelName || 'BeSS Mansion Hotel Surabaya';
+    const attendances = Store.getAttendances();
+    const employees = Store.getEmployees();
+    const tenants = Store.getTenants();
+    const dateStamp = new Date().toISOString().slice(0, 10);
+
+    let sql = `-- ========================================================\n`;
+    sql += `-- BACKUP DATABASE: absen_makan_hotel\n`;
+    sql += `-- HOTEL: ${hotelName}\n`;
+    sql += `-- TANGGAL BACKUP: ${new Date().toLocaleString('id-ID')} WIB\n`;
+    sql += `-- TOTAL DATA: ${attendances.length} Transaksi Absensi, ${employees.length} Karyawan, ${tenants.length} Kantin\n`;
+    sql += `-- ========================================================\n\n`;
+
+    sql += `CREATE DATABASE IF NOT EXISTS \`absen_makan_hotel\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\n`;
+    sql += `USE \`absen_makan_hotel\`;\n\n`;
+
+    // 1. Tenants Dump
+    if (tenants.length > 0) {
+      sql += `-- 1. DATA KANTIN / DEPOT\n`;
+      sql += `INSERT INTO \`tenants\` (\`tenant_key\`, \`name\`, \`password\`, \`status\`) VALUES\n`;
+      const tenantRows = tenants.map(t => {
+        const key = (t.id || t.tenantKey || '').replace(/'/g, "''");
+        const name = (t.name || '').replace(/'/g, "''");
+        const pass = (t.password || 'kantin123').replace(/'/g, "''");
+        const st = (t.status || 'Aktif').replace(/'/g, "''");
+        return `  ('${key}', '${name}', '${pass}', '${st}')`;
+      });
+      sql += tenantRows.join(',\n') + `\nON DUPLICATE KEY UPDATE \`name\` = VALUES(\`name\`), \`password\` = VALUES(\`password\`);\n\n`;
+    }
+
+    // 2. Employees Dump
+    if (employees.length > 0) {
+      sql += `-- 2. DATA KARYAWAN & SISWA TRAINING\n`;
+      sql += `INSERT INTO \`employees\` (\`employee_id\`, \`name\`, \`department\`, \`position\`, \`institution\`, \`is_trainee\`, \`password\`, \`status\`) VALUES\n`;
+      const empRows = employees.map(e => {
+        const eid = (e.id || '').replace(/'/g, "''");
+        const name = (e.name || '').replace(/'/g, "''");
+        const dept = (e.department || '').replace(/'/g, "''");
+        const pos = (e.position || '').replace(/'/g, "''");
+        const inst = (e.institution || '').replace(/'/g, "''");
+        const isTrn = e.isTrainee || e.department === 'Training' || eid.startsWith('TRN-') ? 1 : 0;
+        const pass = (e.password || 'password123').replace(/'/g, "''");
+        const st = (e.status || 'Aktif').replace(/'/g, "''");
+        return `  ('${eid}', '${name}', '${dept}', '${pos}', '${inst}', ${isTrn}, '${pass}', '${st}')`;
+      });
+      sql += empRows.join(',\n') + `\nON DUPLICATE KEY UPDATE \`name\` = VALUES(\`name\`), \`department\` = VALUES(\`department\`);\n\n`;
+    }
+
+    // 3. Attendances Dump
+    if (attendances.length > 0) {
+      sql += `-- 3. DATA RIWAYAT TRANSAKSI ABSENSI MAKAN\n`;
+      sql += `INSERT INTO \`attendance_logs\` (\`date\`, \`time\`, \`employee_id\`, \`employee_name\`, \`department\`, \`position\`, \`institution\`, \`is_trainee\`, \`shift\`, \`tenant_id\`, \`tenant_name\`, \`price\`) VALUES\n`;
+      const attRows = attendances.map(a => {
+        const dt = (a.date || '').replace(/'/g, "''");
+        const tm = (a.time || '12:00:00').replace(/'/g, "''");
+        const eid = (a.employeeId || '').replace(/'/g, "''");
+        const ename = (a.employeeName || '').replace(/'/g, "''");
+        const dept = (a.department || '').replace(/'/g, "''");
+        const pos = (a.position || '').replace(/'/g, "''");
+        const inst = (a.institution || '').replace(/'/g, "''");
+        const isTrn = a.isTrainee ? 1 : 0;
+        const shift = (a.shift || 'Makan Siang').replace(/'/g, "''");
+        const tid = (a.tenantId || a.tenantKey || 'tenant1').replace(/'/g, "''");
+        const tname = (a.tenantName || 'Kantin').replace(/'/g, "''");
+        const pr = Number(a.price) || Number(s.mealPrice) || 15000;
+        return `  ('${dt}', '${tm}', '${eid}', '${ename}', '${dept}', '${pos}', '${inst}', ${isTrn}, '${shift}', '${tid}', '${tname}', ${pr})`;
+      });
+      sql += attRows.join(',\n') + `\nON DUPLICATE KEY UPDATE \`time\` = VALUES(\`time\`);\n\n`;
+    }
+
+    const blob = new Blob([sql], { type: 'application/sql;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `backup_sql_absen_hotel_${dateStamp}.sql`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
+
+  // Pulihkan Data dari file JSON Backup
+  importBackupJSON() {
+    const fileInput = document.getElementById('backup-restore-file');
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+      alert('Silakan pilih berkas backup (*.json) terlebih dahulu.');
+      return;
+    }
+
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (!data || typeof data !== 'object') {
+          throw new Error('Format file cadangan tidak valid.');
+        }
+
+        let restoredItems = 0;
+        if (Array.isArray(data.employees)) {
+          localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(data.employees));
+          restoredItems += data.employees.length;
+        }
+        if (Array.isArray(data.attendances)) {
+          localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(data.attendances));
+          restoredItems += data.attendances.length;
+        }
+        if (Array.isArray(data.tenants)) {
+          localStorage.setItem(STORAGE_KEYS.TENANTS, JSON.stringify(data.tenants));
+        }
+        if (data.settings && typeof data.settings === 'object') {
+          localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(data.settings));
+        }
+
+        // Sinkronkan ke database MySQL
+        Store.syncWithBackend(true);
+
+        alert(`Sukses memulihkan cadangan data!\n- Total entri diperbarui: ${restoredItems}\nSistem akan memuat ulang halaman.`);
+        window.location.reload();
+      } catch (err) {
+        alert('Gagal membaca file cadangan: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
   },
 
   // Reset/Seed ulang data
