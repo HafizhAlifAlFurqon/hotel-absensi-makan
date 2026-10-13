@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagram Flow Sistem Absensi Makan Hotel - Figma Ready</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0b0f19; color: #f8fafc; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="p-6 md:p-10 min-h-screen">
+
+  <div class="max-w-7xl mx-auto space-y-8">
+    <!-- Top Action Bar -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-slate-900/80 backdrop-blur-md p-6 rounded-2xl border border-slate-800 shadow-2xl">
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <span class="px-2.5 py-1 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-lg text-xs font-bold tracking-wider uppercase">Figma & FigJam Ready</span>
+          <span class="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-bold tracking-wider uppercase">100% Vector Editable</span>
+        </div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">Diagram Alur Sistem Absensi Makan Hotel</h1>
+        <p class="text-slate-400 text-sm mt-1">Diagram alur resmi mencakup Scan QR, Validasi Shift, Multi-Tarif Depot, 4 Rekapitulasi & TTD Atasan.</p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-wrap items-center gap-3">
+        <button onclick="copySvgToClipboard()" id="btn-copy-svg" class="px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-600/30 transition flex items-center gap-2 cursor-pointer active:scale-95">
+          <i class="fa-solid fa-copy"></i>
+          <span>Salin SVG (Paste ke Figma)</span>
+        </button>
+        <button onclick="copyMermaidToClipboard()" id="btn-copy-mermaid" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-sm font-semibold transition flex items-center gap-2 cursor-pointer active:scale-95">
+          <i class="fa-solid fa-code"></i>
+          <span>Salin Kode Mermaid (FigJam)</span>
+        </button>
+        <a href="diagram-flow-absensi.svg" download="diagram-flow-absensi.svg" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-sm font-semibold transition flex items-center gap-2 cursor-pointer">
+          <i class="fa-solid fa-download"></i>
+          <span>Download .SVG</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Cara Pakai di Figma -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="bg-slate-900/50 p-5 rounded-xl border border-slate-800/80">
+        <h3 class="text-sm font-bold text-indigo-400 flex items-center gap-2 mb-2">
+          <i class="fa-brands fa-figma text-lg"></i> Cara 1: Buka di Figma Canvas (Rekomendasi)
+        </h3>
+        <ol class="text-xs text-slate-300 space-y-1.5 list-decimal list-inside leading-relaxed">
+          <li>Klik tombol <b>"Salin SVG (Paste ke Figma)"</b> di atas.</li>
+          <li>Buka project / file baru di aplikasi atau web <b>Figma</b>.</li>
+          <li>Tekan <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-[11px] font-mono border border-slate-700">Ctrl + V</kbd> (atau <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-[11px] font-mono border border-slate-700">Cmd + V</kbd> di Mac).</li>
+          <li>Diagram akan langsung ter-paste sebagai <b>Vector Frame & Layer Figma asli</b> (bisa diganti warna, font, dan di-edit setiap teksnya). Atau cukup drag file <code class="text-indigo-300">diagram-flow-absensi.svg</code> langsung ke dalam lembar kerja Figma!</li>
+        </ol>
+      </div>
+
+      <div class="bg-slate-900/50 p-5 rounded-xl border border-slate-800/80">
+        <h3 class="text-sm font-bold text-amber-400 flex items-center gap-2 mb-2">
+          <i class="fa-solid fa-diagram-project text-lg"></i> Cara 2: Buka di FigJam (Menggunakan Mermaid)
+        </h3>
+        <ol class="text-xs text-slate-300 space-y-1.5 list-decimal list-inside leading-relaxed">
+          <li>Klik tombol <b>"Salin Kode Mermaid"</b> di atas.</li>
+          <li>Buka papan <b>FigJam</b> Anda.</li>
+          <li>Buka menu Widget / Plugins (<kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-[11px] font-mono border border-slate-700">Ctrl + /</kbd>), cari <b>"Mermaid"</b>.</li>
+          <li>Paste kodenya, dan diagram flowchart akan langsung digambar otomatis menjadi diagram FigJam interaktif!</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- SVG Preview Container -->
+    <div class="bg-slate-900 rounded-2xl border border-slate-800 p-4 overflow-hidden shadow-2xl">
+      <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-800 text-xs text-slate-400">
+        <span class="font-mono flex items-center gap-2"><i class="fa-solid fa-eye text-indigo-400"></i> PREVIEW VECTOR DISPLAY</span>
+        <span>Ukuran Kanvas: 1440 × 980 px</span>
+      </div>
+      <div class="w-full overflow-x-auto rounded-xl bg-slate-950 p-2 flex justify-center">
+        <img id="svg-preview" src="diagram-flow-absensi.svg" alt="Diagram Alur Sistem Absensi Makan Hotel" class="max-w-none w-full shadow-lg rounded-lg border border-slate-800/50">
+      </div>
+    </div>
+
+    <!-- Mermaid Code Block Preview -->
+    <div class="bg-slate-900 rounded-2xl border border-slate-800 p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+          <i class="fa-solid fa-code text-indigo-400"></i> Kode Sumber Mermaid Diagram (Untuk FigJam / Markdown)
+        </h3>
+        <button onclick="copyMermaidToClipboard()" class="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition">
+          <i class="fa-regular fa-copy"></i> Salin Kode
+        </button>
+      </div>
+      <pre class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs font-mono text-emerald-400 overflow-x-auto leading-relaxed max-h-72" id="mermaid-code">flowchart TD
+    %% Styling Global
+    classDef actorStyle fill:#1e1b4b,stroke:#6366f1,stroke-width:2px,color:#fff
+    classDef inputStyle fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#fff
+    classDef decisionStyle fill:#451a03,stroke:#f59e0b,stroke-width:2px,color:#fff
+    classDef successStyle fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#fff
+    classDef rejectStyle fill:#4c0519,stroke:#f43f5e,stroke-width:2px,color:#fff
+    classDef reportStyle fill:#3b0764,stroke:#a855f7,stroke-width:2px,color:#fff
+
+    subgraph LANE1 ["1. IDENTIFIKASI & INPUT"]
+        A["Karyawan / Anak Magang"]:::actorStyle -->|Datang ke Depot Kantin| B["Terminal Scanner Kantin"]:::inputStyle
+        B --> C{"Metode Presensi"}:::decisionStyle
+        C -->|Scan Kamera| D["Scan QR Code Kartu ID"]:::inputStyle
+        C -->|Input Manual| E["Ketik ID / NIK Karyawan"]:::inputStyle
+    end
+
+    subgraph LANE2 ["2. LOGIKA & VALIDASI SISTEM"]
+        D --> F["Deteksi Waktu & Shift Makan"]:::decisionStyle
+        E --> F
+        F -->|Di Luar Shift| G["Tolak: Di Luar Jam Makan"]:::rejectStyle
+        F -->|Shift Valid| H{"Cek History: Sudah Makan di Shift Ini?"}:::decisionStyle
+        H -->|Ya: Double Scan| I["Tolak: Karyawan Sudah Makan"]:::rejectStyle
+        I --> J["Alarm Beep Merah & Popup Tolak"]:::rejectStyle
+        H -->|Belum Makan| K["Lolos: Verifikasi Disetujui"]:::successStyle
+        K --> L["Audio Beep Berhasil & Layar Hijau"]:::successStyle
+    end
+
+    subgraph LANE3 ["3. TRANSAKSI & MULTI-TARIF KANTIN"]
+        L --> M["Ambil Data Depot Terpilih"]:::inputStyle
+        M --> N["Kalkulasi Tarif Masing-Masing Depot"]:::successStyle
+        N -->|Contoh Depot Bu Mamie| N1["Tarif: Rp 13.000 / porsi"]:::successStyle
+        N -->|Contoh Depot Bu Yuli| N2["Tarif: Rp 15.000 / porsi"]:::successStyle
+        N1 --> O["Catat Transaksi: Store.recordAttendance()"]:::successStyle
+        N2 --> O
+        O --> P["LocalStorage (Offline-First)"]:::inputStyle
+        O --> Q["Sinkronisasi Database MySQL (api.php)"]:::inputStyle
+    end
+
+    subgraph LANE4 ["4. MONITORING, REKAP & PENGESAHAN"]
+        O --> R["Update Realtime Dashboard & Kuota"]:::reportStyle
+        R --> S["Kalkulasi 4 Rekapitulasi Laporan"]:::reportStyle
+        S --> T1["1. Rekap Shift (Siang vs Sore)"]:::reportStyle
+        S --> T2["2. Rekap Tagihan per Depot (Tarif Sendiri)"]:::reportStyle
+        S --> T3["3. Rekap Beban per Departemen"]:::reportStyle
+        S --> T4["4. Rincian Log Transaksi Harian"]:::reportStyle
+        
+        T1 & T2 & T3 & T4 --> U["Lembar Pengesahan: 3 Kolom Tanda Tangan"]:::reportStyle
+        U -->|Dibuat| U1["Admin Personalia / HRD"]
+        U -->|Diverifikasi| U2["Pengelola Depot Kantin"]
+        U -->|Disetujui| U3["General Manager / Finance"]
+        
+        U --> V1["Ekspor PDF (Kop Surat Resmi Hotel)"]:::reportStyle
+        U --> V2["Ekspor Excel (Border Solid 4 Sisi & Rumus)"]:::reportStyle
+    end</pre>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-slate-800 text-white px-5 py-3 rounded-xl border border-slate-700 shadow-2xl flex items-center gap-3 transition-all duration-300 translate-y-20 opacity-0 pointer-events-none z-50">
+    <i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+    <span id="toast-text" class="text-sm font-semibold">Tersalin ke clipboard!</span>
+  </div>
+
+  <script>
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const text = document.getElementById('toast-text');
+      text.innerText = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+      }, 3000);
+    }
+
+    async function copySvgToClipboard() {
+      try {
+        const response = await fetch('diagram-flow-absensi.svg');
+        const svgText = await response.text();
+        await navigator.clipboard.writeText(svgText);
+        showToast('SVG tersalin! Silakan buka Figma lalu tekan Ctrl + V');
+      } catch (err) {
+        alert('Gagal menyalin otomatis. Anda dapat mendownload file .svg dan drag langsung ke canvas Figma.');
+      }
+    }
+
+    async function copyMermaidToClipboard() {
+      try {
+        const code = document.getElementById('mermaid-code').innerText;
+        await navigator.clipboard.writeText(code);
+        showToast('Kode Mermaid tersalin! Silakan paste di FigJam / plugin Mermaid.');
+      } catch (err) {
+        alert('Gagal menyalin kode Mermaid.');
+      }
+    }
+  </script>
+</body>
+</html>
