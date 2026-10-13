@@ -13,3 +13,11 @@ desktop.ini
 *.log
 scratch/
 tmp/
+
+# File Sensitif Server & Database (Dikecualikan dari GitHub demi keamanan)
+config.php
+database.sql
+api.php
+*.sql
+.env
+.env.*
