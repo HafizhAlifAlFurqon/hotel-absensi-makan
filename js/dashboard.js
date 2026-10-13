@@ -171,7 +171,7 @@ const Dashboard = {
         return `
           <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs hover:${c.border} transition">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-slate-500 uppercase tracking-wider truncate max-w-[150px]">${tc.name}</span>
+              <span class="text-xs font-bold text-slate-500 uppercase tracking-wider truncate max-w-[150px]">${Store.escapeHtml(tc.name)}</span>
               <div class="w-8 h-8 rounded-lg ${c.bg} ${c.text} flex items-center justify-center text-sm shrink-0">
                 <i class="fa-solid ${c.icon}"></i>
               </div>
@@ -260,8 +260,8 @@ const Dashboard = {
         : `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800"><i class="fa-solid fa-moon mr-1 text-[10px]"></i> ${r.shift}</span>`;
 
       const badgeDepot = r.tenantKey === 'tenant1'
-        ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"><i class="fa-solid fa-store mr-1 text-[10px]"></i> ${r.tenantName}</span>`
-        : `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800"><i class="fa-solid fa-store mr-1 text-[10px]"></i> ${r.tenantName}</span>`;
+        ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"><i class="fa-solid fa-store mr-1 text-[10px]"></i> ${Store.escapeHtml(r.tenantName)}</span>`
+        : `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800"><i class="fa-solid fa-store mr-1 text-[10px]"></i> ${Store.escapeHtml(r.tenantName)}</span>`;
 
       return `
         <tr class="hover:bg-gray-50 border-b border-gray-100 transition">

@@ -64,16 +64,13 @@ const EmployeesManager = {
     });
   },
 
-  // Otomatis siapkan ID Karyawan berikutnya & default password
+  // Otomatis siapkan ID Karyawan berikutnya
   prepareFormNextId() {
     if (this.editingId) return;
     const idEl = document.getElementById('emp-form-id');
     const passEl = document.getElementById('emp-form-password');
     if (idEl && !idEl.value) {
       idEl.value = Store.generateNextEmployeeId();
-    }
-    if (passEl && !passEl.value) {
-      passEl.value = 'password123';
     }
   },
 
@@ -130,10 +127,20 @@ const EmployeesManager = {
       const dept = deptEl ? deptEl.value : '';
       const position = posEl ? posEl.value.trim() : 'Staff';
       const status = statusEl ? statusEl.value : 'Aktif';
-      const password = passEl ? passEl.value.trim() : 'password123';
+      const password = passEl ? passEl.value.trim() : '';
 
       if (!name || !id || !dept) {
         this.showFormAlert('Mohon lengkapi Nama, ID, dan Departemen karyawan.', 'error');
+        Store.playSound('error');
+        return;
+      }
+      if (!this.editingId && !password) {
+        this.showFormAlert('Password wajib diisi untuk akun karyawan baru.', 'error');
+        Store.playSound('error');
+        return;
+      }
+      if (password && password.length < 12) {
+        this.showFormAlert('Password minimal 12 karakter.', 'error');
         Store.playSound('error');
         return;
       }
@@ -144,7 +151,7 @@ const EmployeesManager = {
         department: dept,
         position: position || 'Staff',
         status,
-        password: password || 'password123'
+        ...(password ? { password } : {})
       };
 
       if (this.editingId) {
@@ -183,7 +190,7 @@ const EmployeesManager = {
       if (cancelBtn) cancelBtn.classList.add('hidden');
 
       this.prepareFormNextId();
-      this.showFormAlert(`Data karyawan <b>${name} (${id})</b> berhasil disimpan! Karyawan dapat langsung login dengan password: <b>${password}</b>`, 'success');
+      this.showFormAlert(`Data karyawan <b>${name} (${id})</b> berhasil disimpan. Password tidak ditampilkan kembali.`, 'success');
       Store.playSound('success');
 
       this.renderTable();
@@ -213,7 +220,7 @@ const EmployeesManager = {
     if (deptEl) deptEl.value = emp.department;
     if (posEl) posEl.value = emp.position || '';
     if (statusEl) statusEl.value = emp.status;
-    if (passEl) passEl.value = emp.password || 'password123';
+    if (passEl) passEl.value = '';
 
     if (submitBtn) {
       submitBtn.innerHTML = '<i class="fa-solid fa-save mr-1"></i> Simpan Perubahan Karyawan';
@@ -256,24 +263,23 @@ const EmployeesManager = {
   },
 
   // Fitur Cepat Admin: Ganti Password Karyawan Langsung
-  quickResetPassword(id) {
+  async quickResetPassword(id) {
     const emp = Store.findEmployee(id);
     if (!emp) return;
 
-    const currentPass = emp.password || 'password123';
-    const newPass = prompt(`Ganti Password Karyawan:\nNama: ${emp.name} (${emp.id})\n\nMasukkan password baru:`, currentPass);
+    const newPass = prompt(`Ganti Password Karyawan:\nNama: ${emp.name} (${emp.id})\n\nMasukkan password baru:`);
 
     if (newPass !== null) {
       const trimmed = newPass.trim();
-      if (!trimmed) {
-        this.showFormAlert('Password tidak boleh kosong!', 'error');
+      if (trimmed.length < 12) {
+        this.showFormAlert('Password minimal 12 karakter.', 'error');
         return;
       }
-      const res = Store.updateEmployeePassword(id, trimmed);
+      const res = await Store.updateEmployeePassword(id, trimmed);
       if (res.success) {
         Store.playSound('success');
         this.renderTable();
-        this.showFormAlert(`Password untuk "${emp.name}" berhasil diubah menjadi: ${trimmed}`, 'success');
+        this.showFormAlert(`Password untuk "${emp.name}" berhasil diubah. Password tidak ditampilkan kembali.`, 'success');
       } else {
         this.showFormAlert(res.message, 'error');
       }
@@ -397,7 +403,11 @@ const EmployeesManager = {
 
       const dept = (parts[1] && parts[1].length > 0) ? parts[1] : defaultDept;
       const pos = (parts[2] && parts[2].length > 0) ? parts[2] : 'Staff';
-      const pass = (parts[3] && parts[3].length > 0) ? parts[3] : 'password123';
+      const pass = (parts[3] && parts[3].length > 0) ? parts[3] : '';
+      if (!pass || pass.length < 12) {
+        alert(`Password minimal 12 karakter dan wajib disertakan pada baris: "${line}". Format: Nama, Departemen, Jabatan, Password.`);
+        return;
+      }
 
       empList.push({
         name,
@@ -461,7 +471,6 @@ const EmployeesManager = {
         <td style="padding: 7px 8px; font-weight: bold; color: #0f172a;">${emp.name}</td>
         <td style="padding: 7px 8px; color: #334155;">${emp.department}</td>
         <td style="padding: 7px 8px; color: #475569;">${emp.position || '-'}</td>
-        <td style="padding: 7px 8px; font-family: monospace; font-weight: bold; color: #047857; background: #ecfdf5;">${emp.password || 'password123'}</td>
         <td style="padding: 7px 8px; text-align: center; font-weight: 600; color: ${emp.status === 'Aktif' ? '#047857' : '#be123c'};">${emp.status}</td>
       </tr>
     `).join('');
@@ -511,7 +520,7 @@ const EmployeesManager = {
         </div>
 
         <div class="summary-card">
-          <span><b>Catatan Administrator:</b> Bagikan kredensial ID / Nama dan Password di bawah ini kepada masing-masing karyawan untuk login.</span>
+          <span><b>Catatan Administrator:</b> Bagikan ID / Nama secara terpisah. Password tidak dicetak dalam daftar ini.</span>
           <span style="font-weight: bold; color: #047857;">Rahasia & Internal</span>
         </div>
 
@@ -523,7 +532,6 @@ const EmployeesManager = {
               <th>Nama Karyawan (Username Login)</th>
               <th>Departemen</th>
               <th>Jabatan</th>
-              <th style="width: 120px;">Password Default</th>
               <th style="width: 70px; text-align: center;">Status</th>
             </tr>
           </thead>
@@ -537,7 +545,7 @@ const EmployeesManager = {
           <ol>
             <li>Buka halaman sistem absensi makan di HP atau Komputer Anda.</li>
             <li>Pada layar login, masukkan <b>Nama Karyawan</b> atau <b>ID Karyawan</b> Anda.</li>
-            <li>Masukkan <b>Password</b> yang tertera pada daftar di atas (Contoh: <code>password123</code>).</li>
+            <li>Masukkan password yang diberikan secara pribadi oleh Administrator. Password tidak dicetak dalam daftar ini.</li>
             <li>Setelah berhasil masuk, Anda dapat langsung melakukan scan QR kasir kantin untuk mengambil makan.</li>
             <li>Karyawan dapat mengubah password pribadi sewaktu-waktu di menu <b>"Portal Karyawan" &gt; "Ubah Password Saya"</b>.</li>
           </ol>
@@ -609,8 +617,6 @@ const EmployeesManager = {
             <span class="w-1.5 h-1.5 rounded-full bg-rose-600 mr-1.5"></span> Non Aktif
            </button>`;
 
-      const passDisplay = emp.password || 'password123';
-
       return `
         <tr class="hover:bg-slate-50 border-b border-slate-100 transition">
           <td class="py-3 px-3 text-xs text-slate-400 font-mono">${index + 1}</td>
@@ -629,7 +635,7 @@ const EmployeesManager = {
                 </div>
                 <div class="text-[10px] text-slate-500 font-mono flex items-center gap-1.5 mt-0.5">
                   <span class="flex items-center gap-1 bg-amber-50 text-amber-800 px-1.5 py-0.5 rounded border border-amber-200 font-bold">
-                    <i class="fa-solid fa-key text-[9px] text-amber-600"></i> ${passDisplay}
+                    <i class="fa-solid fa-key text-[9px] text-amber-600"></i> Password disembunyikan
                   </span>
                   <button onclick="EmployeesManager.quickResetPassword('${emp.id}')" title="Ganti Password Karyawan" class="text-amber-700 hover:text-amber-900 underline text-[10px] cursor-pointer">
                     Ganti Pass

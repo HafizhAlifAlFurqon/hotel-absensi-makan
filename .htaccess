@@ -4,7 +4,7 @@
 # ======================================================================
 
 # 1. Lindungi File Sensitif agar Tidak Bisa Diunduh Publik Langsung
-<FilesMatch "\.(sql|ini|bat|ps1|log|md|gitignore)$">
+<FilesMatch "^(config\.php)$|\.(sql|ini|bat|ps1|log|md|gitignore)$">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>

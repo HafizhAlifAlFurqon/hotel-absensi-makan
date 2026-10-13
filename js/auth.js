@@ -117,19 +117,62 @@ const Auth = {
   },
 
   // Login dengan Password Sendiri (Karyawan, Kasir Kantin, Admin)
-  loginWithPassword(identifier, password) {
-    const res = Store.verifyCredentials(identifier, password);
-    if (!res.success) {
-      return res;
+  async loginWithPassword(identifier, password) {
+    let response;
+    try {
+      response = await fetch('api.php?action=login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ identifier, password })
+      });
+    } catch (error) {
+      return { success: false, message: 'Server login tidak dapat dihubungi.' };
+    }
+
+    const res = await response.json();
+    if (!response.ok || !res.success || !res.user) {
+      return { success: false, message: res.message || 'Username atau password salah.' };
     }
 
     const user = res.user;
+    if (user.mustChangePassword) {
+      const newPassword = window.prompt('Password akun ini masih bawaan. Buat password baru minimal 12 karakter:');
+      if (!newPassword) {
+        await fetch('api.php?action=logout', { method: 'POST', credentials: 'same-origin' });
+        return { success: false, message: 'Password bawaan harus diganti sebelum dapat masuk.' };
+      }
+      const confirmation = window.prompt('Ulangi password baru untuk konfirmasi:');
+      if (newPassword !== confirmation || newPassword.trim().length < 12) {
+        await fetch('api.php?action=logout', { method: 'POST', credentials: 'same-origin' });
+        return { success: false, message: 'Password tidak cocok atau kurang dari 12 karakter. Silakan coba lagi.' };
+      }
+      const changeResponse = await fetch('api.php?action=change_password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ newPassword: newPassword.trim() })
+      });
+      const changeResult = await changeResponse.json();
+      if (!changeResponse.ok || !changeResult.success) {
+        return { success: false, message: changeResult.message || 'Gagal mengganti password.' };
+      }
+      user.mustChangePassword = false;
+    }
+    const avatarColor = user.role === 'admin' ? '0f766e' : (user.role === 'canteen' ? '2563eb' : '059669');
+    user.picture = Auth.getAvatar(user.name, avatarColor);
     if (user.role === 'karyawan') {
       localStorage.setItem('hotel_absensi_active_emp_id', user.employeeId);
     }
 
     Auth.setCurrentUser(user);
     Auth.hideLoginPage();
+    const synced = await Store.syncWithBackend();
+    if (!synced) {
+      await Auth.logout();
+      return { success: false, message: 'Gagal memuat data dari server. Coba lagi atau hubungi Administrator.' };
+    }
+    if (window.App) App.updateTenantLabels();
 
     // Otomatis navigasi: Admin langsung masuk ke DASHBOARD!
     if (window.App) {
@@ -151,32 +194,60 @@ const Auth = {
   },
 
   // Kompatibilitas fungsi login lama
-  loginWithGoogle({ role = 'karyawan', employeeId = null, tenantId = null, name = null }) {
-    if (role === 'admin') {
-      return this.loginWithPassword('admin', 'admin123');
-    } else if (role === 'canteen') {
-      const tId = tenantId || 'tenant1';
-      const t = Store.findTenant ? Store.findTenant(tId) : null;
-      const pass = (t && t.password) || (tId === 'tenant1' ? 'depota123' : 'depotyuli123');
-      return this.loginWithPassword(tId, pass);
-    } else {
-      const empId = employeeId || name || 'EMP-001';
-      const emp = Store.findEmployee(empId);
-      const pass = (emp && emp.password) || 'password123';
-      return this.loginWithPassword(empId, pass);
-    }
+  loginWithGoogle() {
+    return Promise.resolve({ success: false, message: 'Gunakan login dengan password akun Anda.' });
   },
 
-  logout() {
+  async logout() {
+    try {
+      const response = await fetch('api.php?action=logout', { method: 'POST', credentials: 'same-origin' });
+      if (!response.ok) throw new Error('Server menolak permintaan logout.');
+    } catch (error) {
+      alert('Logout server gagal. Sesi mungkin masih aktif; periksa koneksi lalu coba lagi.');
+      return false;
+    }
     Auth.setCurrentUser(null);
     Auth.showLoginPage();
     if (window.Store && typeof Store.playSound === 'function') {
       Store.playSound('click');
     }
+    return true;
   },
 
   isLoggedIn() {
     return !!Auth.getCurrentUser();
+  },
+
+  async restoreSession() {
+    try {
+      const response = await fetch('api.php?action=session', {
+        cache: 'no-store',
+        credentials: 'same-origin'
+      });
+      if (!response.ok) throw new Error('Sesi server tidak tersedia.');
+      const data = await response.json();
+      if (!data.success || !data.user) throw new Error('Respons sesi server tidak valid.');
+      const user = data.user;
+      if (user.mustChangePassword) {
+        await fetch('api.php?action=logout', { method: 'POST', credentials: 'same-origin' });
+        throw new Error('Password bawaan harus diganti. Silakan login kembali untuk membuat password baru.');
+      }
+      const avatarColor = user.role === 'admin' ? '0f766e' : (user.role === 'canteen' ? '2563eb' : '059669');
+      user.picture = Auth.getAvatar(user.name, avatarColor);
+      Auth.setCurrentUser(user);
+      Auth.hideLoginPage();
+      const synced = await Store.syncWithBackend();
+      if (!synced) throw new Error('Data server tidak dapat dimuat.');
+      if (window.App) {
+        App.updateTenantLabels();
+        App.navigateTo(user.role === 'karyawan' ? 'employee-portal' : (user.role === 'canteen' ? 'canteen' : 'dashboard'));
+      }
+      return user;
+    } catch (error) {
+      Auth.setCurrentUser(null);
+      Auth.showLoginPage();
+      return null;
+    }
   },
 
   // Penerapan Hak Akses (Role-Based Access Control)

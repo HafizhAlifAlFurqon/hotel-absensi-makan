@@ -163,7 +163,7 @@
               <div class="flex items-start gap-2">
                 <span class="w-5 h-5 rounded-md bg-teal-100 text-teal-800 flex items-center justify-center text-[10px] font-bold shrink-0">1</span>
                 <div>
-                  <span class="font-bold text-slate-800">Administrator:</span> Masukkan <code>admin</code> (Password: <code>admin123</code>) untuk membuka Dashboard & seluruh menu.
+                  <span class="font-bold text-slate-800">Administrator:</span> Masukkan username dan password yang diberikan oleh pengelola server.
                 </div>
               </div>
               <div class="flex items-start gap-2">
@@ -179,9 +179,8 @@
                 </div>
               </div>
 
-              <!-- Tombol Cepat / Quick Login Buttons Container -->
               <div class="pt-2 border-t border-slate-200">
-                <p class="text-[11px] font-bold text-slate-500 mb-1.5">Akses Cepat (Klik untuk Mengisi Otomatis):</p>
+                <p class="text-[11px] text-slate-500">Password bawaan wajib diganti saat login pertama kali.</p>
                 <div id="quick-login-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5"></div>
               </div>
             </div>
@@ -953,8 +952,7 @@
           </div>
           
           <div class="p-2 bg-slate-50 rounded-xl border border-slate-100 text-[10px] text-slate-500 flex items-center justify-between">
-            <span>Pass Default Karyawan: <code class="font-bold text-slate-700">password123</code></span>
-            <span>Training: <code class="font-bold text-slate-700">nama_depan</code></span>
+            <span>Password akun tidak ditampilkan di halaman ini.</span>
           </div>
         </div>
 
@@ -977,7 +975,7 @@
           </div>
           <div class="relative sm:col-span-3">
             <i class="fa-solid fa-key absolute left-3.5 top-3 text-slate-400 text-xs"></i>
-            <input type="text" id="new-canteen-pass" placeholder="Password (Default: kantin123)" class="w-full pl-10 pr-4 py-2.5 text-xs font-mono rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none">
+            <input type="password" id="new-canteen-pass" placeholder="Password kasir (minimal 12 karakter)" class="w-full pl-10 pr-4 py-2.5 text-xs font-mono rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none">
           </div>
           <div class="sm:col-span-2">
             <button onclick="TenantManager.addNewCanteen()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer">
@@ -1079,12 +1077,12 @@
             </label>
             <div class="relative">
               <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-xs text-slate-400"><i class="fa-solid fa-key"></i></span>
-              <input type="password" id="setting-admin-password" placeholder="admin123" class="w-full pl-9 pr-10 py-2.5 text-xs font-medium rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-500 outline-none">
+              <input type="password" id="setting-admin-password" placeholder="Kosongkan jika tidak ingin mengubah (min. 12 karakter)" autocomplete="new-password" class="w-full pl-9 pr-10 py-2.5 text-xs font-medium rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-500 outline-none">
               <button type="button" onclick="togglePasswordVisibility('setting-admin-password', this)" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer">
                 <i class="fa-solid fa-eye text-xs"></i>
               </button>
             </div>
-            <p class="text-[11px] text-slate-400 mt-1">Default sistem: <code>admin</code> / <code>admin123</code></p>
+            <p class="text-[11px] text-slate-400 mt-1">Password baru minimal 12 karakter. Password yang tersimpan tidak ditampilkan.</p>
           </div>
 
           <div id="admin-cred-alert"></div>
@@ -1242,7 +1240,7 @@
               <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                 Password Login *
               </label>
-              <input type="text" id="emp-form-password" placeholder="Default: password123" class="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none">
+              <input type="password" id="emp-form-password" placeholder="Password akun (min. 12 karakter; kosongkan saat edit untuk mempertahankan)" autocomplete="new-password" class="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none">
             </div>
 
             <div>
@@ -1891,7 +1889,7 @@
 
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Password Akun *</label>
-            <input type="text" id="trn-form-password" required value="training123" class="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 outline-none">
+            <input type="password" id="trn-form-password" autocomplete="new-password" placeholder="Password akun (minimal 12 karakter)" class="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 outline-none">
           </div>
 
           <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
@@ -1977,11 +1975,11 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Password Baru</label>
-                <input type="password" id="emp-portal-new-pass" placeholder="Minimal 4 karakter" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none">
+                <input type="password" id="emp-portal-new-pass" placeholder="Minimal 12 karakter" autocomplete="new-password" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none">
               </div>
               <div>
                 <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Konfirmasi Password Baru</label>
-                <input type="password" id="emp-portal-confirm-pass" placeholder="Ketik ulang password baru" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none">
+                <input type="password" id="emp-portal-confirm-pass" placeholder="Ketik ulang password baru" autocomplete="new-password" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none">
               </div>
             </div>
             <div id="emp-portal-pass-alert"></div>
@@ -2216,7 +2214,7 @@
           Nama Lengkap, Departemen, Jabatan, Password
         </p>
         <p class="text-[11px] text-emerald-800">
-          *Departemen, Jabatan, dan Password opsional. Jika hanya menuliskan Nama (contoh: <code>Budi Santoso</code>), sistem otomatis membuatkan ID urut (contoh: <code>EMP-016</code>), departemen default, dan password <b>password123</b>.
+          *Format impor: Nama, Departemen, Jabatan, Password. Password tiap akun wajib dicantumkan dan minimal 12 karakter.
         </p>
       </div>
 
@@ -2392,7 +2390,7 @@
           <div class="space-y-1">
             <h5 class="font-bold text-slate-900 text-xs">Uji Coba Live & Ganti Password Admin Default</h5>
             <p class="text-slate-600 leading-relaxed">
-              Buka website lewat domain Anda (misal: <code>https://absen.bessmansionhotel.com</code>). Login sebagai admin, pastikan database tersinkronisasi, dan ganti password admin default (<code>admin123</code>) ke password baru demi keamanan properti hotel.
+              Buka website lewat alamat HTTPS server hotel. Login awal akan meminta penggantian password bawaan. Pastikan admin dan seluruh akun kantin/karyawan memakai password unik sebelum sistem dipakai.
             </p>
           </div>
         </div>
@@ -2552,7 +2550,13 @@
       }
     }
 
-    function handleStandaloneLoginSubmit() {
+    function escapeLoginMessage(message) {
+      return String(message || '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[char]);
+    }
+
+    async function handleStandaloneLoginSubmit() {
       const idEl = document.getElementById('login-page-identifier');
       const passEl = document.getElementById('login-page-password');
       const alertEl = document.getElementById('login-page-alert');
@@ -2587,15 +2591,15 @@
         btnEl.disabled = true;
       }
 
-      setTimeout(() => {
+      setTimeout(async () => {
         try {
-          const res = Auth.loginWithPassword(id, pass);
+          const res = await Auth.loginWithPassword(id, pass);
           if (!res.success) {
             if (alertEl) {
               alertEl.innerHTML = `
                 <div class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-bold flex items-center gap-2">
                   <i class="fa-solid fa-circle-exclamation text-rose-500 text-base"></i>
-                  <span>${res.message || 'ID/Username atau Password salah!'}</span>
+                  <span>${escapeLoginMessage(res.message || 'ID/Username atau Password salah!')}</span>
                 </div>
               `;
             }
@@ -2666,68 +2670,7 @@
     function renderQuickLoginButtons() {
       const container = document.getElementById('quick-login-grid');
       if (!container) return;
-      const tenants = (window.Store && typeof Store.getTenants === 'function') ? Store.getTenants() : [
-        { id: 'tenant1', name: 'Depot Bu Mamie', password: 'depota123' },
-        { id: 'tenant2', name: 'Depot Bu Yuli', password: 'depotyuli123' }
-      ];
-      const emps = (window.Store && typeof Store.getEmployees === 'function') ? Store.getEmployees().filter(e => e.status === 'Aktif') : [];
-      const s = (window.Store && typeof Store.getSettings === 'function') ? Store.getSettings() : { adminUsername: 'admin', adminPassword: 'admin123' };
-
-      let html = '';
-
-      // Tampilkan tombol karyawan terdaftar nyata jika ada
-      if (emps.length > 0) {
-        const displayEmps = emps.slice(0, 2);
-        displayEmps.forEach(emp => {
-          html += `
-            <button type="button" onclick="quickFillAndLogin('${emp.id}', '${emp.password || 'password123'}')" class="p-2.5 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 transition flex items-center justify-between text-left group cursor-pointer ${emps.length === 1 ? 'sm:col-span-2' : ''}">
-              <div class="flex items-center gap-2 min-w-0">
-                <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center justify-center shrink-0">${emp.name.charAt(0)}</div>
-                <div class="truncate">
-                  <span class="font-bold text-xs text-slate-800 block truncate leading-tight">${emp.name}</span>
-                  <span class="text-[10px] text-slate-500 font-mono">${emp.id} (pass: ${emp.password || 'password123'})</span>
-                </div>
-              </div>
-              <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 shrink-0 ml-1">Karyawan</span>
-            </button>
-          `;
-        });
-      }
-
-      // Kasir Kantin
-      tenants.forEach((t, idx) => {
-        const isEven = idx % 2 === 0;
-        html += `
-          <button type="button" onclick="quickFillAndLogin('${t.id}', '${t.password || 'kantin123'}')" class="p-2.5 rounded-xl border border-slate-200 hover:border-${isEven ? 'blue' : 'purple'}-500 hover:bg-${isEven ? 'blue' : 'purple'}-50/50 transition flex items-center justify-between text-left group cursor-pointer">
-            <div class="flex items-center gap-2 min-w-0">
-              <div class="w-7 h-7 rounded-lg bg-${isEven ? 'blue' : 'purple'}-100 text-${isEven ? 'blue' : 'purple'}-800 font-bold text-xs flex items-center justify-center shrink-0">
-                <i class="fa-solid ${isEven ? 'fa-bowl-food' : 'fa-utensils'}"></i>
-              </div>
-              <div class="truncate">
-                <span class="font-bold text-xs text-slate-800 block truncate leading-tight label-${t.id}-name">${t.name}</span>
-                <span class="text-[10px] text-slate-500 font-mono">${t.id} (pass: ${t.password || 'kantin123'})</span>
-              </div>
-            </div>
-            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-${isEven ? 'blue' : 'purple'}-100 text-${isEven ? 'blue' : 'purple'}-800 shrink-0 ml-1">Kasir</span>
-          </button>
-        `;
-      });
-
-      // Admin Utama
-      html += `
-        <button type="button" onclick="quickFillAndLogin('${s.adminUsername || 'admin'}', '${s.adminPassword || 'admin123'}')" class="p-2.5 rounded-xl border border-slate-200 hover:border-teal-500 hover:bg-teal-50/50 transition flex items-center justify-between text-left group cursor-pointer sm:col-span-2">
-          <div class="flex items-center gap-2 min-w-0">
-            <div class="w-7 h-7 rounded-lg bg-teal-100 text-teal-800 font-bold text-xs flex items-center justify-center shrink-0"><i class="fa-solid fa-shield-halved"></i></div>
-            <div class="truncate">
-              <span class="font-bold text-xs text-slate-800 block truncate leading-tight">Administrator Hotel (Akses Penuh)</span>
-              <span class="text-[10px] text-slate-500 font-mono">${s.adminUsername || 'admin'} (pass: ${s.adminPassword || 'admin123'})</span>
-            </div>
-          </div>
-          <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-teal-100 text-teal-800 shrink-0 ml-1">Admin Utama</span>
-        </button>
-      `;
-
-      container.innerHTML = html;
+      container.replaceChildren();
     }
     window.renderQuickLoginButtons = renderQuickLoginButtons;
   </script>

@@ -67,12 +67,12 @@ const ReportsManager = {
     const tenants = Store.getTenants();
     const currentVal = this.tenantId || 'all';
 
-    let optionsHtml = '<option value="all">Semua Depot Kantin</option>';
+    const options = [new Option('Semua Depot Kantin', 'all')];
     tenants.forEach(t => {
-      optionsHtml += `<option value="${t.id}">${t.name}</option>`;
+      options.push(new Option(t.name, t.id));
     });
 
-    select.innerHTML = optionsHtml;
+    select.replaceChildren(...options);
     select.value = currentVal;
 
     // Jika tenantId lama sudah tidak ada di list dan bukan 'all', fallback ke 'all'
@@ -999,7 +999,7 @@ const ReportsManager = {
               <div class="w-5 h-5 rounded-md bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-[9px]">
                 <i class="fa-solid fa-store"></i>
               </div>
-              <span>${t.name}</span>
+              <span>${Store.escapeHtml(t.name)}</span>
               ${isSelected ? '<span class="text-[9px] font-extrabold text-teal-800 bg-teal-100 px-1.5 py-0.5 rounded-full border border-teal-200">Filter Aktif</span>' : ''}
             </div>
           </td>
@@ -1218,7 +1218,7 @@ const ReportsManager = {
                   <i class="fa-solid fa-graduation-cap"></i>
                 </div>
                 <div>
-                  <span class="block">${t.name}</span>
+                  <span class="block">${Store.escapeHtml(t.name)}</span>
                   <span class="text-[9px] text-slate-400 font-mono">${t.id}</span>
                 </div>
               </div>
@@ -1337,7 +1337,7 @@ const ReportsManager = {
             <td class="py-1.5 px-2.5 text-slate-600">
               ${isTrn ? '<span class="inline-flex items-center gap-1 font-bold text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded text-[9px] border border-amber-200"><i class="fa-solid fa-graduation-cap"></i> Training</span>' : r.department}
             </td>
-            <td class="py-1.5 px-2.5 font-semibold text-emerald-800">${r.tenantName}</td>
+            <td class="py-1.5 px-2.5 font-semibold text-emerald-800">${Store.escapeHtml(r.tenantName)}</td>
             <td class="py-1.5 px-2.5 font-mono font-semibold text-emerald-700 text-right">Rp ${biaya.toLocaleString('id-ID')}</td>
           </tr>
         `;
@@ -1349,7 +1349,7 @@ const ReportsManager = {
             <td class="py-1.5 px-2.5 font-mono font-bold text-blue-900">${r.employeeId}</td>
             <td class="py-1.5 px-2.5 font-semibold text-slate-900">${r.employeeName}</td>
             <td class="py-1.5 px-2.5 text-slate-700 font-medium">${r.department}</td>
-            <td class="py-1.5 px-2.5 font-semibold text-emerald-800">${r.tenantName}</td>
+            <td class="py-1.5 px-2.5 font-semibold text-emerald-800">${Store.escapeHtml(r.tenantName)}</td>
             <td class="py-1.5 px-2.5 font-mono font-semibold text-emerald-700 text-right">Rp ${biaya.toLocaleString('id-ID')}</td>
           </tr>
         `;
@@ -1366,7 +1366,7 @@ const ReportsManager = {
                 <i class="fa-solid fa-school text-slate-400 mr-1 text-[9px]"></i> ${institution}
               </span>
             </td>
-            <td class="py-1.5 px-2.5 font-semibold text-emerald-800">${r.tenantName}</td>
+            <td class="py-1.5 px-2.5 font-semibold text-emerald-800">${Store.escapeHtml(r.tenantName)}</td>
             <td class="py-1.5 px-2.5 font-mono font-semibold text-emerald-700 text-right">Rp ${biaya.toLocaleString('id-ID')}</td>
           </tr>
         `;

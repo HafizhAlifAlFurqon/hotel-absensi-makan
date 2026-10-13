@@ -30,21 +30,8 @@ const App = {
     this.updateTenantLabels();
     this.setupNavigation();
 
-    // Default navigasi: Jika belum login, tampilkan halaman login mandiri
-    const user = Auth.getCurrentUser();
-    if (!user) {
-      Auth.showLoginPage();
-    } else {
-      Auth.hideLoginPage();
-      Auth.enforceRBAC();
-      if (user.role === 'karyawan') {
-        this.navigateTo('employee-portal');
-      } else if (user.role === 'canteen') {
-        this.navigateTo('canteen');
-      } else {
-        this.navigateTo('dashboard');
-      }
-    }
+    Auth.showLoginPage();
+    Auth.restoreSession();
 
     this.checkHttpsProtocol();
 
@@ -218,23 +205,13 @@ const App = {
     Auth.enforceRBAC();
   },
 
-  switchRole(role) {
-    if (role === 'admin') {
-      const s = Store.getSettings();
-      Auth.loginWithPassword(s.adminUsername || 'admin', s.adminPassword || 'admin123');
-    } else if (role === 'tenant1') {
-      Auth.loginWithPassword('tenant1', 'depota123');
-    } else if (role === 'tenant2') {
-      Auth.loginWithPassword('tenant2', 'depotyuli123');
-    } else if (role === 'karyawan') {
-      const emps = Store.getEmployees().filter(e => e.status === 'Aktif');
-      if (emps.length > 0) {
-        Auth.loginWithPassword(emps[0].id, emps[0].password || 'password123');
-      } else {
-        Auth.openLoginModal();
-      }
-    } else {
-      Auth.openLoginModal();
+  async switchRole(role) {
+    const loggedOut = await Auth.logout();
+    if (!loggedOut) return;
+    Auth.showLoginPage();
+    const identifier = document.getElementById('login-page-identifier');
+    if (identifier) {
+      identifier.value = role === 'admin' ? (Store.getSettings().adminUsername || 'admin') : (role === 'tenant1' || role === 'tenant2' ? role : '');
     }
   },
 

@@ -30,7 +30,6 @@ const DEFAULT_EMPLOYEES = [];
 const DEFAULT_SETTINGS = {
   hotelName: 'BeSS Mansion Hotel Surabaya',
   adminUsername: 'admin',
-  adminPassword: 'admin123',
   tenant1Name: 'Depot Bu Mamie',
   tenant2Name: 'Depot Bu Yuli',
   mealPrice: 15000, // Rp 15.000 per porsi
@@ -58,6 +57,16 @@ const Store = {
       this.audioCtx.resume().catch(() => {});
     }
     return this.audioCtx;
+  },
+
+  escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    })[char]);
   },
 
   // --- Audio Feedback (Web Audio API Synthesizer Respon Cepat) ---
@@ -131,16 +140,10 @@ const Store = {
         if (isDummyOnly) {
           localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify([]));
         } else if (Array.isArray(currentEmps)) {
-          let changed = false;
           currentEmps.forEach(e => {
-            if (!e.password) {
-              e.password = 'password123';
-              changed = true;
-            }
+            delete e.password;
           });
-          if (changed) {
-            localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(currentEmps));
-          }
+          localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(currentEmps));
         }
       } catch (err) {}
     }
@@ -157,21 +160,20 @@ const Store = {
           currentSettings.hotelName = 'BeSS Mansion Hotel Surabaya';
           sChanged = true;
         }
-        if (!currentSettings.adminPassword) {
-          currentSettings.adminUsername = 'admin';
-          currentSettings.adminPassword = 'admin123';
+        if ('adminPassword' in currentSettings) {
+          delete currentSettings.adminPassword;
           sChanged = true;
         }
         if (!currentSettings.tenants || !Array.isArray(currentSettings.tenants) || currentSettings.tenants.length === 0) {
           currentSettings.tenants = [
-            { id: 'tenant1', name: currentSettings.tenant1Name || 'Depot Bu Mamie', password: 'depota123', status: 'Aktif' },
-            { id: 'tenant2', name: currentSettings.tenant2Name || 'Depot Bu Yuli', password: 'depotyuli123', status: 'Aktif' }
+            { id: 'tenant1', name: currentSettings.tenant1Name || 'Depot Bu Mamie', status: 'Aktif' },
+            { id: 'tenant2', name: currentSettings.tenant2Name || 'Depot Bu Yuli', status: 'Aktif' }
           ];
           sChanged = true;
         } else {
           currentSettings.tenants.forEach(t => {
-            if (!t.password) {
-              t.password = t.id === 'tenant1' ? 'depota123' : (t.id === 'tenant2' ? 'depotyuli123' : 'kantin123');
+            if ('password' in t) {
+              delete t.password;
               sChanged = true;
             }
           });
@@ -210,21 +212,7 @@ const Store = {
       } catch (err) {}
     }
 
-    // 4. Sinkronisasi Otomatis dengan Backend MySQL
-    setTimeout(() => {
-      Store.syncWithBackend().then(synced => {
-        if (synced && window.App) {
-          App.updateTenantLabels();
-        }
-      });
-    }, 50);
-
-    // Auto-refresh data dari MySQL secara berkala (setiap 15 detik untuk mendukung multi-perangkat)
-    if (!window._storeSyncInterval) {
-      window._storeSyncInterval = setInterval(() => {
-        Store.syncWithBackend();
-      }, 15000);
-    }
+    // Data privat hanya disinkronkan setelah server mengonfirmasi sesi login.
   },
 
   // --- Helper Komunikasi REST API MySQL (api.php) ---
@@ -233,6 +221,7 @@ const Store = {
       const res = await fetch(`api.php?action=${encodeURIComponent(action)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify(payload)
       });
       if (!res.ok) {
@@ -261,8 +250,8 @@ const Store = {
       } else {
         badge.className = 'hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-950/80 text-amber-200 border border-amber-500/80 shadow-xs';
         dot.className = 'w-2 h-2 rounded-full bg-amber-400 mr-1.5';
-        text.innerText = 'Offline (LocalStorage)';
-        badge.title = 'MySQL tidak terdeteksi. Menggunakan penyimpanan peramban lokal.';
+        text.innerText = 'Server Offline';
+        badge.title = 'Server aplikasi tidak dapat dijangkau; perubahan tidak disimpan.';
       }
     }
 
@@ -271,7 +260,7 @@ const Store = {
       if (isConnected) {
         indicator.innerHTML = '<span class="inline-flex items-center text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-200"><i class="fa-solid fa-circle-check text-emerald-600 mr-2"></i> MySQL Aktif &amp; Terhubung (absen_makan_hotel)</span>';
       } else {
-        indicator.innerHTML = '<span class="inline-flex items-center text-xs font-bold text-amber-700 bg-amber-100 px-3 py-1.5 rounded-xl border border-amber-200"><i class="fa-solid fa-triangle-exclamation text-amber-600 mr-2"></i> MySQL Offline (Menggunakan LocalStorage)</span>';
+        indicator.innerHTML = '<span class="inline-flex items-center text-xs font-bold text-amber-700 bg-amber-100 px-3 py-1.5 rounded-xl border border-amber-200"><i class="fa-solid fa-triangle-exclamation text-amber-600 mr-2"></i> Server aplikasi tidak tersedia</span>';
       }
     }
 
@@ -282,7 +271,7 @@ const Store = {
         loginDbBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span><span>MySQL Terhubung</span>';
       } else {
         loginDbBadge.className = 'hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-950/80 text-amber-300 border border-amber-500/50 shadow-xs';
-        loginDbBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400 mr-1.5"></span><span>Offline (LocalStorage)</span>';
+        loginDbBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400 mr-1.5"></span><span>Server tidak tersedia</span>';
       }
     }
   },
@@ -290,9 +279,20 @@ const Store = {
   // --- Sinkronisasi Data Dua Arah dengan MySQL Server ---
   async syncWithBackend(isManual = false) {
     if (this.isSyncing) return;
+    if (!Auth.isLoggedIn()) return false;
     this.isSyncing = true;
     try {
       const res = await fetch('api.php?action=get_all', { cache: 'no-store' });
+      if (res.status === 401) {
+        Auth.setCurrentUser(null);
+        Auth.showLoginPage();
+        if (window._storeSyncInterval) {
+          clearInterval(window._storeSyncInterval);
+          window._storeSyncInterval = null;
+        }
+        this.isSyncing = false;
+        return false;
+      }
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       if (data && data.success) {
@@ -300,15 +300,7 @@ const Store = {
 
         // 1. Data Karyawan dari MySQL
         if (Array.isArray(data.employees)) {
-          if (data.employees.length > 0) {
-            localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(data.employees));
-          } else {
-            // Jika di MySQL kosong tapi user punya data lokal, upload ke MySQL
-            const localEmps = this.getEmployees();
-            if (localEmps.length > 0) {
-              await this.apiPost('batch_save_employees', { employees: localEmps });
-            }
-          }
+          localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(data.employees));
         }
 
         // 2. Data Riwayat Absensi dari MySQL
@@ -324,6 +316,11 @@ const Store = {
 
         this.updateDatabaseStatusBadge(true);
         window.dispatchEvent(new CustomEvent('store-synced', { detail: data }));
+        if (!window._storeSyncInterval) {
+          window._storeSyncInterval = setInterval(() => {
+            if (Auth.isLoggedIn()) Store.syncWithBackend();
+          }, 15000);
+        }
 
         if (isManual) {
           alert('Sinkronisasi Sukses!\nData Anda telah terhubung dan tersimpan rapi di MySQL (absen_makan_hotel).');
@@ -363,26 +360,26 @@ const Store = {
 
   saveEmployee(employee, oldId = null) {
     const employees = Store.getEmployees();
-    if (!employee.password) {
-      employee.password = 'password123';
-    }
+    const credentials = { ...employee, oldId };
+    const safeEmployee = { ...employee };
+    delete safeEmployee.password;
     if (!employee.createdAt) {
       employee.createdAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
     }
+    safeEmployee.createdAt = employee.createdAt;
     const existingIndex = employees.findIndex(e => e.id.toLowerCase() === employee.id.toLowerCase());
     if (existingIndex >= 0) {
       // Pertahankan createdAt asli jika karyawan diedit
       if (employees[existingIndex].createdAt) {
         employee.createdAt = employees[existingIndex].createdAt;
       }
-      employees[existingIndex] = { ...employees[existingIndex], ...employee };
+      employees[existingIndex] = { ...employees[existingIndex], ...safeEmployee };
     } else {
-      employees.push(employee);
+      employees.push(safeEmployee);
     }
     localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
-    // Sinkronkan ke database MySQL
-    Store.apiPost('save_employee', { ...employee, oldId });
-    return employee;
+    Store.apiPost('save_employee', credentials);
+    return safeEmployee;
   },
 
   generateNextEmployeeId() {
@@ -446,18 +443,22 @@ const Store = {
     }
 
     // Update data karyawan
-    employees[idx] = {
+    const employeeUpdate = {
       ...employees[idx],
       ...updatedData,
       id: newId,
-      name: newName,
-      password: (updatedData.password && updatedData.password.trim()) || employees[idx].password || 'password123'
+      name: newName
     };
+    if (!updatedData.password) delete employeeUpdate.password;
+    else employeeUpdate.password = updatedData.password.trim();
+    const credentials = { ...employeeUpdate, oldId };
+    delete employeeUpdate.password;
+    employees[idx] = employeeUpdate;
 
     localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
 
     // Sinkronkan ke database MySQL
-    Store.apiPost('save_employee', { ...employees[idx], oldId: oldId });
+    Store.apiPost('save_employee', credentials);
 
     // Update sesi pengguna saat ini jika cocok
     if (window.Auth) {
@@ -474,16 +475,20 @@ const Store = {
     return { success: true, message: `Data karyawan "${newName}" (${newId}) berhasil diperbarui!`, employee: employees[idx] };
   },
 
-  updateEmployeePassword(employeeId, newPassword) {
+  async updateEmployeePassword(employeeId, newPassword) {
     if (!employeeId || !newPassword) return { success: false, message: 'Password tidak boleh kosong.' };
     const employees = Store.getEmployees();
     const emp = employees.find(e => e.id.toLowerCase() === employeeId.toLowerCase());
     if (emp) {
-      emp.password = newPassword.trim();
-      localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
-      // Sinkronkan ke database MySQL
-      Store.apiPost('save_employee', emp);
-      return { success: true, message: `Password untuk karyawan "${emp.name}" berhasil diperbarui!` };
+      const currentUser = Auth.getCurrentUser();
+      const isSelf = currentUser && currentUser.role === 'karyawan'
+        && currentUser.employeeId.toLowerCase() === employeeId.toLowerCase();
+      const result = isSelf
+        ? await Store.apiPost('change_password', { newPassword: newPassword.trim() })
+        : await Store.apiPost('save_employee', { ...emp, password: newPassword.trim() });
+      return result && result.success
+        ? { success: true, message: `Password untuk karyawan "${emp.name}" berhasil diperbarui!` }
+        : { success: false, message: (result && result.message) || 'Gagal memperbarui password di server.' };
     }
     return { success: false, message: 'Karyawan tidak ditemukan.' };
   },
@@ -514,7 +519,6 @@ const Store = {
         existing.name = cleanName;
         if (item.department) existing.department = item.department.trim();
         if (item.position) existing.position = item.position.trim();
-        if (item.password) existing.password = item.password.trim();
         count++;
       } else {
         employees.push({
@@ -522,7 +526,7 @@ const Store = {
           name: cleanName,
           department: (item.department && item.department.trim()) || 'Housekeeping',
           position: (item.position && item.position.trim()) || 'Staff',
-          password: (item.password && item.password.trim()) || 'password123',
+          password: (item.password && item.password.trim()) || '',
           status: item.status || 'Aktif'
         });
         count++;
@@ -539,102 +543,12 @@ const Store = {
     if (newUsername && newUsername.trim()) {
       settings.adminUsername = newUsername.trim();
     }
-    if (newPassword && newPassword.trim()) {
-      settings.adminPassword = newPassword.trim();
-    }
-    this.saveSettings(settings);
-    return { success: true, message: 'Kredensial Administrator berhasil diperbarui!' };
-  },
-
-  verifyCredentials(identifier, password) {
-    if (!identifier || !password) {
-      return { success: false, message: 'Harap masukkan Nama / ID Karyawan dan Password.' };
-    }
-
-    const cleanId = identifier.trim().toLowerCase();
-    const cleanPass = password.trim();
-    const settings = Store.getSettings();
-    const currentAdminUser = (settings.adminUsername || 'admin').toLowerCase();
-
-    // 1. Cek Administrator
-    if (cleanId === currentAdminUser || cleanId === 'admin' || cleanId === 'administrator') {
-      const adminPass = settings.adminPassword || 'admin123';
-      if (cleanPass === adminPass) {
-        return {
-          success: true,
-          role: 'admin',
-          user: {
-            role: 'admin',
-            name: 'Administrator Hotel',
-            picture: Auth.getAvatar('Admin', '0f766e'),
-            badge: 'Admin Utama'
-          }
-        };
-      } else {
-        return { success: false, message: 'Password Administrator salah!' };
-      }
-    }
-
-    // 2. Cek Kasir Kantin
-    const tenants = Store.getTenants();
-    const matchedTenant = tenants.find(t => 
-      t.id.toLowerCase() === cleanId || 
-      t.name.toLowerCase() === cleanId ||
-      cleanId === `kasir_${t.id.toLowerCase()}`
-    );
-
-    if (matchedTenant) {
-      const tenantPass = matchedTenant.password || 'kantin123';
-      if (cleanPass === tenantPass || cleanPass === 'kantin123' || cleanPass === 'admin123') {
-        return {
-          success: true,
-          role: 'canteen',
-          user: {
-            role: 'canteen',
-            tenantId: matchedTenant.id,
-            name: matchedTenant.name,
-            picture: Auth.getAvatar(matchedTenant.name, '2563eb'),
-            badge: `Kasir ${matchedTenant.name}`
-          }
-        };
-      } else {
-        return { success: false, message: `Password Kasir ${matchedTenant.name} salah!` };
-      }
-    }
-
-    // 3. Cek Karyawan (Berdasarkan Nama Lengkap atau ID Karyawan)
-    const employees = Store.getEmployees();
-    const matchedEmp = employees.find(e => 
-      e.id.toLowerCase() === cleanId || 
-      e.name.toLowerCase() === cleanId ||
-      (cleanId.length >= 3 && e.name.toLowerCase().startsWith(cleanId))
-    );
-
-    if (matchedEmp) {
-      const empPass = matchedEmp.password || 'password123';
-      if (cleanPass === empPass) {
-        if (matchedEmp.status !== 'Aktif') {
-          return { success: false, message: `Akun Karyawan ${matchedEmp.name} berstatus NON-AKTIF. Hubungi HR Hotel.` };
-        }
-        return {
-          success: true,
-          role: 'karyawan',
-          user: {
-            role: 'karyawan',
-            employeeId: matchedEmp.id,
-            name: matchedEmp.name,
-            department: matchedEmp.department,
-            position: matchedEmp.position || 'Staff',
-            picture: Auth.getAvatar(matchedEmp.name, '059669'),
-            badge: 'Karyawan'
-          }
-        };
-      } else {
-        return { success: false, message: `Password untuk karyawan "${matchedEmp.name}" (${matchedEmp.id}) salah!` };
-      }
-    }
-
-    return { success: false, message: `Nama Karyawan / ID "${identifier}" tidak ditemukan dalam database!` };
+    delete settings.adminPassword;
+    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+    return this.apiPost('save_settings', {
+      adminUsername: settings.adminUsername,
+      adminPassword: newPassword && newPassword.trim() ? newPassword.trim() : undefined
+    }).then(result => result || { success: false, message: 'Gagal menyimpan kredensial ke server.' });
   },
 
   deleteEmployee(id) {
@@ -711,10 +625,14 @@ const Store = {
   saveSettings(newSettings) {
     const current = Store.getSettings();
     const updated = { ...current, ...newSettings };
-    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(updated));
-    // Sinkronkan ke database MySQL
     Store.apiPost('save_settings', updated);
-    return updated;
+    const safeSettings = { ...updated };
+    delete safeSettings.adminPassword;
+    if (Array.isArray(safeSettings.tenants)) {
+      safeSettings.tenants = safeSettings.tenants.map(({ password, ...tenant }) => tenant);
+    }
+    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(safeSettings));
+    return safeSettings;
   },
 
   getTenants() {
@@ -758,7 +676,7 @@ const Store = {
   },
 
   addTenant(name, password = null, price = null) {
-    if (!name || !name.trim()) return null;
+    if (!name || !name.trim() || !password || !password.trim()) return null;
     const s = Store.getSettings();
     const tenants = Store.getTenants();
     const newId = 'tenant_' + Date.now().toString(36);
@@ -768,7 +686,7 @@ const Store = {
     const newTenant = {
       id: newId,
       name: name.trim(),
-      password: password ? password.trim() : 'kantin123',
+      password: password.trim(),
       price: tenantPrice,
       status: 'Aktif'
     };
@@ -777,17 +695,28 @@ const Store = {
     return newTenant;
   },
 
-  updateTenant(id, newName, newPrice = null, newPassword = null) {
-    if (!id) return null;
+  async updateTenantPassword(id, password) {
+    if (!id || !password || !password.trim()) {
+      return { success: false, message: 'Password baru wajib diisi.' };
+    }
+    const tenants = this.getTenants().map(tenant => ({
+      ...tenant,
+      ...(tenant.id === id ? { password: password.trim() } : {})
+    }));
+    const result = await this.apiPost('save_settings', { tenants });
+    return result && result.success
+      ? { success: true }
+      : { success: false, message: (result && result.message) || 'Gagal memperbarui password kantin di server.' };
+  },
+
+  updateTenant(id, newName, newPrice = null) {
+    if (!id || !newName || !newName.trim()) return null;
     const tenants = Store.getTenants();
     const t = tenants.find(item => item.id === id);
     if (t) {
-      if (newName && newName.trim()) t.name = newName.trim();
+      t.name = newName.trim();
       if (newPrice !== null && newPrice !== undefined && !isNaN(Number(newPrice)) && Number(newPrice) > 0) {
         t.price = Number(newPrice);
-      }
-      if (newPassword && newPassword.trim()) {
-        t.password = newPassword.trim();
       }
       const s = Store.getSettings();
       if (id === 'tenant1') s.tenant1Name = t.name;

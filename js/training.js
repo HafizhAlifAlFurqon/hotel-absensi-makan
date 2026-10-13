@@ -49,7 +49,11 @@ const TrainingManager = {
     const select = document.getElementById('training-report-canteen-filter');
     if (!select) return;
     const tenants = Store.getTenants();
-    select.innerHTML = '<option value="">Semua Kantin</option>' + tenants.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+    select.replaceChildren(new Option('Semua Kantin', ''));
+    tenants.forEach(tenant => {
+      const option = new Option(tenant.name, tenant.id);
+      select.add(option);
+    });
   },
 
   switchTab(tab) {
@@ -257,7 +261,7 @@ const TrainingManager = {
               <td class="py-1.5 px-2.5 text-[11px] font-mono font-bold text-amber-900">${r.employeeId}</td>
               <td class="py-1.5 px-2.5 text-[11px] font-bold text-slate-800">${r.employeeName}</td>
               <td class="py-1.5 px-2.5 text-[11px] text-slate-600">${inst}</td>
-              <td class="py-1.5 px-2.5 text-[11px] font-semibold text-emerald-800">${r.tenantName}</td>
+              <td class="py-1.5 px-2.5 text-[11px] font-semibold text-emerald-800">${Store.escapeHtml(r.tenantName)}</td>
               <td class="py-1.5 px-2.5 text-[11px] font-semibold text-indigo-700">${r.shift || '-'}</td>
               <td class="py-1.5 px-2.5 text-[11px] font-mono font-bold text-right text-slate-800">Rp ${rowPrice.toLocaleString('id-ID')}</td>
             </tr>
@@ -322,7 +326,7 @@ const TrainingManager = {
           <td class="py-3 px-4 text-xs font-bold text-slate-800">${trn.name}</td>
           <td class="py-3 px-4 text-xs text-slate-600 font-medium">${trn.institution || '-'}</td>
           <td class="py-3 px-4 text-xs text-slate-600">${trn.position || 'Trainee'}</td>
-          <td class="py-3 px-4 text-xs font-mono text-slate-500">${trn.password || 'training123'}</td>
+          <td class="py-3 px-4 text-xs font-mono text-slate-500">Password disembunyikan</td>
           <td class="py-3 px-4 text-xs">
             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isAktif ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
               ${trn.status}
@@ -393,7 +397,7 @@ const TrainingManager = {
         if (nameInput) nameInput.value = trn.name;
         if (instInput) instInput.value = trn.institution || '';
         if (posInput) posInput.value = trn.position || 'Trainee';
-        if (passInput) passInput.value = trn.password || 'training123';
+        if (passInput) passInput.value = '';
       }
     } else {
       if (title) title.innerHTML = `<i class="fa-solid fa-user-graduate text-amber-600"></i> Tambah Siswa Training (Magang)`;
@@ -404,7 +408,7 @@ const TrainingManager = {
       if (nameInput) nameInput.value = '';
       if (instInput) instInput.value = '';
       if (posInput) posInput.value = 'Housekeeping Trainee';
-      if (passInput) passInput.value = 'training123';
+      if (passInput) passInput.value = '';
     }
 
     modal.classList.remove('hidden');
@@ -421,10 +425,18 @@ const TrainingManager = {
     const name = document.getElementById('trn-form-name')?.value.trim();
     const institution = document.getElementById('trn-form-institution')?.value.trim();
     const position = document.getElementById('trn-form-position')?.value.trim() || 'Trainee';
-    const password = document.getElementById('trn-form-password')?.value.trim() || 'training123';
+    const password = document.getElementById('trn-form-password')?.value.trim() || '';
 
     if (!id || !name) {
       alert('Mohon isi ID dan Nama Lengkap siswa.');
+      return;
+    }
+    if (!this.editingId && !password) {
+      alert('Password wajib diisi untuk akun training baru.');
+      return;
+    }
+    if (password && password.length < 12) {
+      alert('Password minimal 12 karakter.');
       return;
     }
 
@@ -438,7 +450,7 @@ const TrainingManager = {
       position,
       institution,
       isTrainee: true,
-      password,
+      ...(password ? { password } : {}),
       status
     });
 

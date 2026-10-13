@@ -92,11 +92,20 @@ Kedua metode ini terhubung ke database terpusat yang sama sehingga otomatis menc
 ---
 
 ## Cara Menjalankan Aplikasi
-1. **Opsi 1 (Paling Mudah)**:
-   - Masuk ke folder `hotel-absensi-makan` lalu klik dua kali file **`start.bat`** (pilih 1) atau cukup klik dua kali **`index.html`** langsung di browser Chrome/Edge.
-2. **Opsi 2 (Multi-Perangkat di Kantin / Jaringan Wi-Fi Hotel)**:
-   - Klik dua kali **`start.bat`** lalu pilih opsi **2** (Jalankan Local Web Server).
-   - Perangkat kasir di Depot A atau Depot Bu Yuli (seperti Tablet atau HP) dapat membuka URL yang tertera di layar terminal (misal: `http://192.168.x.x:8080`).
+1. **Pengembangan lokal:** Klik dua kali `start.bat` dan pilih **1** untuk menjalankan PHP server lokal. Pastikan PHP CLI dan MySQL tersedia.
+2. **Server operasional / multi-perangkat:** Pasang aplikasi di Apache/Nginx yang menjalankan PHP dan HTTPS. Perangkat kasir/karyawan mengakses URL HTTPS server tersebut.
+
+> `start.bat`/PHP built-in server dan membuka `index.html` langsung ditujukan untuk pengembangan/pengujian. API akan menolak login dan akses data dari koneksi HTTP non-lokal.
+
+## Pengamanan untuk Server Hotel
+
+- Aplikasi memakai sesi PHP di server. Login harus dilakukan melalui API PHP; membuka file HTML langsung atau memakai server statis saja tidak mendukung autentikasi dan sinkronisasi database.
+- Gunakan HTTPS juga di jaringan internal hotel. Jika TLS berhenti di reverse proxy, atur proxy/PHP agar `$_SERVER['HTTPS']` dikenali sebagai aktif, sehingga cookie sesi ditandai `Secure` dan pemeriksaan origin sesuai alamat HTTPS.
+- Sebelum server dibuka ke jaringan, atur `INITIAL_ADMIN_PASSWORD` di `config.php` menjadi rahasia unik minimal 16 karakter. Gunakan nilai itu untuk login awal dengan username `admin`; aplikasi akan meminta password admin baru minimal 12 karakter. Setelah penggantian berhasil, hapus rahasia awal tersebut dari `config.php`.
+- Akun tenant/karyawan yang masih memakai password bawaan akan diminta menggantinya saat login pertama. Admin juga dapat mengatur password akun tenant/karyawan terlebih dahulu dari menu pengelolaan. Pastikan seluruh akun sudah memakai password unik sebelum operasional.
+- Password disimpan sebagai hash dan tidak dikirim ke browser. Password lama yang masih tersimpan teks biasa akan di-hash otomatis setelah login berhasil.
+- Isi `config.php` dengan akun MySQL khusus aplikasi yang hanya memiliki izin pada database aplikasi; jangan gunakan akun `root` untuk server operasional. Simpan salinan cadangan database di lokasi yang aksesnya dibatasi.
+- Batasi akses jaringan dan firewall ke server hotel saja. “Server pribadi” atau Wi-Fi internal tetap perlu HTTPS, autentikasi, dan pembatasan akses karena perangkat lain di jaringan dapat mencoba mengakses layanan.
 
 ---
 
@@ -105,4 +114,4 @@ Kedua metode ini terhubung ke database terpusat yang sama sehingga otomatis menc
 - **Pihak Depot Bu A**: Kasir tenant 1 untuk memindai kartu karyawan atau menampilkan QR meja kasir Depot Bu A.
 - **Pihak Depot Bu Yuli**: Kasir tenant 2 untuk memindai kartu karyawan atau menampilkan QR meja kasir Depot Bu Yuli.
 - **Pihak Karyawan**: Portal absensi mandiri bagi karyawan untuk memindai QR meja kantin melalui HP masing-masing.
-Ganti role kapan saja melalui tombol dropdown di pojok kanan atas layar atau saat logout.
+Untuk berpindah role, logout lalu login memakai akun role yang dituju.
