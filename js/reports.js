@@ -328,7 +328,8 @@ const ReportsManager = {
     const s = Store.getSettings();
     const mealPrice = Number(s.mealPrice) || 15000;
     const hotelName = s.hotelName || 'BeSS Mansion Hotel Surabaya';
-    const totalBiaya = records.length * mealPrice;
+    const totalPorsi = records.length;
+    const totalBiaya = totalPorsi * mealPrice;
 
     const periodText = (this.startDate === this.endDate)
       ? this.startDate
@@ -336,59 +337,342 @@ const ReportsManager = {
 
     const scopeLabel = this.scope === 'employee' 
       ? 'Karyawan Saja' 
-      : (this.scope === 'training' ? 'Anak Training' : 'Global (Semua)');
+      : (this.scope === 'training' ? 'Anak Training (Magang)' : 'Global (Semua Karyawan & Training)');
     
     const tenantLabel = (this.tenantId === 'all' || !this.tenantId) 
       ? 'Semua Depot Kantin' 
       : Store.getTenantName(this.tenantId);
 
-    // Hitung rincian shift
+    // 1. Hitung Shift Data
     const countSiang = records.filter(r => r.shift && r.shift.includes('Siang')).length;
     const countSore = records.filter(r => r.shift && r.shift.includes('Sore')).length;
+    const biayaSiang = countSiang * mealPrice;
+    const biayaSore = countSore * mealPrice;
+    const pctSiang = totalPorsi > 0 ? ((countSiang / totalPorsi) * 100).toFixed(1) + '%' : '0%';
+    const pctSore = totalPorsi > 0 ? ((countSore / totalPorsi) * 100).toFixed(1) + '%' : '0%';
 
-    // Buat CSV Format (dengan UTF-8 BOM \uFEFF agar terbaca mulus di Excel tanpa karakter rusak)
-    let csv = '\uFEFF';
-    csv += `LAPORAN REKAPITULASI & KONSUMSI ABSENSI MAKAN\n`;
-    csv += `Hotel,"${hotelName.replace(/"/g, '""')}"\n`;
-    csv += `Periode,"${periodText}"\n`;
-    csv += `Lingkup Laporan,"${scopeLabel}"\n`;
-    csv += `Depot Kantin,"${tenantLabel.replace(/"/g, '""')}"\n`;
-    csv += `Total Porsi,"${records.length} Porsi"\n`;
-    csv += `Makan Siang (11:00-15:00),"${countSiang} Porsi"\n`;
-    csv += `Makan Sore (15:01-19:00),"${countSore} Porsi"\n`;
-    csv += `Total Nominal Tagihan (Rp),"Rp ${new Intl.NumberFormat('id-ID').format(totalBiaya)}"\n`;
-    csv += `Tanggal Ekspor,"${new Date().toLocaleString('id-ID')} WIB"\n\n`;
+    // 2. Hitung Per Depot Kantin
+    const tenants = Store.getTenants();
+    const tenantStats = {};
+    tenants.forEach(t => {
+      tenantStats[t.id] = { name: t.name, count: 0, cost: 0 };
+    });
+    records.forEach(r => {
+      const tid = r.tenantId || r.tenantKey || 'tenant1';
+      if (!tenantStats[tid]) {
+        tenantStats[tid] = { name: r.tenantName || tid, count: 0, cost: 0 };
+      }
+      tenantStats[tid].count++;
+      tenantStats[tid].cost += (Number(r.price) || mealPrice);
+    });
 
-    // Header Kolom Tabel
-    csv += `"No","Tanggal","Waktu (WIB)","ID Karyawan","Nama Karyawan","Departemen","Jabatan / Instansi","Shift Makan","Kantin / Depot","Tarif Porsi (Rp)","Kategori Peserta"\n`;
-
-    // Data Baris Transaksi
-    records.forEach((r, idx) => {
+    // 3. Hitung Per Departemen
+    const deptStats = {};
+    records.forEach(r => {
       const isTrn = this.isTraineeRecord(r);
-      const category = isTrn ? 'Anak Training' : 'Karyawan';
+      const d = isTrn ? 'Training / Magang' : (r.department || 'Lainnya');
+      if (!deptStats[d]) {
+        deptStats[d] = { name: d, count: 0, cost: 0 };
+      }
+      deptStats[d].count++;
+      deptStats[d].cost += (Number(r.price) || mealPrice);
+    });
+    const sortedDepts = Object.values(deptStats).sort((a, b) => b.count - a.count);
+
+    const exportTime = new Date().toLocaleDateString('id-ID', {
+      day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    }) + ' WIB';
+
+    // Format Rupiah Helper
+    const fmtRp = (num) => 'Rp ' + new Intl.NumberFormat('id-ID').format(num);
+
+    let html = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office"
+            xmlns:x="urn:schemas-microsoft-com:office:excel"
+            xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8">
+        <!--[if gte mso 9]>
+        <xml>
+          <x:ExcelWorkbook>
+            <x:ExcelWorksheets>
+              <x:ExcelWorksheet>
+                <x:Name>Rekap Absensi Makan</x:Name>
+                <x:WorksheetOptions>
+                  <x:DisplayGridlines/>
+                </x:WorksheetOptions>
+              </x:ExcelWorksheet>
+            </x:ExcelWorksheets>
+          </x:ExcelWorkbook>
+        </xml>
+        <![endif]-->
+        <style>
+          body { font-family: Calibri, 'Segoe UI', Arial, sans-serif; font-size: 11pt; color: #1e293b; }
+          table { border-collapse: collapse; width: 100%; margin-bottom: 24px; }
+          th { background-color: #047857; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #0f766e; padding: 8px 12px; font-size: 10pt; }
+          td { border: 1px solid #cbd5e1; padding: 6px 10px; font-size: 10pt; vertical-align: middle; }
+          .text-center { text-align: center; }
+          .text-right { text-align: right; }
+          .text-left { text-align: left; }
+          .bold { font-weight: bold; }
+          .title { font-size: 16pt; font-weight: bold; color: #064e3b; text-align: left; }
+          .subtitle { font-size: 12pt; font-weight: bold; color: #1e293b; text-align: left; }
+          .meta-row { font-size: 10pt; color: #475569; }
+          .section-header { font-size: 11pt; font-weight: bold; padding: 8px 10px; border: 1px solid #94a3b8; }
+          .sec-shift { background-color: #e0f2fe; color: #0369a1; }
+          .sec-tenant { background-color: #fef3c7; color: #92400e; }
+          .sec-dept { background-color: #f3e8ff; color: #6b21a8; }
+          .sec-detail { background-color: #ecfdf5; color: #065f46; }
+          .total-row { background-color: #f1f5f9; font-weight: bold; }
+          .total-row td { border-top: 2px solid #64748b; border-bottom: 2px solid #64748b; }
+          .grand-total { background-color: #dcfce7; font-weight: bold; color: #166534; }
+          .signature-box { border: none !important; text-align: center; vertical-align: top; }
+          .signature-box td { border: none !important; }
+        </style>
+      </head>
+      <body>
+        <!-- KOP LAPORAN RESMI HOTEL -->
+        <table>
+          <tr><td colspan="10" class="title" style="border:none;">${hotelName.toUpperCase()}</td></tr>
+          <tr><td colspan="10" class="subtitle" style="border:none;">LAPORAN REKAPITULASI &amp; KONSUMSI ABSENSI MAKAN KARYAWAN</td></tr>
+          <tr><td colspan="10" class="meta-row" style="border:none;"><b>Periode:</b> ${periodText} &nbsp;|&nbsp; <b>Lingkup:</b> ${scopeLabel} &nbsp;|&nbsp; <b>Filter Depot:</b> ${tenantLabel}</td></tr>
+          <tr><td colspan="10" class="meta-row" style="border:none;"><b>Tarif Per Porsi:</b> ${fmtRp(mealPrice)} &nbsp;|&nbsp; <b>Waktu Ekspor:</b> ${exportTime}</td></tr>
+          <tr><td colspan="10" style="border:none; height: 12px;"></td></tr>
+        </table>
+
+        <!-- ======================================================== -->
+        <!-- TABEL 1: REKAPITULASI SHIFT MAKAN (SIANG & SORE) -->
+        <!-- ======================================================== -->
+        <table>
+          <tr>
+            <td colspan="7" class="section-header sec-shift">
+              1. REKAPITULASI SHIFT MAKAN (MAKAN SIANG &amp; MAKAN SORE)
+            </td>
+          </tr>
+          <tr>
+            <th style="width: 40px;">No</th>
+            <th style="width: 180px;">Shift Makan</th>
+            <th style="width: 160px;">Jam Operasional</th>
+            <th style="width: 120px;">Jumlah Porsi</th>
+            <th style="width: 140px;">Tarif / Porsi</th>
+            <th style="width: 160px;">Subtotal Biaya (Rp)</th>
+            <th style="width: 100px;">Kontribusi (%)</th>
+          </tr>
+          <tr>
+            <td class="text-center">1</td>
+            <td class="bold">Makan Siang</td>
+            <td class="text-center">11:00 - 15:00 WIB</td>
+            <td class="text-right bold">${countSiang} Porsi</td>
+            <td class="text-right">${fmtRp(mealPrice)}</td>
+            <td class="text-right bold">${fmtRp(biayaSiang)}</td>
+            <td class="text-center bold">${pctSiang}</td>
+          </tr>
+          <tr>
+            <td class="text-center">2</td>
+            <td class="bold">Makan Sore</td>
+            <td class="text-center">15:01 - 19:00 WIB</td>
+            <td class="text-right bold">${countSore} Porsi</td>
+            <td class="text-right">${fmtRp(mealPrice)}</td>
+            <td class="text-right bold">${fmtRp(biayaSore)}</td>
+            <td class="text-center bold">${pctSore}</td>
+          </tr>
+          <tr class="total-row">
+            <td colspan="3" class="text-right bold">TOTAL KESELURUHAN SHIFT</td>
+            <td class="text-right bold">${totalPorsi} Porsi</td>
+            <td class="text-center">-</td>
+            <td class="text-right bold">${fmtRp(totalBiaya)}</td>
+            <td class="text-center bold">100.0%</td>
+          </tr>
+        </table>
+
+        <!-- ======================================================== -->
+        <!-- TABEL 2: REKAPITULASI PER DEPOT KANTIN -->
+        <!-- ======================================================== -->
+        <table>
+          <tr>
+            <td colspan="7" class="section-header sec-tenant">
+              2. REKAPITULASI PER DEPOT KANTIN (TAGIHAN KANTIN)
+            </td>
+          </tr>
+          <tr>
+            <th style="width: 40px;">No</th>
+            <th style="width: 220px;">Nama Depot / Kantin</th>
+            <th style="width: 120px;">ID Depot</th>
+            <th style="width: 120px;">Porsi Terjual</th>
+            <th style="width: 140px;">Tarif / Porsi</th>
+            <th style="width: 160px;">Total Tagihan (Rp)</th>
+            <th style="width: 100px;">Kontribusi (%)</th>
+          </tr>
+    `;
+
+    let tIdx = 1;
+    let tTotalCount = 0;
+    let tTotalCost = 0;
+    Object.keys(tenantStats).forEach(tid => {
+      const t = tenantStats[tid];
+      if (this.tenantId !== 'all' && this.tenantId && this.tenantId !== tid) return;
+      tTotalCount += t.count;
+      tTotalCost += t.cost;
+      const pct = totalPorsi > 0 ? ((t.count / totalPorsi) * 100).toFixed(1) + '%' : '0%';
+      html += `
+        <tr>
+          <td class="text-center">${tIdx++}</td>
+          <td class="bold">${t.name}</td>
+          <td class="text-center" style="mso-number-format:'\\@';">${tid}</td>
+          <td class="text-right bold">${t.count} Porsi</td>
+          <td class="text-right">${fmtRp(mealPrice)}</td>
+          <td class="text-right bold">${fmtRp(t.cost)}</td>
+          <td class="text-center bold">${pct}</td>
+        </tr>
+      `;
+    });
+
+    html += `
+          <tr class="total-row">
+            <td colspan="3" class="text-right bold">TOTAL TAGIHAN DEPOT KANTIN</td>
+            <td class="text-right bold">${tTotalCount} Porsi</td>
+            <td class="text-center">-</td>
+            <td class="text-right bold">${fmtRp(tTotalCost)}</td>
+            <td class="text-center bold">100.0%</td>
+          </tr>
+        </table>
+
+        <!-- ======================================================== -->
+        <!-- TABEL 3: REKAPITULASI PER DEPARTEMEN -->
+        <!-- ======================================================== -->
+        <table>
+          <tr>
+            <td colspan="6" class="section-header sec-dept">
+              3. REKAPITULASI KONSUMSI PER DEPARTEMEN &amp; UNIT KERJA
+            </td>
+          </tr>
+          <tr>
+            <th style="width: 40px;">No</th>
+            <th style="width: 260px;">Nama Departemen / Unit Kerja</th>
+            <th style="width: 140px;">Jumlah Transaksi</th>
+            <th style="width: 140px;">Tarif / Porsi</th>
+            <th style="width: 180px;">Total Biaya Departemen (Rp)</th>
+            <th style="width: 100px;">Porsi (%)</th>
+          </tr>
+    `;
+
+    sortedDepts.forEach((d, dIdx) => {
+      const pct = totalPorsi > 0 ? ((d.count / totalPorsi) * 100).toFixed(1) + '%' : '0%';
+      html += `
+        <tr>
+          <td class="text-center">${dIdx + 1}</td>
+          <td class="bold">${d.name}</td>
+          <td class="text-right bold">${d.count} Porsi</td>
+          <td class="text-right">${fmtRp(mealPrice)}</td>
+          <td class="text-right bold">${fmtRp(d.cost)}</td>
+          <td class="text-center bold">${pct}</td>
+        </tr>
+      `;
+    });
+
+    html += `
+          <tr class="total-row">
+            <td colspan="2" class="text-right bold">TOTAL KONSUMSI DEPARTEMEN</td>
+            <td class="text-right bold">${totalPorsi} Porsi</td>
+            <td class="text-center">-</td>
+            <td class="text-right bold">${fmtRp(totalBiaya)}</td>
+            <td class="text-center bold">100.0%</td>
+          </tr>
+        </table>
+
+        <!-- ======================================================== -->
+        <!-- TABEL 4: RINCIAN LENGKAP TRANSAKSI ABSENSI MAKAN -->
+        <!-- ======================================================== -->
+        <table>
+          <tr>
+            <td colspan="10" class="section-header sec-detail">
+              4. RINCIAN LENGKAP TRANSAKSI ABSENSI MAKAN PERORANGAN
+            </td>
+          </tr>
+          <tr>
+            <th style="width: 40px;">No</th>
+            <th style="width: 90px;">Tanggal</th>
+            <th style="width: 80px;">Waktu</th>
+            <th style="width: 110px;">ID Karyawan</th>
+            <th style="width: 180px;">Nama Lengkap</th>
+            <th style="width: 140px;">Departemen</th>
+            <th style="width: 140px;">Jabatan / Instansi</th>
+            <th style="width: 110px;">Shift Makan</th>
+            <th style="width: 140px;">Depot Kantin</th>
+            <th style="width: 110px;">Tarif (Rp)</th>
+          </tr>
+    `;
+
+    records.forEach((r, rIdx) => {
+      const isTrn = this.isTraineeRecord(r);
       const dept = r.department || '-';
       const pos = isTrn ? (r.institution || 'Siswa Magang') : (r.position || '-');
       const tenant = r.tenantName || Store.getTenantName(r.tenantId || r.tenantKey) || 'Kantin';
       const shift = r.shift || (r.time && r.time < '15:01:00' ? 'Makan Siang' : 'Makan Sore');
       const pr = Number(r.price) || mealPrice;
 
-      csv += `"${idx + 1}",`;
-      csv += `"${r.date}",`;
-      csv += `"${r.time || '-'}",`;
-      csv += `"${(r.employeeId || '').replace(/"/g, '""')}",`;
-      csv += `"${(r.employeeName || '').replace(/"/g, '""')}",`;
-      csv += `"${dept.replace(/"/g, '""')}",`;
-      csv += `"${pos.replace(/"/g, '""')}",`;
-      csv += `"${shift}",`;
-      csv += `"${tenant.replace(/"/g, '""')}",`;
-      csv += `"${pr}",`;
-      csv += `"${category}"\n`;
+      html += `
+        <tr>
+          <td class="text-center">${rIdx + 1}</td>
+          <td class="text-center" style="mso-number-format:'\\@';">${r.date}</td>
+          <td class="text-center" style="mso-number-format:'\\@';">${r.time || '-'}</td>
+          <td class="text-center bold" style="mso-number-format:'\\@';">${r.employeeId || '-'}</td>
+          <td>${r.employeeName || '-'}</td>
+          <td>${dept}</td>
+          <td>${pos}</td>
+          <td class="text-center">${shift}</td>
+          <td>${tenant}</td>
+          <td class="text-right bold">${fmtRp(pr)}</td>
+        </tr>
+      `;
     });
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    html += `
+          <tr class="grand-total">
+            <td colspan="9" class="text-right bold" style="font-size: 11pt;">GRAND TOTAL TAGIHAN SELURUH TRANSAKSI</td>
+            <td class="text-right bold" style="font-size: 11pt;">${fmtRp(totalBiaya)}</td>
+          </tr>
+        </table>
+
+        <!-- ======================================================== -->
+        <!-- LEMBAR TANDA TANGAN ATASAN (3 PIHAK RESMI HOTEL) -->
+        <!-- ======================================================== -->
+        <table style="margin-top: 36px; border:none;">
+          <tr>
+            <td colspan="10" style="border:none; height: 16px;"></td>
+          </tr>
+          <tr class="signature-box">
+            <td colspan="3" style="width: 33%; text-align: center; border:none;">
+              <b>Dibuat Oleh,</b><br>
+              Petugas HRD / Absensi<br>
+              BeSS Mansion Hotel Surabaya<br><br><br><br><br>
+              <u>( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</u><br>
+              Staff HRD / Personalia
+            </td>
+            <td colspan="4" style="width: 34%; text-align: center; border:none;">
+              <b>Diperiksa Oleh,</b><br>
+              Finance &amp; Accounting<br>
+              BeSS Mansion Hotel Surabaya<br><br><br><br><br>
+              <u>( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</u><br>
+              Accounting &amp; Finance Spv
+            </td>
+            <td colspan="3" style="width: 33%; text-align: center; border:none;">
+              <b>Disetujui Oleh,</b><br>
+              General Manager<br>
+              BeSS Mansion Hotel Surabaya<br><br><br><br><br>
+              <u>( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</u><br>
+              General Manager Hotel
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    const filename = `Laporan_Absensi_Makan_${this.startDate}_sd_${this.endDate}.csv`;
+    const filename = `Laporan_Absensi_Makan_BeSS_Mansion_${this.startDate}_sd_${this.endDate}.xls`;
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
