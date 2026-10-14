@@ -492,7 +492,7 @@ const TrainingManager = {
       window.scrollTo(0, 0);
 
       const opt = {
-        margin: [8, 8, 8, 8],
+        margin: [3, 6, 3, 6],
         filename: filename,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {

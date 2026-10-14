@@ -110,7 +110,7 @@ table.report-table tfoot {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 10mm;
+    margin: 4mm 6mm;
   }
 
   /* Sembunyikan elemen navigasi, tombol, footer sistem, modal headers */

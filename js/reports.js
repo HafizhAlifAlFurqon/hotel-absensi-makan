@@ -1584,34 +1584,43 @@ const PDFPreview = {
 
     const scrollContainer = document.getElementById('pdf-preview-scroll-container');
     const prevScroll = scrollContainer ? scrollContainer.scrollTop : 0;
-    if (scrollContainer) scrollContainer.scrollTop = 0;
-
-    // Simpan posisi scroll window utama dan reset ke (0, 0)
-    // agar canvas rendering html2canvas tidak mengalami pergeseran vertikal ke bawah (offset putih)
     const prevWindowScrollX = window.scrollX || window.pageXOffset || 0;
     const prevWindowScrollY = window.scrollY || window.pageYOffset || 0;
+
+    // Pastikan scroll window dan modal benar-benar di koordinat (0, 0)
     window.scrollTo(0, 0);
+    if (scrollContainer) scrollContainer.scrollTop = 0;
 
-    // Hilangkan efek bayangan, border, min-height, margin, dan padding dari kertas pratinjau
-    // agar canvas rendering pas presisi dimulai dari koordinat (0, 0) paling atas
-    const prevShadow = paperEl.style.boxShadow;
-    const prevBorder = paperEl.style.border;
-    const prevMinHeight = paperEl.style.minHeight;
-    const prevPadding = paperEl.style.padding;
-    const prevMargin = paperEl.style.margin;
+    const isLandscape = this.currentOrientation === 'landscape';
 
-    paperEl.style.boxShadow = 'none';
-    paperEl.style.border = 'none';
-    paperEl.style.minHeight = 'unset';
-    paperEl.style.padding = '0';
-    paperEl.style.margin = '0 auto';
+    // BUAT ELEMEN KHUSUS EKSPOR (STANDALONE ISOLATED CONTAINER)
+    // Ditempatkan langsung pada document.body dengan top: 0, left: 0, padding: 0, margin: 0
+    // Ini menjamin 100% canvas tidak akan pernah terdorong ke tengah oleh flexbox modal atau scroll!
+    const renderNode = document.createElement('div');
+    renderNode.id = 'pdf-render-standalone-node';
+    renderNode.className = 'bg-white text-slate-900 space-y-2.5';
+    renderNode.style.position = 'absolute';
+    renderNode.style.top = '0';
+    renderNode.style.left = '0';
+    renderNode.style.width = isLandscape ? '1060px' : '740px';
+    renderNode.style.margin = '0';
+    renderNode.style.padding = '0';
+    renderNode.style.zIndex = '99999';
+    renderNode.style.backgroundColor = '#ffffff';
+    renderNode.style.fontFamily = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif";
+
+    // Salin isi dari paperEl
+    renderNode.innerHTML = paperEl.innerHTML;
+
+    // Bersihkan kontrol / tombol yang tidak diinginkan
+    renderNode.querySelectorAll('.no-print, button, input[type="date"], select').forEach(el => el.remove());
+
+    document.body.appendChild(renderNode);
 
     const cleanup = () => {
-      paperEl.style.boxShadow = prevShadow;
-      paperEl.style.border = prevBorder;
-      paperEl.style.minHeight = prevMinHeight;
-      paperEl.style.padding = prevPadding;
-      paperEl.style.margin = prevMargin;
+      if (renderNode && renderNode.parentNode) {
+        renderNode.parentNode.removeChild(renderNode);
+      }
       window.scrollTo(prevWindowScrollX, prevWindowScrollY);
       if (scrollContainer) scrollContainer.scrollTop = prevScroll;
       if (btn) {
@@ -1621,9 +1630,8 @@ const PDFPreview = {
     };
 
     if (window.html2pdf) {
-      const isLandscape = this.currentOrientation === 'landscape';
       const opt = {
-        margin: [8, 8, 8, 8], // Margin 8mm standar A4 rapi, simetris, dan proporsional di seluruh sisi
+        margin: [3, 6, 3, 6], // Margin atas 3mm (paling atas & rapat), kiri-kanan 6mm, bawah 3mm
         filename: this.currentFilename,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
@@ -1635,7 +1643,8 @@ const PDFPreview = {
           scrollY: 0,
           scrollX: 0,
           x: 0,
-          y: 0
+          y: 0,
+          windowWidth: isLandscape ? 1060 : 740
         },
         jsPDF: {
           unit: 'mm',
@@ -1648,7 +1657,7 @@ const PDFPreview = {
         }
       };
 
-      html2pdf().set(opt).from(paperEl).save().then(() => {
+      html2pdf().set(opt).from(renderNode).save().then(() => {
         cleanup();
         if (btn) {
           btn.innerHTML = '<i class="fa-solid fa-circle-check mr-1.5"></i> Berhasil Diunduh!';
@@ -1708,7 +1717,7 @@ const PDFPreview = {
         <style>
           @page {
             size: ${isLandscape ? 'A4 landscape' : 'A4 portrait'};
-            margin: 10mm;
+            margin: 4mm 6mm;
           }
           body {
             margin: 0;
