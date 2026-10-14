@@ -487,16 +487,36 @@ const TrainingManager = {
       const detailCard = document.getElementById('training-detail-table-card');
       if (detailCard && isSummary) detailCard.style.display = 'none';
 
+      const prevWindowScrollX = window.scrollX || window.pageXOffset || 0;
+      const prevWindowScrollY = window.scrollY || window.pageYOffset || 0;
+      window.scrollTo(0, 0);
+
       const opt = {
-        margin: [10, 10, 10, 10],
+        margin: [8, 8, 8, 8],
         filename: filename,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
-        pagebreak: { mode: 'css' }
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          letterRendering: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+          scrollY: 0,
+          scrollX: 0,
+          x: 0,
+          y: 0
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape', compress: true },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
       };
       window.html2pdf().set(opt).from(element).save().then(() => {
+        window.scrollTo(prevWindowScrollX, prevWindowScrollY);
         if (detailCard && isSummary) detailCard.style.display = '';
+      }).catch(err => {
+        console.error('PDF error', err);
+        window.scrollTo(prevWindowScrollX, prevWindowScrollY);
+        if (detailCard && isSummary) detailCard.style.display = '';
+        window.print();
       });
     } else {
       window.print();

@@ -1586,18 +1586,33 @@ const PDFPreview = {
     const prevScroll = scrollContainer ? scrollContainer.scrollTop : 0;
     if (scrollContainer) scrollContainer.scrollTop = 0;
 
-    // Hilangkan efek bayangan, border, dan unset min-height agar ukuran canvas 100% natural
+    // Simpan posisi scroll window utama dan reset ke (0, 0)
+    // agar canvas rendering html2canvas tidak mengalami pergeseran vertikal ke bawah (offset putih)
+    const prevWindowScrollX = window.scrollX || window.pageXOffset || 0;
+    const prevWindowScrollY = window.scrollY || window.pageYOffset || 0;
+    window.scrollTo(0, 0);
+
+    // Hilangkan efek bayangan, border, min-height, margin, dan padding dari kertas pratinjau
+    // agar canvas rendering pas presisi dimulai dari koordinat (0, 0) paling atas
     const prevShadow = paperEl.style.boxShadow;
     const prevBorder = paperEl.style.border;
     const prevMinHeight = paperEl.style.minHeight;
+    const prevPadding = paperEl.style.padding;
+    const prevMargin = paperEl.style.margin;
+
     paperEl.style.boxShadow = 'none';
     paperEl.style.border = 'none';
     paperEl.style.minHeight = 'unset';
+    paperEl.style.padding = '0';
+    paperEl.style.margin = '0 auto';
 
     const cleanup = () => {
       paperEl.style.boxShadow = prevShadow;
       paperEl.style.border = prevBorder;
       paperEl.style.minHeight = prevMinHeight;
+      paperEl.style.padding = prevPadding;
+      paperEl.style.margin = prevMargin;
+      window.scrollTo(prevWindowScrollX, prevWindowScrollY);
       if (scrollContainer) scrollContainer.scrollTop = prevScroll;
       if (btn) {
         btn.innerHTML = originalText;
@@ -1606,8 +1621,9 @@ const PDFPreview = {
     };
 
     if (window.html2pdf) {
+      const isLandscape = this.currentOrientation === 'landscape';
       const opt = {
-        margin: [10, 10, 10, 10], // Margin 10mm dinaikkan agar proporsional dan nyaman dilihat
+        margin: [8, 8, 8, 8], // Margin 8mm standar A4 rapi, simetris, dan proporsional di seluruh sisi
         filename: this.currentFilename,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
@@ -1615,7 +1631,11 @@ const PDFPreview = {
           useCORS: true,
           letterRendering: true,
           logging: false,
-          backgroundColor: '#ffffff'
+          backgroundColor: '#ffffff',
+          scrollY: 0,
+          scrollX: 0,
+          x: 0,
+          y: 0
         },
         jsPDF: {
           unit: 'mm',
@@ -1624,7 +1644,7 @@ const PDFPreview = {
           compress: true
         },
         pagebreak: {
-          mode: 'css'
+          mode: ['avoid-all', 'css', 'legacy']
         }
       };
 
