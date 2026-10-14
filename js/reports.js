@@ -1593,34 +1593,27 @@ const PDFPreview = {
 
     const isLandscape = this.currentOrientation === 'landscape';
 
-    // BUAT ELEMEN KHUSUS EKSPOR (STANDALONE ISOLATED CONTAINER)
-    // Ditempatkan langsung pada document.body dengan top: 0, left: 0, padding: 0, margin: 0
-    // Ini menjamin 100% canvas tidak akan pernah terdorong ke tengah oleh flexbox modal atau scroll!
-    const renderNode = document.createElement('div');
-    renderNode.id = 'pdf-render-standalone-node';
-    renderNode.className = 'bg-white text-slate-900 space-y-2.5';
-    renderNode.style.position = 'absolute';
-    renderNode.style.top = '0';
-    renderNode.style.left = '0';
-    renderNode.style.width = isLandscape ? '1060px' : '740px';
-    renderNode.style.margin = '0';
-    renderNode.style.padding = '0';
-    renderNode.style.zIndex = '99999';
-    renderNode.style.backgroundColor = '#ffffff';
-    renderNode.style.fontFamily = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif";
+    // Simpan style asli paperEl
+    const prevPadding = paperEl.style.padding;
+    const prevMargin = paperEl.style.margin;
+    const prevMinHeight = paperEl.style.minHeight;
+    const prevShadow = paperEl.style.boxShadow;
+    const prevBorder = paperEl.style.border;
 
-    // Salin isi dari paperEl
-    renderNode.innerHTML = paperEl.innerHTML;
-
-    // Bersihkan kontrol / tombol yang tidak diinginkan
-    renderNode.querySelectorAll('.no-print, button, input[type="date"], select').forEach(el => el.remove());
-
-    document.body.appendChild(renderNode);
+    // Bersihkan padding, margin, min-height, border, shadow saat export
+    // agar canvas rendering dimulai tepat dari koordinat Y = 0 (paling atas)
+    paperEl.style.padding = '0';
+    paperEl.style.margin = '0 auto';
+    paperEl.style.minHeight = 'unset';
+    paperEl.style.boxShadow = 'none';
+    paperEl.style.border = 'none';
 
     const cleanup = () => {
-      if (renderNode && renderNode.parentNode) {
-        renderNode.parentNode.removeChild(renderNode);
-      }
+      paperEl.style.padding = prevPadding;
+      paperEl.style.margin = prevMargin;
+      paperEl.style.minHeight = prevMinHeight;
+      paperEl.style.boxShadow = prevShadow;
+      paperEl.style.border = prevBorder;
       window.scrollTo(prevWindowScrollX, prevWindowScrollY);
       if (scrollContainer) scrollContainer.scrollTop = prevScroll;
       if (btn) {
@@ -1631,7 +1624,7 @@ const PDFPreview = {
 
     if (window.html2pdf) {
       const opt = {
-        margin: [3, 6, 3, 6], // Margin atas 3mm (paling atas & rapat), kiri-kanan 6mm, bawah 3mm
+        margin: [3, 5, 3, 5], // Margin atas 3mm rapat ke atas, kiri-kanan 5mm, bawah 3mm
         filename: this.currentFilename,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
@@ -1641,10 +1634,7 @@ const PDFPreview = {
           logging: false,
           backgroundColor: '#ffffff',
           scrollY: 0,
-          scrollX: 0,
-          x: 0,
-          y: 0,
-          windowWidth: isLandscape ? 1060 : 740
+          scrollX: 0
         },
         jsPDF: {
           unit: 'mm',
@@ -1657,7 +1647,7 @@ const PDFPreview = {
         }
       };
 
-      html2pdf().set(opt).from(renderNode).save().then(() => {
+      html2pdf().set(opt).from(paperEl).save().then(() => {
         cleanup();
         if (btn) {
           btn.innerHTML = '<i class="fa-solid fa-circle-check mr-1.5"></i> Berhasil Diunduh!';

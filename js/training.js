@@ -502,9 +502,7 @@ const TrainingManager = {
           logging: false,
           backgroundColor: '#ffffff',
           scrollY: 0,
-          scrollX: 0,
-          x: 0,
-          y: 0
+          scrollX: 0
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape', compress: true },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
