@@ -640,6 +640,7 @@ const Store = {
   deleteEmployee(id) {
     const emp = Store.findEmployee(id);
     // Pastikan seluruh absensi karyawan yang tersimpan di localStorage diperkaya dengan snapshot data lengkap
+    // CATATAN: Data makan di laporan TETAP UTUH dan identitas asli tidak dirusak
     if (emp) {
       try {
         const attendances = Store.getAttendances();
@@ -647,14 +648,12 @@ const Store = {
         attendances.forEach(a => {
           if ((a.employeeId && a.employeeId.toLowerCase() === id.toLowerCase()) || (a.employeeName && a.employeeName.toLowerCase() === emp.name.toLowerCase())) {
             a.employeeName = a.employeeName || emp.name;
+            a.employeeId = a.employeeId || emp.id;
             a.department = a.department || emp.department;
             a.position = a.position || emp.position;
             a.institution = a.institution || emp.institution || '';
             if (a.isTrainee === undefined) {
               a.isTrainee = !!(emp.isTrainee || emp.department === 'Training');
-            }
-            if (!a.employeeId.startsWith('EX-')) {
-              a.employeeId = `EX-${a.employeeId}`;
             }
             changed = true;
           }
@@ -665,9 +664,20 @@ const Store = {
       } catch (e) {}
     }
 
-    const employees = Store.getEmployees().filter(e => e.id !== id);
+    const employees = Store.getEmployees().filter(e => e.id.toLowerCase() !== id.toLowerCase());
     localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
-    // Hapus dari database MySQL (soft-delete di backend agar riwayat absensi tetap utuh di laporan)
+
+    // Catat ke daftar kandidat diabaikan agar tidak disarankan lagi di pemulihan otomatis jika dihapus permanen
+    try {
+      const dismissed = JSON.parse(localStorage.getItem('hotel_dismissed_recovery_ids') || '[]');
+      const upperId = id.toUpperCase().trim();
+      if (!dismissed.includes(upperId)) {
+        dismissed.push(upperId);
+        localStorage.setItem('hotel_dismissed_recovery_ids', JSON.stringify(dismissed));
+      }
+    } catch (eDis) {}
+
+    // Hapus permanen di database MySQL (riwayat absensi makan tetap utuh di laporan)
     Store.apiPost('delete_employee', { id });
   },
 
@@ -1121,12 +1131,15 @@ const Store = {
     const existingEmployees = Store.getEmployees();
     const existingIds = new Set(existingEmployees.map(e => (e.id || '').toUpperCase().trim()));
 
+    const dismissedList = JSON.parse(localStorage.getItem('hotel_dismissed_recovery_ids') || '[]');
+    const dismissedSet = new Set(dismissedList.map(id => (id || '').toUpperCase().trim()));
+
     const candidateMap = new Map();
     attendances.forEach(att => {
       const rawId = (att.employeeId || '').trim();
       if (!rawId) return;
       const upperId = rawId.toUpperCase();
-      if (existingIds.has(upperId)) return;
+      if (existingIds.has(upperId) || dismissedSet.has(upperId)) return;
 
       if (!candidateMap.has(upperId)) {
         const isTrn = !!(att.isTrainee || att.department === 'Training' || upperId.startsWith('TRN-'));
@@ -1158,7 +1171,7 @@ const Store = {
       if (res && res.success && Array.isArray(res.candidates)) {
         res.candidates.forEach(c => {
           const upperId = (c.id || '').toUpperCase().trim();
-          if (upperId && !existingIds.has(upperId) && !candidateMap.has(upperId)) {
+          if (upperId && !existingIds.has(upperId) && !dismissedSet.has(upperId) && !candidateMap.has(upperId)) {
             candidateMap.set(upperId, {
               id: c.id,
               name: c.name || c.id,
@@ -1186,11 +1199,14 @@ const Store = {
     const existingEmployees = Store.getEmployees();
     const existingIds = new Set(existingEmployees.map(e => (e.id || '').toUpperCase().trim()));
 
+    const dismissedList = JSON.parse(localStorage.getItem('hotel_dismissed_recovery_ids') || '[]');
+    const dismissedSet = new Set(dismissedList.map(id => (id || '').toUpperCase().trim()));
+
     const candidateMap = new Map();
     if (backup && Array.isArray(backup.employees)) {
       backup.employees.forEach(emp => {
         const upperId = (emp.id || '').toUpperCase().trim();
-        if (upperId && !existingIds.has(upperId)) {
+        if (upperId && !existingIds.has(upperId) && !dismissedSet.has(upperId)) {
           candidateMap.set(upperId, {
             ...emp,
             source: 'Cadangan Pengaman Lokal',
@@ -1205,7 +1221,7 @@ const Store = {
       if (res && res.success && Array.isArray(res.candidates)) {
         res.candidates.forEach(c => {
           const upperId = (c.id || '').toUpperCase().trim();
-          if (upperId && !existingIds.has(upperId) && !candidateMap.has(upperId)) {
+          if (upperId && !existingIds.has(upperId) && !dismissedSet.has(upperId) && !candidateMap.has(upperId)) {
             candidateMap.set(upperId, {
               ...c,
               source: 'Cadangan Pengaman (MySQL)'
@@ -1216,6 +1232,22 @@ const Store = {
     } catch (err) {}
 
     return Array.from(candidateMap.values());
+  },
+
+  // Abaikan / Hapus kandidat dari saran pemulihan secara permanen (Data makan di laporan tetap 100% utuh)
+  async dismissRecoveryCandidate(id, name) {
+    if (!id) return;
+    const upperId = id.toUpperCase().trim();
+    try {
+      const dismissed = JSON.parse(localStorage.getItem('hotel_dismissed_recovery_ids') || '[]');
+      if (!dismissed.includes(upperId)) {
+        dismissed.push(upperId);
+        localStorage.setItem('hotel_dismissed_recovery_ids', JSON.stringify(dismissed));
+      }
+    } catch (e) {}
+
+    await Store.apiPost('dismiss_recovery_candidate', { id, name });
+    return { success: true, message: `Kandidat "${name || id}" berhasil diabaikan permanen dari saran pemulihan.` };
   },
 
   // Pulihkan karyawan secara SATU PER SATU

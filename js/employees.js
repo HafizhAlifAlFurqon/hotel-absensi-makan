@@ -317,13 +317,22 @@ const EmployeesManager = {
     const emp = Store.findEmployee(id);
     if (!emp) return;
 
-    if (confirm(`Yakin ingin menghapus karyawan "${emp.name}" (${emp.id}) dari database?`)) {
-      Store.deleteEmployee(id);
-      this.renderTable();
-      this.prepareFormNextId();
-      if (window.QRCardsManager) window.QRCardsManager.render();
-      if (window.Dashboard) window.Dashboard.updateData();
-    }
+    const confirmed = confirm(
+      `HAPUS PERMANEN KARYAWAN:\n\n` +
+      `Apakah Anda yakin ingin menghapus permanen karyawan "${emp.name}" (${emp.id}) dari database master?\n\n` +
+      `CATATAN PENTING LAPORAN:\n` +
+      `✓ Akun login dan master karyawan akan dihapus permanen.\n` +
+      `✓ Seluruh riwayat dan data transaksi makan dia di LAPORAN & REKAPITULASI TETAP UTUH dan TIDAK AKAN HILANG.`
+    );
+    if (!confirmed) return;
+
+    Store.deleteEmployee(id);
+    this.renderTable();
+    this.prepareFormNextId();
+    if (window.QRCardsManager) window.QRCardsManager.render();
+    if (window.Dashboard) window.Dashboard.updateData();
+    this.showFormAlert(`Karyawan "${emp.name}" (${emp.id}) berhasil dihapus permanen. Seluruh data transaksi makan di laporan tetap tersimpan utuh.`, 'success');
+    Store.playSound('success');
   },
 
   async clearAllEmployees() {
@@ -549,9 +558,14 @@ const EmployeesManager = {
           <td class="py-2.5 px-3">${badgeDept}</td>
           <td class="py-2.5 px-3">${lastInfo}</td>
           <td class="py-2.5 px-3 text-right">
-            <button type="button" onclick="EmployeesManager.restoreOneCandidate('${c.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 ml-auto cursor-pointer shadow-2xs" title="Pulihkan hanya karyawan ini">
-              <i class="fa-solid fa-user-plus"></i> Pulihkan Karyawan Ini
-            </button>
+            <div class="flex items-center justify-end gap-1.5 ml-auto">
+              <button type="button" onclick="EmployeesManager.dismissCandidate('${c.id}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-700 border border-slate-200 hover:border-rose-200 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer" title="Hapus permanen dari daftar saran (Data makan di laporan tetap aman)">
+                <i class="fa-solid fa-trash-can text-[10px]"></i> Hapus Permanen
+              </button>
+              <button type="button" onclick="EmployeesManager.restoreOneCandidate('${c.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs" title="Pulihkan hanya karyawan ini">
+                <i class="fa-solid fa-user-plus"></i> Pulihkan
+              </button>
+            </div>
           </td>
         </tr>
       `;
@@ -597,6 +611,36 @@ const EmployeesManager = {
       btnRestoreSelected.disabled = selectedCount === 0;
       btnRestoreSelected.innerHTML = `<i class="fa-solid fa-user-check"></i> Pulihkan yang Dipilih (${selectedCount})`;
     }
+  },
+
+  async dismissCandidate(id) {
+    const candidate = this.recoveryCandidates.find(c => c.id === id);
+    if (!candidate) return;
+
+    const confirmed = confirm(
+      `HAPUS / ABAIKAN PERMANEN DARI SARAN:\n\n` +
+      `Apakah Anda yakin ingin menghapus permanen kandidat "${candidate.name}" (${candidate.id}) dari daftar saran pemulihan?\n\n` +
+      `CATATAN PENTING:\n` +
+      `✓ Karyawan ini tidak akan disarankan lagi di masa depan.\n` +
+      `✓ Seluruh riwayat dan data transaksi makan dia di LAPORAN TETAP UTUH dan TIDAK AKAN HILANG.`
+    );
+    if (!confirmed) return;
+
+    await Store.dismissRecoveryCandidate(id, candidate.name);
+    this.selectedRecoveryIds.delete(id);
+    this.recoveryCandidates = this.recoveryCandidates.filter(c => c.id !== id);
+    this.renderRecoveryTable();
+
+    const badgeAtt = document.getElementById('rec-tab-badge-attendance');
+    const badgeBak = document.getElementById('rec-tab-badge-backup');
+    if (this.activeRecoveryTab === 'attendance' && badgeAtt) {
+      badgeAtt.innerText = this.recoveryCandidates.length;
+    } else if (badgeBak) {
+      badgeBak.innerText = this.recoveryCandidates.length;
+    }
+
+    this.showFormAlert(`Kandidat "${candidate.name}" (${candidate.id}) telah diabaikan permanen. Data makan di laporan tetap utuh.`, 'success');
+    Store.playSound('success');
   },
 
   async restoreOneCandidate(id) {
