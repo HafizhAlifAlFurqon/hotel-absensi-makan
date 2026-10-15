@@ -328,6 +328,7 @@ const ReportsManager = {
     const s = Store.getSettings();
     const defaultMealPrice = Number(s.mealPrice) || 15000;
     const hotelName = s.hotelName || 'BeSS Mansion Hotel Surabaya';
+    const dynamicDepotName = this.getDynamicDepotName(records);
     const totalPorsi = records.length;
 
     const periodText = (this.startDate === this.endDate)
@@ -688,17 +689,17 @@ const ReportsManager = {
             </td>
             <td colspan="3" style="text-align: center; border:none; vertical-align: top;">
               <b>Diperiksa Oleh,</b><br>
-              Finance &amp; Accounting<br>
-              ${hotelName}<br><br><br><br><br>
+              General Cashier<br>
+              Finance &amp; Accounting<br><br><br><br><br>
               <u>( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</u><br>
-              Accounting &amp; Finance Spv
+              General Cashier
             </td>
             <td colspan="2" style="text-align: center; border:none; vertical-align: top;">
-              <b>Disetujui Oleh,</b><br>
-              General Manager<br>
-              ${hotelName}<br><br><br><br><br>
+              <b>Mengetahui / Disetujui,</b><br>
+              ${dynamicDepotName}<br>
+              Pihak Pengelola Depot<br><br><br><br><br>
               <u>( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</u><br>
-              General Manager Hotel
+              ${dynamicDepotName}
             </td>
           </tr>
         </table>
@@ -855,6 +856,9 @@ const ReportsManager = {
 
     // 7. Render Tabel Rincian Data Absensi
     this.renderDetailTable(records, s);
+
+    // 8. Render Lembar Tanda Tangan Resmi (Kanan: Nama Depot Dinamis, Tengah: General Cashier)
+    this.renderSignatures(records, s);
   },
 
   // 1. Render Rekapitulasi Shift Makan (Makan Siang & Makan Sore)
@@ -1372,6 +1376,70 @@ const ReportsManager = {
         `;
       }
     }).join('');
+  },
+
+  // 8. Render Lembar Tanda Tangan Resmi (Kanan: Nama Depot Dinamis, Tengah: General Cashier)
+  renderSignatures(records = []) {
+    const sigLeftNameEl = document.getElementById('report-sig-left-name');
+    const sigLeftSubEl = document.getElementById('report-sig-left-sub');
+    const sigMidNameEl = document.getElementById('report-sig-mid-name');
+    const sigMidSubEl = document.getElementById('report-sig-mid-sub');
+    const sigRightNameEl = document.getElementById('report-sig-right-name');
+    const sigRightSubEl = document.getElementById('report-sig-right-sub');
+
+    const s = Store.getSettings();
+    const hotelName = (s && s.hotelName) || 'BeSS Mansion Hotel Surabaya';
+
+    // 1. Kiri: Petugas HRD / Absensi
+    if (sigLeftNameEl) sigLeftNameEl.innerText = 'Petugas HRD / Absensi';
+    if (sigLeftSubEl) sigLeftSubEl.innerText = hotelName;
+
+    // 2. Tengah: General Cashier (General Caseer)
+    if (sigMidNameEl) sigMidNameEl.innerText = 'General Cashier';
+    if (sigMidSubEl) sigMidSubEl.innerText = 'Finance & Accounting';
+
+    // 3. Paling Kanan: Nama Depot Dinamis
+    const dynamicDepotName = this.getDynamicDepotName(records);
+    if (sigRightNameEl) sigRightNameEl.innerText = dynamicDepotName;
+    if (sigRightSubEl) {
+      if (this.tenantId && this.tenantId !== 'all') {
+        sigRightSubEl.innerText = `Pengelola ${dynamicDepotName}`;
+      } else {
+        sigRightSubEl.innerText = 'Pihak Pengelola Depot';
+      }
+    }
+  },
+
+  // Dapatkan Nama Depot Secara Dinamis Berdasarkan Filter & Catatan Transaksi
+  getDynamicDepotName(records = []) {
+    // Jika user memilih 1 tenant tertentu pada dropdown filter
+    if (this.tenantId && this.tenantId !== 'all') {
+      return Store.getTenantName(this.tenantId);
+    }
+
+    // Jika filter 'all', periksa tenant dari data absensi yang tampil pada periode ini
+    if (Array.isArray(records) && records.length > 0) {
+      const uniqueTenants = Array.from(new Set(
+        records
+          .map(r => (r.tenantName || Store.getTenantName(r.tenantId || r.tenantKey)).trim())
+          .filter(Boolean)
+      ));
+      if (uniqueTenants.length === 1) {
+        return uniqueTenants[0];
+      } else if (uniqueTenants.length > 1) {
+        return uniqueTenants.join(' & ');
+      }
+    }
+
+    // Jika tidak ada data transaksi, ambil dari master data depot di Store
+    const tenants = Store.getTenants();
+    if (tenants.length === 1) {
+      return tenants[0].name;
+    } else if (tenants.length > 1) {
+      return tenants.map(t => t.name).join(' & ');
+    }
+
+    return 'Pengelola Depot Kantin';
   },
 
   // Buka Pratinjau PDF Sebelum Mengunduh Sesuai Permintaan User (Dukungan Format Tanpa/Dengan Rincian)

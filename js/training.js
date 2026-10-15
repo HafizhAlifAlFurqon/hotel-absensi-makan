@@ -283,6 +283,10 @@ const TrainingManager = {
     if (todayDateEl) todayDateEl.innerText = todayStr;
     const signDateEl = document.getElementById('training-pdf-signature-date');
     if (signDateEl) signDateEl.innerText = todayStr;
+    const signCanteenEl = document.getElementById('training-pdf-canteen-sign-label');
+    if (signCanteenEl) {
+      signCanteenEl.innerText = canteenFilter ? Store.getTenantName(canteenFilter) : 'Pihak Pengelola Depot';
+    }
   },
 
   renderTraineesTable() {
