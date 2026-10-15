@@ -28,7 +28,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
   <!-- Custom Style & Print CSS -->
-  <link rel="stylesheet" href="css/style.css?v=20261015_liquid">
+  <link rel="stylesheet" href="css/style.css?v=20261015_liquid2">
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col antialiased">
 
@@ -69,11 +69,19 @@
       <div class="liquid-blob liquid-blob-1"></div>
       <div class="liquid-blob liquid-blob-2"></div>
       <div class="liquid-blob liquid-blob-3"></div>
+      <div class="liquid-blob liquid-blob-4"></div>
+      <div class="liquid-blob liquid-blob-5"></div>
     </div>
 
     <!-- TOP HEADER BAR PADA HALAMAN LOGIN -->
     <header class="relative z-10 w-full p-4 sm:p-5 flex items-center justify-between border-b border-white/10 bg-black/25 backdrop-blur-md">
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2.5 sm:gap-3">
+        <!-- Tombol Kembali jika user sedang ganti akun -->
+        <button id="login-back-btn" onclick="Auth.cancelSwitchAccount()" type="button" class="hidden px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 text-white text-xs font-bold transition flex items-center gap-2 border border-white/25 backdrop-blur-md cursor-pointer shadow-md group" title="Batal ganti akun dan kembali ke aplikasi">
+          <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
+          <span>Kembali</span>
+        </button>
+
         <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-950/50">
           <i class="fa-solid fa-hotel text-lg sm:text-xl"></i>
         </div>
@@ -105,8 +113,29 @@
 
     <!-- CENTER AREA: KARTU LOGIN UTAMA -->
     <main class="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 my-auto">
-      <div class="w-full max-w-md bg-white/95 backdrop-blur-xl rounded-3xl p-6 sm:p-9 shadow-2xl shadow-black/60 border border-white/40 space-y-6 animate-bounce-short">
+      <div class="w-full max-w-md bg-white/90 backdrop-blur-2xl rounded-3xl p-6 sm:p-9 shadow-2xl shadow-black/60 border border-white/50 space-y-6 animate-bounce-short relative overflow-hidden">
         
+        <!-- Specular Liquid Highlight Bar at Top -->
+        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500"></div>
+
+        <!-- BANNER & TOMBOL BATAL GANTI AKUN JIKA USER SUDAH LOGIN -->
+        <div id="login-switch-banner" class="hidden p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-emerald-500/15 border border-emerald-400/40 text-emerald-950 flex flex-col gap-2.5 backdrop-blur-md shadow-xs">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 text-xs font-bold text-emerald-900">
+              <span class="relative flex h-2.5 w-2.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              <span>Login aktif: <b id="login-current-user-name" class="text-emerald-700 font-extrabold">-</b></span>
+            </div>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">Ganti Akun</span>
+          </div>
+          <button type="button" onclick="Auth.cancelSwitchAccount()" class="w-full py-2.5 px-3 rounded-xl bg-white hover:bg-emerald-50 text-slate-800 hover:text-emerald-800 font-bold text-xs transition border border-emerald-300 shadow-sm flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]">
+            <i class="fa-solid fa-arrow-left text-emerald-600"></i>
+            <span>Batal & Kembali ke Aplikasi</span>
+          </button>
+        </div>
+
         <!-- Icon & Salam Pembuka -->
         <div class="text-center space-y-2">
           <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-600/30 flex items-center justify-center mx-auto transform -rotate-3 hover:rotate-0 transition duration-300">
@@ -214,6 +243,7 @@
       <div class="liquid-blob liquid-blob-2"></div>
       <div class="liquid-blob liquid-blob-3"></div>
       <div class="liquid-blob liquid-blob-4"></div>
+      <div class="liquid-blob liquid-blob-5"></div>
     </div>
 
   <!-- ================= TOP HEADER BAR ================= -->
@@ -2896,16 +2926,16 @@
   <script src="js/libs/chart.min.js"></script>
   <script src="js/libs/html2pdf.bundle.min.js"></script>
 
-  <script src="js/store.js?v=20261015_4"></script>
-  <script src="js/auth.js?v=20261015_4"></script>
-  <script src="js/dashboard.js?v=20261015_4"></script>
-  <script src="js/attendance.js?v=20261015_4"></script>
-  <script src="js/training.js?v=20261015_4"></script>
-  <script src="js/tenants.js?v=20261015_4"></script>
-  <script src="js/employees.js?v=20261015_4"></script>
-  <script src="js/qr_cards.js?v=20261015_4"></script>
-  <script src="js/reports.js?v=20261015_4"></script>
-  <script src="js/app.js?v=20261015_4"></script>
+  <script src="js/store.js?v=20261015_liquid2"></script>
+  <script src="js/auth.js?v=20261015_liquid2"></script>
+  <script src="js/dashboard.js?v=20261015_liquid2"></script>
+  <script src="js/attendance.js?v=20261015_liquid2"></script>
+  <script src="js/training.js?v=20261015_liquid2"></script>
+  <script src="js/tenants.js?v=20261015_liquid2"></script>
+  <script src="js/employees.js?v=20261015_liquid2"></script>
+  <script src="js/qr_cards.js?v=20261015_liquid2"></script>
+  <script src="js/reports.js?v=20261015_liquid2"></script>
+  <script src="js/app.js?v=20261015_liquid2"></script>
 
 </body>
 </html>

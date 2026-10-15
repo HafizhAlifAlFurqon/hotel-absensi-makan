@@ -73,6 +73,27 @@ const Auth = {
     const oldModal = document.getElementById('login-modal');
     if (oldModal) oldModal.classList.add('hidden');
 
+    // Cek apakah user sedang login (kasus Ganti Akun)
+    const currentUser = Auth.getCurrentUser();
+    const backBtn = document.getElementById('login-back-btn');
+    const switchBanner = document.getElementById('login-switch-banner');
+    const currentNameEl = document.getElementById('login-current-user-name');
+
+    if (currentUser) {
+      if (backBtn) backBtn.classList.remove('hidden');
+      if (switchBanner) switchBanner.classList.remove('hidden');
+      if (currentNameEl) {
+        let labelRole = 'User';
+        if (currentUser.role === 'admin') labelRole = 'Administrator';
+        else if (currentUser.role === 'canteen') labelRole = 'Kasir Kantin';
+        else labelRole = 'Karyawan';
+        currentNameEl.textContent = `${currentUser.name || currentUser.username || 'User'} (${labelRole})`;
+      }
+    } else {
+      if (backBtn) backBtn.classList.add('hidden');
+      if (switchBanner) switchBanner.classList.add('hidden');
+    }
+
     // Sembunyikan semua page view
     document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
 
@@ -108,11 +129,36 @@ const Auth = {
     const oldModal = document.getElementById('login-modal');
     if (oldModal) oldModal.classList.add('hidden');
 
+    // Sembunyikan elemen ganti akun
+    const backBtn = document.getElementById('login-back-btn');
+    const switchBanner = document.getElementById('login-switch-banner');
+    if (backBtn) backBtn.classList.add('hidden');
+    if (switchBanner) switchBanner.classList.add('hidden');
+
     // Kembalikan tombol ke state normal agar saat pengguna logout tidak stuck
     const btnEl = document.getElementById('login-submit-btn');
     if (btnEl) {
       btnEl.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket text-base"></i><span>Masuk Sekarang</span>';
       btnEl.disabled = false;
+    }
+  },
+
+  // Batalkan pergantian akun dan kembali ke aplikasi / dashboard
+  cancelSwitchAccount() {
+    const user = Auth.getCurrentUser();
+    if (!user) {
+      return;
+    }
+    Auth.hideLoginPage();
+    if (window.Store && typeof Store.playSound === 'function') {
+      Store.playSound('click');
+    }
+    if (window.App) {
+      const defaultPage = user.role === 'karyawan' ? 'employee-portal' : (user.role === 'canteen' ? 'canteen' : 'dashboard');
+      const targetPage = App.currentPage || defaultPage;
+      App.navigateTo(targetPage);
+    } else {
+      Auth.enforceRBAC();
     }
   },
 
@@ -251,7 +297,7 @@ const Auth = {
 
   closeLoginModal() {
     if (Auth.isLoggedIn()) {
-      Auth.hideLoginPage();
+      Auth.cancelSwitchAccount();
     }
   },
 
@@ -263,5 +309,15 @@ const Auth = {
     this.closeLoginModal();
   }
 };
+
+// Keyboard Shortcut: Tekan tombol 'Escape' untuk membatalkan ganti akun dan kembali ke aplikasi
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const loginPage = document.getElementById('page-login');
+    if (loginPage && !loginPage.classList.contains('hidden') && window.Auth && Auth.isLoggedIn()) {
+      Auth.cancelSwitchAccount();
+    }
+  }
+});
 
 window.Auth = Auth;
