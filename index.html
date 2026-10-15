@@ -2289,6 +2289,100 @@
     </div>
   </div>
 
+  <!-- ================= MODAL PEMULIHAN DATA KARYAWAN SATU-PER-SATU / TERPILIH ================= -->
+  <div id="emp-recovery-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-4xl w-full shadow-2xl border border-slate-100 space-y-4 max-h-[92vh] flex flex-col animate-fade-in">
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-lg shadow-inner">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-slate-900 text-base">Pusat Pemulihan Data Karyawan (Satu per Satu)</h3>
+            <p class="text-xs text-slate-500">Pilih dan pulihkan data karyawan yang hilang satu per satu atau secara selektif.</p>
+          </div>
+        </div>
+        <button type="button" onclick="EmployeesManager.closeRecoveryModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer" title="Tutup">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Tab Navigasi Sumber Pemulihan -->
+      <div class="flex items-center gap-2 border-b border-slate-200 pb-2 shrink-0">
+        <button id="rec-tab-btn-attendance" type="button" onclick="EmployeesManager.switchRecoveryTab('attendance')" class="px-3.5 py-1.5 text-xs font-bold rounded-xl transition flex items-center gap-2 cursor-pointer bg-teal-600 text-white shadow-xs">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Riwayat Absensi Makan
+          <span id="rec-tab-badge-attendance" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-teal-800 text-teal-100">0</span>
+        </button>
+        <button id="rec-tab-btn-backup" type="button" onclick="EmployeesManager.switchRecoveryTab('backup')" class="px-3.5 py-1.5 text-xs font-bold rounded-xl transition flex items-center gap-2 cursor-pointer text-slate-600 hover:bg-slate-100">
+          <i class="fa-solid fa-shield-heart text-amber-500"></i> Cadangan Pengaman Otomatis
+          <span id="rec-tab-badge-backup" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-200 text-slate-700">0</span>
+        </button>
+      </div>
+
+      <!-- Info Box Edukatif (Penjelasan Lengkap) -->
+      <div id="rec-info-box" class="p-3.5 bg-teal-50 border border-teal-200 rounded-2xl text-teal-950 text-xs shrink-0 space-y-1">
+        <p class="font-extrabold flex items-center gap-1.5 text-teal-900">
+          <i class="fa-solid fa-circle-question text-teal-600"></i> Apa itu Pulihkan dari Riwayat Absensi?
+        </p>
+        <p class="text-[11px] text-teal-800 leading-relaxed">
+          Setiap kali karyawan makan di kantin/depot, transaksi absensi menyimpan <b>snapshot data abadi</b> (Nama Lengkap, ID Karyawan, Departemen, &amp; Jabatan). Jika master data karyawan terhapus, Anda dapat memilih dan mengembalikan karyawan yang diinginkan <b>satu per satu</b> melalui tombol <b>"Pulihkan Karyawan Ini"</b> di bawah tanpa harus memulihkan massal.
+        </p>
+      </div>
+
+      <!-- Toolbar Filter & Search -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
+        <div class="relative flex-1">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
+          <input type="text" id="rec-search-input" oninput="EmployeesManager.filterRecoveryList()" placeholder="Cari nama, ID, departemen, atau jabatan..." class="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-500 outline-none bg-white">
+        </div>
+        <div class="flex items-center gap-3">
+          <label class="flex items-center gap-1.5 text-xs font-bold text-slate-700 cursor-pointer select-none">
+            <input type="checkbox" id="rec-select-all" onchange="EmployeesManager.toggleSelectAllRecovery(this.checked)" class="rounded text-teal-600 focus:ring-teal-500 cursor-pointer">
+            <span>Pilih Semua</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Container Tabel Kandidat (Scrollable) -->
+      <div class="flex-1 overflow-y-auto border border-slate-200 rounded-2xl min-h-[220px]">
+        <table class="w-full text-left border-collapse">
+          <thead class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wider sticky top-0 border-b border-slate-200 shadow-2xs">
+            <tr>
+              <th class="py-2.5 px-3 w-8">#</th>
+              <th class="py-2.5 px-3">ID Karyawan</th>
+              <th class="py-2.5 px-3">Nama Karyawan</th>
+              <th class="py-2.5 px-3">Departemen / Jabatan</th>
+              <th class="py-2.5 px-3">Jejak Terakhir</th>
+              <th class="py-2.5 px-3 text-right">Aksi Pulihkan</th>
+            </tr>
+          </thead>
+          <tbody id="rec-table-body" class="divide-y divide-slate-100 text-xs">
+            <!-- Data baris akan dirender dinamis -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer Aksi -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100 shrink-0">
+        <div class="text-xs text-slate-500">
+          <span id="rec-selected-count" class="font-bold text-slate-800">0</span> karyawan dipilih
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="EmployeesManager.closeRecoveryModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer">
+            Tutup
+          </button>
+          <button id="rec-btn-restore-selected" type="button" onclick="EmployeesManager.restoreSelectedRecovery()" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+            <i class="fa-solid fa-user-check"></i> Pulihkan yang Dipilih
+          </button>
+          <button id="rec-btn-restore-all" type="button" onclick="EmployeesManager.restoreAllRecovery()" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-extrabold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-users"></i> Pulihkan Semua
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= MODAL KONFIRMASI SIMULASI SCAN KANTIN ================= -->
   <div id="canteen-scan-confirm-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
     <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-100 space-y-4 text-center animate-bounce-short">
@@ -2787,16 +2881,16 @@
   <script src="js/libs/chart.min.js"></script>
   <script src="js/libs/html2pdf.bundle.min.js"></script>
 
-  <script src="js/store.js?v=20261014_3"></script>
-  <script src="js/auth.js?v=20261014_3"></script>
-  <script src="js/dashboard.js?v=20261014_3"></script>
-  <script src="js/attendance.js?v=20261014_3"></script>
-  <script src="js/training.js?v=20261014_3"></script>
-  <script src="js/tenants.js?v=20261014_3"></script>
-  <script src="js/employees.js?v=20261014_3"></script>
-  <script src="js/qr_cards.js?v=20261014_3"></script>
-  <script src="js/reports.js?v=20261014_3"></script>
-  <script src="js/app.js?v=20261014_3"></script>
+  <script src="js/store.js?v=20261015_1"></script>
+  <script src="js/auth.js?v=20261015_1"></script>
+  <script src="js/dashboard.js?v=20261015_1"></script>
+  <script src="js/attendance.js?v=20261015_1"></script>
+  <script src="js/training.js?v=20261015_1"></script>
+  <script src="js/tenants.js?v=20261015_1"></script>
+  <script src="js/employees.js?v=20261015_1"></script>
+  <script src="js/qr_cards.js?v=20261015_1"></script>
+  <script src="js/reports.js?v=20261015_1"></script>
+  <script src="js/app.js?v=20261015_1"></script>
 
 </body>
 </html>

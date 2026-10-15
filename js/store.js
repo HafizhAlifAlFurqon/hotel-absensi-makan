@@ -1115,6 +1115,195 @@ const Store = {
     };
   },
 
+  // Ambil daftar kandidat karyawan dari riwayat absensi yang saat ini belum ada di database
+  async getAttendanceRecoveryCandidates() {
+    const attendances = Store.getAttendances();
+    const existingEmployees = Store.getEmployees();
+    const existingIds = new Set(existingEmployees.map(e => (e.id || '').toUpperCase().trim()));
+
+    const candidateMap = new Map();
+    attendances.forEach(att => {
+      const rawId = (att.employeeId || '').trim();
+      if (!rawId) return;
+      const upperId = rawId.toUpperCase();
+      if (existingIds.has(upperId)) return;
+
+      if (!candidateMap.has(upperId)) {
+        const isTrn = !!(att.isTrainee || att.department === 'Training' || upperId.startsWith('TRN-'));
+        candidateMap.set(upperId, {
+          id: rawId,
+          name: att.employeeName || rawId,
+          department: att.department || (isTrn ? 'Training' : 'Housekeeping'),
+          position: att.position || (isTrn ? 'Trainee' : 'Staff'),
+          institution: att.institution || '',
+          isTrainee: isTrn,
+          password: 'password123',
+          status: 'Aktif',
+          lastMealDate: att.date || '-',
+          totalMeals: 1,
+          source: 'Riwayat Absensi'
+        });
+      } else {
+        const c = candidateMap.get(upperId);
+        c.totalMeals = (c.totalMeals || 1) + 1;
+        if (att.date && (!c.lastMealDate || att.date > c.lastMealDate)) {
+          c.lastMealDate = att.date;
+        }
+      }
+    });
+
+    // Ambil juga kandidat dari database MySQL jika terhubung
+    try {
+      const res = await Store.apiPost('get_attendance_recovery_candidates', {});
+      if (res && res.success && Array.isArray(res.candidates)) {
+        res.candidates.forEach(c => {
+          const upperId = (c.id || '').toUpperCase().trim();
+          if (upperId && !existingIds.has(upperId) && !candidateMap.has(upperId)) {
+            candidateMap.set(upperId, {
+              id: c.id,
+              name: c.name || c.id,
+              department: c.department || 'Housekeeping',
+              position: c.position || 'Staff',
+              institution: c.institution || '',
+              isTrainee: !!c.isTrainee,
+              password: 'password123',
+              status: 'Aktif',
+              lastMealDate: c.lastMealDate || '-',
+              totalMeals: c.totalMeals || 1,
+              source: 'Riwayat Absensi (MySQL)'
+            });
+          }
+        });
+      }
+    } catch (err) {}
+
+    return Array.from(candidateMap.values());
+  },
+
+  // Ambil daftar kandidat karyawan dari cadangan pengaman (safety backup)
+  async getSafetyBackupCandidates() {
+    const backup = Store.getSafetyBackup();
+    const existingEmployees = Store.getEmployees();
+    const existingIds = new Set(existingEmployees.map(e => (e.id || '').toUpperCase().trim()));
+
+    const candidateMap = new Map();
+    if (backup && Array.isArray(backup.employees)) {
+      backup.employees.forEach(emp => {
+        const upperId = (emp.id || '').toUpperCase().trim();
+        if (upperId && !existingIds.has(upperId)) {
+          candidateMap.set(upperId, {
+            ...emp,
+            source: 'Cadangan Pengaman Lokal',
+            backupDate: backup.timestamp
+          });
+        }
+      });
+    }
+
+    try {
+      const res = await Store.apiPost('get_safety_backup_candidates', {});
+      if (res && res.success && Array.isArray(res.candidates)) {
+        res.candidates.forEach(c => {
+          const upperId = (c.id || '').toUpperCase().trim();
+          if (upperId && !existingIds.has(upperId) && !candidateMap.has(upperId)) {
+            candidateMap.set(upperId, {
+              ...c,
+              source: 'Cadangan Pengaman (MySQL)'
+            });
+          }
+        });
+      }
+    } catch (err) {}
+
+    return Array.from(candidateMap.values());
+  },
+
+  // Pulihkan karyawan secara SATU PER SATU
+  async restoreSingleEmployee(candidate) {
+    if (!candidate || !candidate.id) {
+      return { success: false, message: 'Data karyawan tidak valid.' };
+    }
+
+    const employees = Store.getEmployees();
+    const upperId = candidate.id.toUpperCase().trim();
+    const existsIdx = employees.findIndex(e => e.id.toUpperCase().trim() === upperId);
+
+    const cleanEmp = {
+      id: candidate.id.trim(),
+      name: candidate.name ? candidate.name.trim() : candidate.id.trim(),
+      department: candidate.department || 'Housekeeping',
+      position: candidate.position || 'Staff',
+      institution: candidate.institution || '',
+      isTrainee: !!candidate.isTrainee,
+      password: candidate.password || 'password123',
+      status: 'Aktif'
+    };
+
+    if (existsIdx >= 0) {
+      employees[existsIdx] = cleanEmp;
+    } else {
+      employees.push(cleanEmp);
+    }
+
+    localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
+    await Store.apiPost('save_employee', cleanEmp);
+    await Store.syncWithBackend(true);
+
+    return {
+      success: true,
+      employee: cleanEmp,
+      message: `Karyawan "${cleanEmp.name}" (${cleanEmp.id}) berhasil dipulihkan ke database!`
+    };
+  },
+
+  // Pulihkan beberapa karyawan terpilih sekaligus (Multiple Select)
+  async restoreMultipleEmployees(candidateList) {
+    if (!Array.isArray(candidateList) || candidateList.length === 0) {
+      return { success: false, count: 0, message: 'Tidak ada karyawan yang dipilih.' };
+    }
+
+    const employees = Store.getEmployees();
+    const existingMap = new Map();
+    employees.forEach((e, idx) => existingMap.set(e.id.toUpperCase().trim(), idx));
+
+    let restoredCount = 0;
+    const cleanList = [];
+
+    candidateList.forEach(c => {
+      if (!c || !c.id) return;
+      const upperId = c.id.toUpperCase().trim();
+      const cleanEmp = {
+        id: c.id.trim(),
+        name: c.name ? c.name.trim() : c.id.trim(),
+        department: c.department || 'Housekeeping',
+        position: c.position || 'Staff',
+        institution: c.institution || '',
+        isTrainee: !!c.isTrainee,
+        password: c.password || 'password123',
+        status: 'Aktif'
+      };
+      cleanList.push(cleanEmp);
+
+      if (existingMap.has(upperId)) {
+        employees[existingMap.get(upperId)] = cleanEmp;
+      } else {
+        employees.push(cleanEmp);
+        existingMap.set(upperId, employees.length - 1);
+      }
+      restoredCount++;
+    });
+
+    localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
+    await Store.apiPost('batch_save_employees', { employees: cleanList });
+    await Store.syncWithBackend(true);
+
+    return {
+      success: true,
+      count: restoredCount,
+      message: `Berhasil memulihkan ${restoredCount} karyawan terpilih!`
+    };
+  },
+
   // Kosongkan seluruh riwayat absensi
   clearAllAttendances() {
     localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify([]));

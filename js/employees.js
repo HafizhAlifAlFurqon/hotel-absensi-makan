@@ -376,49 +376,309 @@ const EmployeesManager = {
     }
   },
 
-  async promptRestoreBackup() {
-    const backup = Store.getSafetyBackup();
-    const countText = backup ? `${backup.count} karyawan` : 'data karyawan';
-    const timeText = backup && backup.timestamp ? ` yang dicadangkan pada ${new Date(backup.timestamp).toLocaleString('id-ID')} WIB` : '';
-    
-    if (!confirm(`Pulihkan ${countText}${timeText} kembali ke database karyawan?`)) {
+  // Buka Pusat Pemulihan Data Karyawan (Satu per Satu / Pilihan)
+  promptRestoreBackup() {
+    this.openRecoveryModal('backup');
+  },
+
+  promptRecoverFromAttendance() {
+    this.openRecoveryModal('attendance');
+  },
+
+  // ================= MODAL PEMULIHAN DATA KARYAWAN (SATU-SATU / TERPILIH) =================
+  activeRecoveryTab: 'attendance',
+  recoveryCandidates: [],
+  selectedRecoveryIds: new Set(),
+
+  async openRecoveryModal(tab = 'attendance') {
+    const modal = document.getElementById('emp-recovery-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    this.activeRecoveryTab = tab;
+    this.selectedRecoveryIds.clear();
+
+    const searchInput = document.getElementById('rec-search-input');
+    if (searchInput) searchInput.value = '';
+    const selectAllBox = document.getElementById('rec-select-all');
+    if (selectAllBox) selectAllBox.checked = false;
+
+    await this.refreshRecoveryData();
+  },
+
+  closeRecoveryModal() {
+    const modal = document.getElementById('emp-recovery-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  async switchRecoveryTab(tab) {
+    this.activeRecoveryTab = tab;
+    this.selectedRecoveryIds.clear();
+    const selectAllBox = document.getElementById('rec-select-all');
+    if (selectAllBox) selectAllBox.checked = false;
+    await this.refreshRecoveryData();
+  },
+
+  async refreshRecoveryData() {
+    const btnAtt = document.getElementById('rec-tab-btn-attendance');
+    const btnBak = document.getElementById('rec-tab-btn-backup');
+    const badgeAtt = document.getElementById('rec-tab-badge-attendance');
+    const badgeBak = document.getElementById('rec-tab-badge-backup');
+    const infoBox = document.getElementById('rec-info-box');
+
+    const tbody = document.getElementById('rec-table-body');
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-center py-10 text-slate-400">
+            <i class="fa-solid fa-spinner fa-spin text-2xl text-teal-600 mb-2 block"></i>
+            Memindai data karyawan yang dapat dipulihkan...
+          </td>
+        </tr>
+      `;
+    }
+
+    const [attCandidates, bakCandidates] = await Promise.all([
+      Store.getAttendanceRecoveryCandidates(),
+      Store.getSafetyBackupCandidates()
+    ]);
+
+    if (badgeAtt) badgeAtt.innerText = attCandidates.length;
+    if (badgeBak) badgeBak.innerText = bakCandidates.length;
+
+    if (this.activeRecoveryTab === 'attendance') {
+      if (btnAtt) {
+        btnAtt.className = 'px-3.5 py-1.5 text-xs font-bold rounded-xl transition flex items-center gap-2 cursor-pointer bg-teal-600 text-white shadow-xs';
+      }
+      if (btnBak) {
+        btnBak.className = 'px-3.5 py-1.5 text-xs font-bold rounded-xl transition flex items-center gap-2 cursor-pointer text-slate-600 hover:bg-slate-100';
+      }
+      if (infoBox) {
+        infoBox.className = 'p-3.5 bg-teal-50 border border-teal-200 rounded-2xl text-teal-950 text-xs shrink-0 space-y-1';
+        infoBox.innerHTML = `
+          <p class="font-extrabold flex items-center gap-1.5 text-teal-900">
+            <i class="fa-solid fa-circle-question text-teal-600"></i> Apa itu Pulihkan dari Riwayat Absensi?
+          </p>
+          <p class="text-[11px] text-teal-800 leading-relaxed">
+            Setiap kali karyawan makan di kantin/depot, transaksi absensi menyimpan <b>snapshot data abadi</b> (Nama Lengkap, ID Karyawan, Departemen, &amp; Jabatan). Jika master data karyawan terhapus, Anda dapat memilih dan mengembalikan karyawan yang diinginkan <b>satu per satu</b> melalui tombol <b>"Pulihkan Karyawan Ini"</b> di bawah tanpa harus memulihkan massal.
+          </p>
+        `;
+      }
+      this.recoveryCandidates = attCandidates;
+    } else {
+      if (btnAtt) {
+        btnAtt.className = 'px-3.5 py-1.5 text-xs font-bold rounded-xl transition flex items-center gap-2 cursor-pointer text-slate-600 hover:bg-slate-100';
+      }
+      if (btnBak) {
+        btnBak.className = 'px-3.5 py-1.5 text-xs font-bold rounded-xl transition flex items-center gap-2 cursor-pointer bg-amber-600 text-white shadow-xs';
+      }
+      if (infoBox) {
+        infoBox.className = 'p-3.5 bg-amber-50 border border-amber-200 rounded-2xl text-amber-950 text-xs shrink-0 space-y-1';
+        infoBox.innerHTML = `
+          <p class="font-extrabold flex items-center gap-1.5 text-amber-900">
+            <i class="fa-solid fa-shield-heart text-amber-600"></i> Cadangan Pengaman Otomatis (Safety Snapshot)
+          </p>
+          <p class="text-[11px] text-amber-800 leading-relaxed">
+            Daftar karyawan ini tersimpan otomatis sesaat sebelum Anda mengosongkan daftar karyawan. Anda dapat mengembalikan karyawan tertentu <b>satu per satu</b> atau mencentang beberapa orang yang dibutuhkan.
+          </p>
+        `;
+      }
+      this.recoveryCandidates = bakCandidates;
+    }
+
+    this.renderRecoveryTable();
+  },
+
+  renderRecoveryTable() {
+    const tbody = document.getElementById('rec-table-body');
+    const searchVal = (document.getElementById('rec-search-input')?.value || '').toLowerCase().trim();
+    if (!tbody) return;
+
+    let list = this.recoveryCandidates;
+    if (searchVal) {
+      list = list.filter(c =>
+        (c.name && c.name.toLowerCase().includes(searchVal)) ||
+        (c.id && c.id.toLowerCase().includes(searchVal)) ||
+        (c.department && c.department.toLowerCase().includes(searchVal)) ||
+        (c.position && c.position.toLowerCase().includes(searchVal))
+      );
+    }
+
+    this.updateRecoveryCounter(list.length);
+
+    if (list.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-center py-10 text-slate-400">
+            <i class="fa-solid fa-circle-check text-3xl mb-2 block text-emerald-500 opacity-60"></i>
+            <span class="font-bold text-slate-700">Tidak ada data karyawan yang perlu dipulihkan di kategori ini.</span>
+            <p class="text-[11px] text-slate-400 mt-0.5">Semua karyawan sudah aktif atau riwayat absensi sudah sinkron dengan database master.</p>
+          </td>
+        </tr>
+      `;
       return;
     }
 
-    const res = await Store.restoreSafetyBackupEmployees();
+    tbody.innerHTML = list.map((c) => {
+      const isChecked = this.selectedRecoveryIds.has(c.id);
+      const isTrainee = !!(c.isTrainee || c.department === 'Training');
+      const badgeDept = isTrainee
+        ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">Training</span>`
+        : `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-700">${c.department || 'Housekeeping'}</span>`;
+
+      const lastInfo = c.totalMeals 
+        ? `<div class="text-[10px] text-slate-600 font-mono"><i class="fa-solid fa-clock-rotate-left text-teal-600 mr-1"></i>${c.totalMeals}x makan (${c.lastMealDate || '-'})</div>`
+        : `<div class="text-[10px] text-slate-400 font-mono">Snapshot Cadangan</div>`;
+
+      return `
+        <tr class="hover:bg-teal-50/40 transition">
+          <td class="py-2.5 px-3">
+            <input type="checkbox" onchange="EmployeesManager.toggleRecoverySelect('${c.id}', this.checked)" ${isChecked ? 'checked' : ''} class="rounded text-teal-600 focus:ring-teal-500 cursor-pointer">
+          </td>
+          <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${c.id}</td>
+          <td class="py-2.5 px-3">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-lg bg-teal-100 text-teal-800 font-bold text-xs flex items-center justify-center shrink-0">
+                ${(c.name || c.id).charAt(0)}
+              </div>
+              <div>
+                <span class="font-bold text-slate-900 block leading-tight">${c.name}</span>
+                <span class="text-[10px] text-slate-400">${c.position || 'Staff'}</span>
+              </div>
+            </div>
+          </td>
+          <td class="py-2.5 px-3">${badgeDept}</td>
+          <td class="py-2.5 px-3">${lastInfo}</td>
+          <td class="py-2.5 px-3 text-right">
+            <button type="button" onclick="EmployeesManager.restoreOneCandidate('${c.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 ml-auto cursor-pointer shadow-2xs" title="Pulihkan hanya karyawan ini">
+              <i class="fa-solid fa-user-plus"></i> Pulihkan Karyawan Ini
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  },
+
+  toggleRecoverySelect(id, isChecked) {
+    if (isChecked) {
+      this.selectedRecoveryIds.add(id);
+    } else {
+      this.selectedRecoveryIds.delete(id);
+    }
+    this.updateRecoveryCounter();
+  },
+
+  toggleSelectAllRecovery(checked) {
+    const searchVal = (document.getElementById('rec-search-input')?.value || '').toLowerCase().trim();
+    let list = this.recoveryCandidates;
+    if (searchVal) {
+      list = list.filter(c =>
+        (c.name && c.name.toLowerCase().includes(searchVal)) ||
+        (c.id && c.id.toLowerCase().includes(searchVal)) ||
+        (c.department && c.department.toLowerCase().includes(searchVal))
+      );
+    }
+    list.forEach(c => {
+      if (checked) this.selectedRecoveryIds.add(c.id);
+      else this.selectedRecoveryIds.delete(c.id);
+    });
+    this.renderRecoveryTable();
+  },
+
+  filterRecoveryList() {
+    this.renderRecoveryTable();
+  },
+
+  updateRecoveryCounter(visibleCount = null) {
+    const countEl = document.getElementById('rec-selected-count');
+    const btnRestoreSelected = document.getElementById('rec-btn-restore-selected');
+    const selectedCount = this.selectedRecoveryIds.size;
+    if (countEl) countEl.innerText = selectedCount;
+    if (btnRestoreSelected) {
+      btnRestoreSelected.disabled = selectedCount === 0;
+      btnRestoreSelected.innerHTML = `<i class="fa-solid fa-user-check"></i> Pulihkan yang Dipilih (${selectedCount})`;
+    }
+  },
+
+  async restoreOneCandidate(id) {
+    const candidate = this.recoveryCandidates.find(c => c.id === id);
+    if (!candidate) return;
+
+    const res = await Store.restoreSingleEmployee(candidate);
     if (res.success) {
+      Store.playSound('success');
+      this.selectedRecoveryIds.delete(id);
+      this.recoveryCandidates = this.recoveryCandidates.filter(c => c.id !== id);
+      this.renderRecoveryTable();
+
       this.renderTable();
       this.prepareFormNextId();
       if (window.QRCardsManager) window.QRCardsManager.render();
       if (window.Dashboard) window.Dashboard.updateData();
-      const alertBox = document.getElementById('emp-table-alert');
-      if (alertBox) alertBox.innerHTML = '';
-      this.showFormAlert(`Sukses! ${res.count} data karyawan berhasil dipulihkan kembali.`, 'success');
-      Store.playSound('success');
+
+      const badgeAtt = document.getElementById('rec-tab-badge-attendance');
+      const badgeBak = document.getElementById('rec-tab-badge-backup');
+      if (this.activeRecoveryTab === 'attendance' && badgeAtt) {
+        badgeAtt.innerText = this.recoveryCandidates.length;
+      } else if (badgeBak) {
+        badgeBak.innerText = this.recoveryCandidates.length;
+      }
+
+      this.showFormAlert(`Sukses! Karyawan "${candidate.name}" (${candidate.id}) berhasil dipulihkan ke database master!`, 'success');
     } else {
       alert(res.message);
     }
   },
 
-  async promptRecoverFromAttendance() {
-    if (!confirm(
-      'Fitur Pemulihan Cerdas dari Riwayat Absensi:\n\n' +
-      'Sistem akan memindai riwayat transaksi absensi makan di database, mengekstrak semua nama, ID, departemen, dan jabatan karyawan yang pernah bertransaksi, lalu memasukkannya kembali ke database master karyawan.\n\n' +
-      'Lanjutkan proses rekonstruksi data karyawan?'
-    )) {
+  async restoreSelectedRecovery() {
+    if (this.selectedRecoveryIds.size === 0) {
+      alert('Pilih setidaknya satu karyawan untuk dipulihkan.');
       return;
     }
 
-    const res = await Store.recoverEmployeesFromAttendance();
+    const selectedList = this.recoveryCandidates.filter(c => this.selectedRecoveryIds.has(c.id));
+    if (!confirm(`Pulihkan ${selectedList.length} karyawan terpilih ke database aktif?`)) {
+      return;
+    }
+
+    const res = await Store.restoreMultipleEmployees(selectedList);
     if (res.success) {
+      Store.playSound('success');
+      this.selectedRecoveryIds.clear();
+      await this.refreshRecoveryData();
+
       this.renderTable();
       this.prepareFormNextId();
       if (window.QRCardsManager) window.QRCardsManager.render();
       if (window.Dashboard) window.Dashboard.updateData();
-      const alertBox = document.getElementById('emp-table-alert');
-      if (alertBox) alertBox.innerHTML = '';
-      this.showFormAlert(`Sukses! ${res.count} karyawan berhasil direkonstruksi dari riwayat absensi.`, 'success');
+
+      this.showFormAlert(`Sukses! ${res.count} karyawan terpilih berhasil dipulihkan ke database!`, 'success');
+    } else {
+      alert(res.message);
+    }
+  },
+
+  async restoreAllRecovery() {
+    if (this.recoveryCandidates.length === 0) {
+      alert('Tidak ada karyawan untuk dipulihkan.');
+      return;
+    }
+
+    if (!confirm(`Pulihkan seluruh (${this.recoveryCandidates.length} karyawan) yang ada di daftar ini ke database aktif?`)) {
+      return;
+    }
+
+    const res = await Store.restoreMultipleEmployees(this.recoveryCandidates);
+    if (res.success) {
       Store.playSound('success');
+      this.selectedRecoveryIds.clear();
+      await this.refreshRecoveryData();
+
+      this.renderTable();
+      this.prepareFormNextId();
+      if (window.QRCardsManager) window.QRCardsManager.render();
+      if (window.Dashboard) window.Dashboard.updateData();
+
+      this.showFormAlert(`Sukses! ${res.count} data karyawan berhasil dipulihkan!`, 'success');
     } else {
       alert(res.message);
     }
@@ -696,18 +956,18 @@ const EmployeesManager = {
             Jika ini terjadi karena ketidaksengajaan, Anda dapat langsung mengembalikan seluruh data karyawan ke posisi semula dengan sekali klik di bawah ini:
           </p>
           <div class="flex flex-wrap items-center gap-2">
-            <button onclick="EmployeesManager.promptRestoreBackup()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
-              <i class="fa-solid fa-rotate-left"></i> Pulihkan Sekarang (${hasBackup.count} Karyawan)
+            <button onclick="EmployeesManager.openRecoveryModal('backup')" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
+              <i class="fa-solid fa-rotate-left"></i> Buka Pemulihan Cadangan (Pilih Satu-Satu)
             </button>
-            <button onclick="EmployeesManager.promptRecoverFromAttendance()" class="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
-              <i class="fa-solid fa-wand-magic-sparkles text-emerald-600"></i> Rekonstruksi dari Riwayat Absensi
+            <button onclick="EmployeesManager.openRecoveryModal('attendance')" class="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+              <i class="fa-solid fa-wand-magic-sparkles text-emerald-600"></i> Pulihkan dari Riwayat Absensi (Pilih Satu-Satu)
             </button>
           </div>
         </div>
       ` : `
         <div class="mt-4">
-          <button onclick="EmployeesManager.promptRecoverFromAttendance()" class="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 cursor-pointer shadow-xs">
-            <i class="fa-solid fa-wand-magic-sparkles text-emerald-600"></i> Pulihkan Karyawan dari Riwayat Absensi
+          <button onclick="EmployeesManager.openRecoveryModal('attendance')" class="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 cursor-pointer shadow-xs">
+            <i class="fa-solid fa-wand-magic-sparkles text-emerald-600"></i> Pulihkan Karyawan dari Riwayat Absensi (Pilih Satu-Satu)
           </button>
         </div>
       `;
