@@ -268,10 +268,31 @@ table.report-table tfoot {
   transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* 2. Kartu Liquid Frosted Glass (iOS 26 / VisionOS Crystal Refraction) */
+#app-shell .bg-white:not(.a4-document-paper):not(#printable-report-area):not(#training-view-report):not(#pdf-preview-paper):not(.no-liquid) {
+  background: rgba(255, 255, 255, 0.86) !important;
+  backdrop-filter: blur(24px) saturate(190%) contrast(102%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%) contrast(102%);
+  border: 1px solid rgba(255, 255, 255, 0.88) !important;
+  box-shadow:
+    0 10px 30px -6px rgba(15, 23, 42, 0.07),
+    0 4px 12px -2px rgba(6, 78, 59, 0.04),
+    inset 0 1.5px 0.5px rgba(255, 255, 255, 0.95),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.02) !important;
+  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.32s ease;
+  will-change: transform;
+}
+
 #app-shell .bg-white:not(.a4-document-paper):not(#printable-report-area):not(#training-view-report):not(#pdf-preview-paper):not(.no-liquid):hover {
-  transform: translateY(-2px);
-  border-color: rgba(52, 211, 153, 0.55) !important;
-  box-shadow: 0 18px 42px -6px rgba(16, 185, 129, 0.22), 0 6px 16px -2px rgba(6, 78, 59, 0.08), inset 0 2px 0 rgba(255, 255, 255, 1) !important;
+  transform: translate3d(0, -3px, 0);
+  border-color: rgba(52, 211, 153, 0.60) !important;
+  box-shadow:
+    0 20px 45px -8px rgba(16, 185, 129, 0.22),
+    0 8px 18px -2px rgba(6, 78, 59, 0.08),
+    inset 0 2px 0.5px rgba(255, 255, 255, 1),
+    inset 0 -1px 1px rgba(16, 185, 129, 0.10) !important;
 }
 
 /* 3. Header & Navbar Liquid Glassmorphism */
@@ -291,14 +312,14 @@ table.report-table tfoot {
 }
 
 #app-shell nav button {
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   border-radius: 0.75rem;
 }
 
 #app-shell nav button:hover {
   background: rgba(255, 255, 255, 0.15) !important;
-  transform: translateY(-1.5px);
+  transform: translate3d(0, -1.5px, 0);
 }
 
 #app-shell nav button.bg-emerald-700 {
@@ -314,7 +335,21 @@ table.report-table tfoot {
   100% { box-shadow: 0 6px 24px 2px rgba(20, 184, 166, 0.65), inset 0 1.5px 0 rgba(255, 255, 255, 0.65); }
 }
 
-/* 4. Efek Liquid Shimmer Reflection pada Tombol Utama */
+/* 4. Efek Liquid Shimmer & iOS Tactile Press pada Tombol */
+button:not(:disabled),
+[data-page-target],
+.cursor-pointer {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.2s ease,
+              border-color 0.2s ease;
+}
+
+button:not(:disabled):active,
+[data-page-target]:active {
+  transform: scale(0.96) !important;
+}
+
 button.bg-emerald-600,
 button.bg-emerald-700,
 button.bg-emerald-800,
@@ -322,7 +357,6 @@ button.bg-teal-600,
 button.bg-blue-600 {
   position: relative;
   overflow: hidden;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 14px -1px rgba(16, 185, 129, 0.40);
 }
 
@@ -331,12 +365,8 @@ button.bg-emerald-700:hover,
 button.bg-emerald-800:hover,
 button.bg-teal-600:hover,
 button.bg-blue-600:hover {
-  transform: translateY(-2px);
+  transform: translate3d(0, -2px, 0);
   box-shadow: 0 8px 24px -2px rgba(16, 185, 129, 0.55);
-}
-
-button:active {
-  transform: scale(0.98);
 }
 
 button.bg-emerald-600::after,
@@ -367,44 +397,137 @@ button.bg-teal-600:hover::after {
   opacity: 1;
 }
 
-/* 5. Liquid Glass Input & Select Elements */
+/* 5. Apple Focus Aura & Liquid Glass Form Elements */
 #app-shell input[type="text"]:not(#printable-report-area *),
 #app-shell input[type="password"]:not(#printable-report-area *),
 #app-shell input[type="date"]:not(#printable-report-area *),
 #app-shell input[type="number"]:not(#printable-report-area *),
-#app-shell select:not(#printable-report-area *) {
-  background-color: rgba(248, 250, 252, 0.85);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+#app-shell select:not(#printable-report-area *),
+#app-shell textarea:not(#printable-report-area *) {
+  background-color: rgba(248, 250, 252, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(203, 213, 225, 0.85);
-  transition: all 0.2s ease;
+  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.03);
 }
 
 #app-shell input:focus:not(#printable-report-area *),
-#app-shell select:focus:not(#printable-report-area *) {
+#app-shell select:focus:not(#printable-report-area *),
+#app-shell textarea:focus:not(#printable-report-area *) {
   background-color: #ffffff;
   border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22), 0 3px 12px rgba(16, 185, 129, 0.16);
+  transform: translate3d(0, -1px, 0);
+  box-shadow: 0 0 0 3.5px rgba(16, 185, 129, 0.22), 0 4px 14px rgba(16, 185, 129, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
-/* 6. Liquid Glass Modals */
+/* 6. Apple Spring Sheet Modal Presentation */
 [id$="-modal"],
 [id*="modal"] {
-  backdrop-filter: blur(18px) saturate(180%);
-  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
   background-color: rgba(15, 23, 42, 0.68) !important;
 }
 
-/* 7. Liquid Table Row Transitions */
+[id$="-modal"]:not(.hidden),
+[id*="modal"]:not(.hidden) {
+  animation: iosBackdropFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+[id$="-modal"]:not(.hidden) > div,
+[id*="modal"]:not(.hidden) > div {
+  animation: iosModalSpringUp 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
+@keyframes iosBackdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes iosModalSpringUp {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 26px, 0) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+/* 7. iOS View Entrance (Transisi Halaman Mulus) */
+.page-view:not(.hidden) {
+  animation: iosViewEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
+@keyframes iosViewEntrance {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* 8. Dynamic Island Style Floating Alert Drop */
+#emp-form-alert > div,
+#emp-table-alert > div,
+#batch-modal-alert > div,
+#canteen-manual-alert > div,
+#training-form-alert > div,
+.ios-dynamic-island {
+  animation: iosDynamicIslandDrop 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+  box-shadow: 0 14px 38px -4px rgba(15, 23, 42, 0.20), 0 4px 14px -2px rgba(16, 185, 129, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  will-change: transform, opacity;
+}
+
+@keyframes iosDynamicIslandDrop {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -20px, 0) scale(0.92);
+  }
+  65% {
+    transform: translate3d(0, 3px, 0) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+/* 9. iOS Fluid Capsule Badges */
+#header-db-badge,
+#login-db-status,
+#login-shift-badge,
+#current-shift-badge,
+#emp-total-badge {
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.24s ease;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+#header-db-badge:hover,
+#current-shift-badge:hover,
+#emp-total-badge:hover {
+  transform: translate3d(0, -1px, 0) scale(1.02);
+}
+
+/* 10. Liquid Table Row Transitions */
 #app-shell table tbody tr {
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 #app-shell table tbody tr:hover {
   background-color: rgba(236, 253, 245, 0.75) !important;
 }
 
-/* 8. Liquid Scrollbar Elegan */
+/* 11. Liquid Scrollbar Elegan */
 ::-webkit-scrollbar {
   width: 9px;
   height: 9px;
@@ -425,7 +548,18 @@ button.bg-teal-600:hover::after {
   background: linear-gradient(180deg, rgba(16, 185, 129, 0.90), rgba(13, 148, 136, 0.95));
 }
 
-/* 9. Jaminan Kertas Laporan Cetak & PDF Tetap Solid Murni Putih */
+/* 12. Mode Hemat Daya & Aksesibilitas (Pre-empt Lag on Low-end Devices) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 13. Jaminan Kertas Laporan Cetak & PDF Tetap Solid Murni Putih */
 #printable-report-area,
 #training-view-report,
 .a4-document-paper,
@@ -433,6 +567,8 @@ button.bg-teal-600:hover::after {
   background: #ffffff !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 /* Aturan Khusus Cetak / Print Stylesheet */
