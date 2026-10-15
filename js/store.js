@@ -662,22 +662,32 @@ const Store = {
           localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(attendances));
         }
       } catch (e) {}
+      // Simpan ke riwayat karyawan terhapus (soft-delete) agar dapat dipulihkan di menu Pulihkan
+      try {
+        const deletedHistory = JSON.parse(localStorage.getItem('hotel_deleted_employees_history') || '[]');
+        const upperId = id.toUpperCase().trim();
+        const filtered = deletedHistory.filter(d => (d.id || '').toUpperCase().trim() !== upperId);
+        filtered.push({
+          ...emp,
+          deletedAt: new Date().toISOString()
+        });
+        localStorage.setItem('hotel_deleted_employees_history', JSON.stringify(filtered));
+      } catch (eHist) {}
     }
 
     const employees = Store.getEmployees().filter(e => e.id.toLowerCase() !== id.toLowerCase());
     localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
 
-    // Catat ke daftar kandidat diabaikan agar tidak disarankan lagi di pemulihan otomatis jika dihapus permanen
+    // Pastikan TIDAK dimasukkan ke daftar diabaikan (hotel_dismissed_recovery_ids)
+    // Hapus dari dismissed jika sebelumnya ada, agar bisa muncul di menu Pulihkan
     try {
       const dismissed = JSON.parse(localStorage.getItem('hotel_dismissed_recovery_ids') || '[]');
       const upperId = id.toUpperCase().trim();
-      if (!dismissed.includes(upperId)) {
-        dismissed.push(upperId);
-        localStorage.setItem('hotel_dismissed_recovery_ids', JSON.stringify(dismissed));
-      }
+      const newDismissed = dismissed.filter(dId => (dId || '').toUpperCase().trim() !== upperId);
+      localStorage.setItem('hotel_dismissed_recovery_ids', JSON.stringify(newDismissed));
     } catch (eDis) {}
 
-    // Hapus permanen di database MySQL (riwayat absensi makan tetap utuh di laporan)
+    // Hapus dari daftar aktif di database MySQL (soft-delete, riwayat absensi makan tetap utuh di laporan)
     Store.apiPost('delete_employee', { id });
   },
 
@@ -1203,10 +1213,28 @@ const Store = {
     const dismissedSet = new Set(dismissedList.map(id => (id || '').toUpperCase().trim()));
 
     const candidateMap = new Map();
+
+    // 1. Ambil dari riwayat karyawan yang baru saja dihapus (soft delete)
+    try {
+      const deletedHistory = JSON.parse(localStorage.getItem('hotel_deleted_employees_history') || '[]');
+      if (Array.isArray(deletedHistory)) {
+        deletedHistory.forEach(emp => {
+          const upperId = (emp.id || '').toUpperCase().trim();
+          if (upperId && !existingIds.has(upperId) && !dismissedSet.has(upperId)) {
+            candidateMap.set(upperId, {
+              ...emp,
+              source: 'Karyawan Dihapus (Dapat Dipulihkan)'
+            });
+          }
+        });
+      }
+    } catch (e) {}
+
+    // 2. Ambil dari cadangan pengaman lokal
     if (backup && Array.isArray(backup.employees)) {
       backup.employees.forEach(emp => {
         const upperId = (emp.id || '').toUpperCase().trim();
-        if (upperId && !existingIds.has(upperId) && !dismissedSet.has(upperId)) {
+        if (upperId && !existingIds.has(upperId) && !dismissedSet.has(upperId) && !candidateMap.has(upperId)) {
           candidateMap.set(upperId, {
             ...emp,
             source: 'Cadangan Pengaman Lokal',
@@ -1216,6 +1244,7 @@ const Store = {
       });
     }
 
+    // 3. Ambil dari database MySQL
     try {
       const res = await Store.apiPost('get_safety_backup_candidates', {});
       if (res && res.success && Array.isArray(res.candidates)) {
@@ -1224,7 +1253,7 @@ const Store = {
           if (upperId && !existingIds.has(upperId) && !dismissedSet.has(upperId) && !candidateMap.has(upperId)) {
             candidateMap.set(upperId, {
               ...c,
-              source: 'Cadangan Pengaman (MySQL)'
+              source: c.source || 'Cadangan Pengaman (MySQL)'
             });
           }
         });
@@ -1234,10 +1263,20 @@ const Store = {
     return Array.from(candidateMap.values());
   },
 
-  // Abaikan / Hapus kandidat dari saran pemulihan secara permanen (Data makan di laporan tetap 100% utuh)
-  async dismissRecoveryCandidate(id, name) {
-    if (!id) return;
+  // Hapus Karyawan Permanen (HANYA DARI FITUR PULIHKAN)
+  // Data makan di laporan tetap 100% utuh
+  async permanentDeleteEmployee(id, name) {
+    if (!id) return { success: false, message: 'ID tidak valid' };
     const upperId = id.toUpperCase().trim();
+
+    // 1. Hapus dari riwayat terhapus sementara
+    try {
+      const deletedHistory = JSON.parse(localStorage.getItem('hotel_deleted_employees_history') || '[]');
+      const filtered = deletedHistory.filter(d => (d.id || '').toUpperCase().trim() !== upperId);
+      localStorage.setItem('hotel_deleted_employees_history', JSON.stringify(filtered));
+    } catch (e) {}
+
+    // 2. Masukkan ke hotel_dismissed_recovery_ids agar tidak pernah muncul lagi di saran pemulihan
     try {
       const dismissed = JSON.parse(localStorage.getItem('hotel_dismissed_recovery_ids') || '[]');
       if (!dismissed.includes(upperId)) {
@@ -1246,8 +1285,22 @@ const Store = {
       }
     } catch (e) {}
 
-    await Store.apiPost('dismiss_recovery_candidate', { id, name });
-    return { success: true, message: `Kandidat "${name || id}" berhasil diabaikan permanen dari saran pemulihan.` };
+    // 3. Pastikan juga terhapus dari daftar karyawan aktif jika masih ada
+    const employees = Store.getEmployees().filter(e => e.id.toUpperCase().trim() !== upperId);
+    localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
+
+    // 4. Hapus permanen di database MySQL (riwayat absensi makan tetap utuh di laporan)
+    await Store.apiPost('permanent_delete_employee', { id, name });
+
+    return { 
+      success: true, 
+      message: `Karyawan "${name || id}" berhasil dihapus permanen. Seluruh data makan di laporan tetap tersimpan utuh.` 
+    };
+  },
+
+  // Abaikan / Hapus kandidat dari saran pemulihan secara permanen (Alias untuk permanentDeleteEmployee)
+  async dismissRecoveryCandidate(id, name) {
+    return await this.permanentDeleteEmployee(id, name);
   },
 
   // Pulihkan karyawan secara SATU PER SATU
@@ -1278,6 +1331,18 @@ const Store = {
     }
 
     localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
+
+    // Bersihkan dari riwayat soft-deleted dan daftar diabaikan
+    try {
+      const deletedHistory = JSON.parse(localStorage.getItem('hotel_deleted_employees_history') || '[]');
+      const filteredHist = deletedHistory.filter(d => (d.id || '').toUpperCase().trim() !== upperId);
+      localStorage.setItem('hotel_deleted_employees_history', JSON.stringify(filteredHist));
+
+      const dismissed = JSON.parse(localStorage.getItem('hotel_dismissed_recovery_ids') || '[]');
+      const filteredDismissed = dismissed.filter(dId => (dId || '').toUpperCase().trim() !== upperId);
+      localStorage.setItem('hotel_dismissed_recovery_ids', JSON.stringify(filteredDismissed));
+    } catch (e) {}
+
     await Store.apiPost('save_employee', cleanEmp);
     await Store.syncWithBackend(true);
 
@@ -1300,10 +1365,12 @@ const Store = {
 
     let restoredCount = 0;
     const cleanList = [];
+    const restoredUpperIds = new Set();
 
     candidateList.forEach(c => {
       if (!c || !c.id) return;
       const upperId = c.id.toUpperCase().trim();
+      restoredUpperIds.add(upperId);
       const cleanEmp = {
         id: c.id.trim(),
         name: c.name ? c.name.trim() : c.id.trim(),
@@ -1326,6 +1393,18 @@ const Store = {
     });
 
     localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
+
+    // Bersihkan dari riwayat soft-deleted dan daftar diabaikan
+    try {
+      const deletedHistory = JSON.parse(localStorage.getItem('hotel_deleted_employees_history') || '[]');
+      const filteredHist = deletedHistory.filter(d => !restoredUpperIds.has((d.id || '').toUpperCase().trim()));
+      localStorage.setItem('hotel_deleted_employees_history', JSON.stringify(filteredHist));
+
+      const dismissed = JSON.parse(localStorage.getItem('hotel_dismissed_recovery_ids') || '[]');
+      const filteredDismissed = dismissed.filter(dId => !restoredUpperIds.has((dId || '').toUpperCase().trim()));
+      localStorage.setItem('hotel_dismissed_recovery_ids', JSON.stringify(filteredDismissed));
+    } catch (e) {}
+
     await Store.apiPost('batch_save_employees', { employees: cleanList });
     await Store.syncWithBackend(true);
 

@@ -318,11 +318,13 @@ const EmployeesManager = {
     if (!emp) return;
 
     const confirmed = confirm(
-      `HAPUS PERMANEN KARYAWAN:\n\n` +
-      `Apakah Anda yakin ingin menghapus permanen karyawan "${emp.name}" (${emp.id}) dari database master?\n\n` +
-      `CATATAN PENTING LAPORAN:\n` +
-      `✓ Akun login dan master karyawan akan dihapus permanen.\n` +
-      `✓ Seluruh riwayat dan data transaksi makan dia di LAPORAN & REKAPITULASI TETAP UTUH dan TIDAK AKAN HILANG.`
+      `HAPUS KARYAWAN DARI DAFTAR AKTIF:\n\n` +
+      `Apakah Anda yakin ingin menghapus "${emp.name}" (${emp.id}) dari daftar karyawan aktif?\n\n` +
+      `CATATAN:\n` +
+      `• Karyawan tidak dihapus permanen di sini.\n` +
+      `• Anda dapat memulihkannya kembali sewaktu-waktu di menu "Pusat Pemulihan Data Karyawan".\n` +
+      `• Penghapusan permanen hanya dapat dilakukan di dalam menu Fitur Pulihkan.\n` +
+      `• Seluruh riwayat transaksi makan di LAPORAN TETAP 100% AMAN & UTUH.`
     );
     if (!confirmed) return;
 
@@ -331,7 +333,7 @@ const EmployeesManager = {
     this.prepareFormNextId();
     if (window.QRCardsManager) window.QRCardsManager.render();
     if (window.Dashboard) window.Dashboard.updateData();
-    this.showFormAlert(`Karyawan "${emp.name}" (${emp.id}) berhasil dihapus permanen. Seluruh data transaksi makan di laporan tetap tersimpan utuh.`, 'success');
+    this.showFormAlert(`Karyawan "${emp.name}" (${emp.id}) dipindahkan ke menu Pulihkan. (Penghapusan permanen hanya ada di fitur Pulihkan).`, 'success');
     Store.playSound('success');
   },
 
@@ -559,11 +561,11 @@ const EmployeesManager = {
           <td class="py-2.5 px-3">${lastInfo}</td>
           <td class="py-2.5 px-3 text-right">
             <div class="flex items-center justify-end gap-1.5 ml-auto">
-              <button type="button" onclick="EmployeesManager.dismissCandidate('${c.id}')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-700 border border-slate-200 hover:border-rose-200 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer" title="Hapus permanen dari daftar saran (Data makan di laporan tetap aman)">
+              <button type="button" onclick="EmployeesManager.dismissCandidate('${c.id}')" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer" title="Hapus permanen karyawan ini (Data transaksi makan di laporan tetap 100% aman)">
                 <i class="fa-solid fa-trash-can text-[10px]"></i> Hapus Permanen
               </button>
-              <button type="button" onclick="EmployeesManager.restoreOneCandidate('${c.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs" title="Pulihkan hanya karyawan ini">
-                <i class="fa-solid fa-user-plus"></i> Pulihkan
+              <button type="button" onclick="EmployeesManager.restoreOneCandidate('${c.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs" title="Pulihkan karyawan ini">
+                <i class="fa-solid fa-rotate-left"></i> Pulihkan
               </button>
             </div>
           </td>
@@ -618,15 +620,15 @@ const EmployeesManager = {
     if (!candidate) return;
 
     const confirmed = confirm(
-      `HAPUS / ABAIKAN PERMANEN DARI SARAN:\n\n` +
-      `Apakah Anda yakin ingin menghapus permanen kandidat "${candidate.name}" (${candidate.id}) dari daftar saran pemulihan?\n\n` +
+      `HAPUS PERMANEN KARYAWAN:\n\n` +
+      `Apakah Anda yakin ingin menghapus permanen data karyawan "${candidate.name}" (${candidate.id})?\n\n` +
       `CATATAN PENTING:\n` +
-      `✓ Karyawan ini tidak akan disarankan lagi di masa depan.\n` +
-      `✓ Seluruh riwayat dan data transaksi makan dia di LAPORAN TETAP UTUH dan TIDAK AKAN HILANG.`
+      `✓ Karyawan akan dihapus secara permanen dari sistem dan tidak akan disarankan lagi di menu Pulihkan.\n` +
+      `✓ Seluruh riwayat dan transaksi makan di LAPORAN TETAP 100% AMAN & UTUH.`
     );
     if (!confirmed) return;
 
-    await Store.dismissRecoveryCandidate(id, candidate.name);
+    await Store.permanentDeleteEmployee(id, candidate.name);
     this.selectedRecoveryIds.delete(id);
     this.recoveryCandidates = this.recoveryCandidates.filter(c => c.id !== id);
     this.renderRecoveryTable();
@@ -639,8 +641,12 @@ const EmployeesManager = {
       badgeBak.innerText = this.recoveryCandidates.length;
     }
 
-    this.showFormAlert(`Kandidat "${candidate.name}" (${candidate.id}) telah diabaikan permanen. Data makan di laporan tetap utuh.`, 'success');
+    this.showFormAlert(`Karyawan "${candidate.name}" (${candidate.id}) berhasil dihapus permanen. Seluruh data transaksi makan di laporan tetap tersimpan utuh.`, 'success');
     Store.playSound('success');
+  },
+
+  async permanentDeleteCandidate(id) {
+    return await this.dismissCandidate(id);
   },
 
   async restoreOneCandidate(id) {
@@ -1079,7 +1085,7 @@ const EmployeesManager = {
             <button onclick="EmployeesManager.editEmployee('${emp.id}')" class="text-blue-600 hover:text-blue-800 p-1.5 rounded-lg hover:bg-blue-50 transition border border-transparent hover:border-blue-200 cursor-pointer" title="Edit Lengkap">
               <i class="fa-solid fa-pen-to-square"></i>
             </button>
-            <button onclick="EmployeesManager.deleteEmployee('${emp.id}')" class="text-rose-600 hover:text-rose-800 p-1.5 rounded-lg hover:bg-rose-50 transition border border-transparent hover:border-rose-200 cursor-pointer" title="Hapus Karyawan">
+            <button onclick="EmployeesManager.deleteEmployee('${emp.id}')" class="text-rose-600 hover:text-rose-800 p-1.5 rounded-lg hover:bg-rose-50 transition border border-transparent hover:border-rose-200 cursor-pointer" title="Hapus Karyawan (Dapat dipulihkan di menu Pulihkan)">
               <i class="fa-solid fa-trash-can"></i>
             </button>
           </td>
