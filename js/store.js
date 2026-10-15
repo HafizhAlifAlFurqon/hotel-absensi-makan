@@ -999,12 +999,120 @@ const Store = {
     }
   },
 
-  // Kosongkan seluruh data karyawan (agar bersih tanpa data sampel)
+  // Kosongkan seluruh data karyawan (disertai cadangan pengaman otomatis)
   clearAllEmployees() {
+    const currentEmployees = Store.getEmployees();
+    if (currentEmployees && currentEmployees.length > 0) {
+      const backupPayload = {
+        timestamp: new Date().toISOString(),
+        count: currentEmployees.length,
+        employees: currentEmployees
+      };
+      localStorage.setItem('hotel_employees_safety_backup', JSON.stringify(backupPayload));
+    }
     localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify([]));
-    // Sinkronkan ke database MySQL
+    // Sinkronkan ke database MySQL (yang juga menyimpan cadangan ke employees_safety_backup)
     Store.apiPost('clear_employees', {});
     return [];
+  },
+
+  // Periksa ketersediaan cadangan pengaman otomatis
+  getSafetyBackup() {
+    try {
+      const raw = localStorage.getItem('hotel_employees_safety_backup');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.employees) && parsed.employees.length > 0) {
+        return parsed;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  },
+
+  // Pulihkan data karyawan dari cadangan pengaman otomatis
+  async restoreSafetyBackupEmployees() {
+    const backup = this.getSafetyBackup();
+    if (backup && Array.isArray(backup.employees) && backup.employees.length > 0) {
+      localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(backup.employees));
+      // Sinkronkan ke MySQL
+      await Store.apiPost('restore_employees_safety', {});
+      await Store.syncWithBackend(true);
+      return {
+        success: true,
+        count: backup.employees.length,
+        timestamp: backup.timestamp,
+        message: `Berhasil memulihkan ${backup.employees.length} data karyawan dari cadangan pengaman!`
+      };
+    }
+
+    // Jika di localStorage kosong, coba pulihkan langsung dari MySQL
+    const res = await Store.apiPost('restore_employees_safety', {});
+    if (res && res.success) {
+      await Store.syncWithBackend(true);
+      return {
+        success: true,
+        count: res.restored_count || 0,
+        message: res.message || 'Berhasil memulihkan data karyawan dari cadangan MySQL!'
+      };
+    }
+
+    return {
+      success: false,
+      count: 0,
+      message: 'Tidak ditemukan data cadangan pengaman untuk dipulihkan.'
+    };
+  },
+
+  // Pulihkan / Rekonstruksi data karyawan dari seluruh riwayat absensi (Smart Attendance Recovery)
+  async recoverEmployeesFromAttendance() {
+    const attendances = Store.getAttendances();
+    const existingEmployees = Store.getEmployees();
+    const existingIds = new Set(existingEmployees.map(e => (e.id || '').toUpperCase()));
+    
+    // Kumpulkan seluruh profil unik karyawan dari riwayat transaksi absensi
+    const recoveredMap = new Map();
+    attendances.forEach(att => {
+      const rawId = (att.employeeId || '').trim();
+      if (!rawId) return;
+      const upperId = rawId.toUpperCase();
+      if (!existingIds.has(upperId) && !recoveredMap.has(upperId)) {
+        const isTrn = !!(att.isTrainee || att.department === 'Training' || upperId.startsWith('TRN-'));
+        recoveredMap.set(upperId, {
+          id: rawId,
+          name: att.employeeName || rawId,
+          department: att.department || (isTrn ? 'Training' : 'Housekeeping'),
+          position: att.position || (isTrn ? 'Trainee' : 'Staff'),
+          institution: att.institution || '',
+          isTrainee: isTrn,
+          password: 'password123',
+          status: 'Aktif',
+          createdAt: new Date().toISOString()
+        });
+      }
+    });
+
+    const recoveredList = Array.from(recoveredMap.values());
+    if (recoveredList.length > 0) {
+      const mergedEmployees = [...existingEmployees, ...recoveredList];
+      localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(mergedEmployees));
+      // Simpan batch ke MySQL
+      await Store.apiPost('batch_save_employees', { employees: recoveredList });
+    }
+
+    // Rekonstruksi juga di sisi database MySQL langsung
+    const apiRes = await Store.apiPost('recover_employees_from_attendance', {});
+    await Store.syncWithBackend(true);
+
+    const totalRecovered = recoveredList.length || (apiRes && apiRes.recovered_count) || 0;
+    return {
+      success: totalRecovered > 0,
+      count: totalRecovered,
+      message: totalRecovered > 0 
+        ? `Berhasil merekonstruksi ${totalRecovered} data karyawan dari riwayat absensi makan!`
+        : 'Tidak ada karyawan yang dapat diekstrak dari riwayat absensi (data sudah lengkap atau riwayat kosong).'
+    };
   },
 
   // Kosongkan seluruh riwayat absensi

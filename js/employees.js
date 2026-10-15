@@ -326,15 +326,101 @@ const EmployeesManager = {
     }
   },
 
-  clearAllEmployees() {
-    if (confirm('Apakah Anda yakin ingin menghapus semua data karyawan (termasuk 15 data contoh bawaan) agar database benar-benar bersih dan hanya berisi karyawan yang Anda buat sendiri?')) {
-      Store.clearAllEmployees();
+  async clearAllEmployees() {
+    const currentEmployees = Store.getEmployees();
+    const count = currentEmployees.length;
+    if (count === 0) {
+      alert('Daftar karyawan sudah kosong.');
+      return;
+    }
+
+    const confirmed = confirm(
+      `Apakah Anda yakin ingin mengosongkan seluruh data (${count} karyawan)?\n\n` +
+      `Sistem akan secara otomatis membuat Cadangan Pengaman (Safety Snapshot) sehingga Anda dapat membatalkan (Undo) atau memulihkannya kembali kapan saja jika tidak sengaja terhapus.`
+    );
+    if (!confirmed) return;
+
+    Store.clearAllEmployees();
+    this.renderTable();
+    this.prepareFormNextId();
+    if (window.QRCardsManager) window.QRCardsManager.render();
+    if (window.Dashboard) window.Dashboard.updateData();
+    this.showUndoAlert(count);
+    Store.playSound('success');
+  },
+
+  showUndoAlert(count) {
+    const alertBox = document.getElementById('emp-table-alert') || document.getElementById('emp-form-alert');
+    if (alertBox) {
+      alertBox.innerHTML = `
+        <div class="p-4 bg-amber-50 border-2 border-amber-300 rounded-2xl text-amber-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-amber-200 text-amber-800 flex items-center justify-center font-bold text-base shrink-0">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <div>
+              <p class="font-extrabold text-slate-900 text-sm">Seluruh data (${count} karyawan) telah dikosongkan.</p>
+              <p class="text-[11px] text-amber-800">Cadangan pengaman telah otomatis disimpan. Terjadi ketidaksengajaan atau salah pencet?</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 self-end sm:self-auto shrink-0">
+            <button type="button" onclick="EmployeesManager.promptRestoreBackup()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+              <i class="fa-solid fa-rotate-left"></i> Pulihkan Sekarang (Undo)
+            </button>
+            <button type="button" onclick="this.closest('.p-4').remove()" class="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-amber-100 transition cursor-pointer" title="Tutup pemberitahuan">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+  },
+
+  async promptRestoreBackup() {
+    const backup = Store.getSafetyBackup();
+    const countText = backup ? `${backup.count} karyawan` : 'data karyawan';
+    const timeText = backup && backup.timestamp ? ` yang dicadangkan pada ${new Date(backup.timestamp).toLocaleString('id-ID')} WIB` : '';
+    
+    if (!confirm(`Pulihkan ${countText}${timeText} kembali ke database karyawan?`)) {
+      return;
+    }
+
+    const res = await Store.restoreSafetyBackupEmployees();
+    if (res.success) {
       this.renderTable();
       this.prepareFormNextId();
       if (window.QRCardsManager) window.QRCardsManager.render();
       if (window.Dashboard) window.Dashboard.updateData();
-      this.showFormAlert('Semua data karyawan sampel berhasil dibersihkan! Anda sekarang dapat mendaftarkan karyawan Anda sendiri mulai dari ID EMP-001.', 'success');
+      const alertBox = document.getElementById('emp-table-alert');
+      if (alertBox) alertBox.innerHTML = '';
+      this.showFormAlert(`Sukses! ${res.count} data karyawan berhasil dipulihkan kembali.`, 'success');
       Store.playSound('success');
+    } else {
+      alert(res.message);
+    }
+  },
+
+  async promptRecoverFromAttendance() {
+    if (!confirm(
+      'Fitur Pemulihan Cerdas dari Riwayat Absensi:\n\n' +
+      'Sistem akan memindai riwayat transaksi absensi makan di database, mengekstrak semua nama, ID, departemen, dan jabatan karyawan yang pernah bertransaksi, lalu memasukkannya kembali ke database master karyawan.\n\n' +
+      'Lanjutkan proses rekonstruksi data karyawan?'
+    )) {
+      return;
+    }
+
+    const res = await Store.recoverEmployeesFromAttendance();
+    if (res.success) {
+      this.renderTable();
+      this.prepareFormNextId();
+      if (window.QRCardsManager) window.QRCardsManager.render();
+      if (window.Dashboard) window.Dashboard.updateData();
+      const alertBox = document.getElementById('emp-table-alert');
+      if (alertBox) alertBox.innerHTML = '';
+      this.showFormAlert(`Sukses! ${res.count} karyawan berhasil direkonstruksi dari riwayat absensi.`, 'success');
+      Store.playSound('success');
+    } else {
+      alert(res.message);
     }
   },
 
@@ -583,16 +669,55 @@ const EmployeesManager = {
       employees = employees.filter(e => e.status === statusVal);
     }
 
-    if (countBadge) {
-      countBadge.innerText = `${employees.length} Karyawan`;
+    const undoBtn = document.getElementById('btn-undo-clear-emp');
+    const hasBackup = Store.getSafetyBackup();
+    if (undoBtn) {
+      if (hasBackup) {
+        undoBtn.classList.remove('hidden');
+        undoBtn.innerHTML = `<i class="fa-solid fa-rotate-left text-amber-600"></i> Pulihkan (${hasBackup.count} Karyawan)`;
+      } else {
+        undoBtn.classList.add('hidden');
+      }
     }
 
     if (employees.length === 0) {
+      const backupCard = hasBackup ? `
+        <div class="mt-4 p-4 bg-amber-50/90 border-2 border-amber-300 rounded-2xl text-amber-900 inline-block text-left max-w-lg shadow-sm">
+          <div class="flex items-center gap-2.5 mb-2">
+            <div class="w-9 h-9 rounded-xl bg-amber-200 text-amber-800 flex items-center justify-center font-bold text-sm shrink-0">
+              <i class="fa-solid fa-shield-heart text-amber-700"></i>
+            </div>
+            <div>
+              <p class="font-extrabold text-xs text-amber-950">Data Karyawan Baru Saja Dikosongkan?</p>
+              <p class="text-[11px] text-amber-800">Tersedia Cadangan Pengaman Otomatis (${hasBackup.count} Karyawan).</p>
+            </div>
+          </div>
+          <p class="text-[11px] text-amber-700 leading-relaxed mb-3">
+            Jika ini terjadi karena ketidaksengajaan, Anda dapat langsung mengembalikan seluruh data karyawan ke posisi semula dengan sekali klik di bawah ini:
+          </p>
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="EmployeesManager.promptRestoreBackup()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
+              <i class="fa-solid fa-rotate-left"></i> Pulihkan Sekarang (${hasBackup.count} Karyawan)
+            </button>
+            <button onclick="EmployeesManager.promptRecoverFromAttendance()" class="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+              <i class="fa-solid fa-wand-magic-sparkles text-emerald-600"></i> Rekonstruksi dari Riwayat Absensi
+            </button>
+          </div>
+        </div>
+      ` : `
+        <div class="mt-4">
+          <button onclick="EmployeesManager.promptRecoverFromAttendance()" class="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 cursor-pointer shadow-xs">
+            <i class="fa-solid fa-wand-magic-sparkles text-emerald-600"></i> Pulihkan Karyawan dari Riwayat Absensi
+          </button>
+        </div>
+      `;
+
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" class="text-center py-8 text-gray-400">
-            <i class="fa-solid fa-users-slash text-3xl mb-2 block opacity-40"></i>
-            Tidak ada data karyawan yang cocok dengan kriteria pencarian.
+          <td colspan="7" class="text-center py-10 text-gray-400">
+            <i class="fa-solid fa-users-slash text-4xl mb-2 block opacity-40"></i>
+            <span class="text-xs font-medium">Tidak ada data karyawan yang cocok dengan kriteria pencarian.</span>
+            <div>${backupCard}</div>
           </td>
         </tr>
       `;

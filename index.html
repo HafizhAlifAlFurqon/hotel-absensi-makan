@@ -1189,7 +1189,13 @@
           <span id="emp-total-badge" class="px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
             0 Karyawan
           </span>
-          <button type="button" onclick="EmployeesManager.clearAllEmployees()" class="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Hapus semua data contoh agar database bersih untuk diisi data karyawan Anda sendiri">
+          <button id="btn-undo-clear-emp" type="button" onclick="EmployeesManager.promptRestoreBackup()" class="hidden px-3.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Pulihkan data karyawan dari cadangan pengaman otomatis">
+            <i class="fa-solid fa-rotate-left text-amber-600"></i> Pulihkan Terakhir (Undo)
+          </button>
+          <button type="button" onclick="EmployeesManager.promptRecoverFromAttendance()" class="px-3.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Ekstrak profil karyawan secara otomatis dari riwayat transaksi absensi makan jika data terhapus">
+            <i class="fa-solid fa-wand-magic-sparkles text-teal-600"></i> Pulihkan dari Absensi
+          </button>
+          <button type="button" onclick="EmployeesManager.clearAllEmployees()" class="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Hapus semua data contoh agar database bersih untuk diisi data karyawan Anda sendiri (Cadangan pengaman otomatis disimpan)">
             <i class="fa-solid fa-trash-can"></i> Kosongkan Daftar Karyawan
           </button>
           <button onclick="EmployeesManager.openBatchModal()" class="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
@@ -1268,6 +1274,9 @@
           </div>
         </form>
       </div>
+
+      <!-- ALERT CONTAINER UNTUK UNDO / NOTIFIKASI PEMULIHAN -->
+      <div id="emp-table-alert" class="empty:hidden"></div>
 
       <!-- DATABASE KARYAWAN DI BAWAHNYA -->
       <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
@@ -2240,6 +2249,35 @@
 
       <div id="batch-modal-alert"></div>
 
+      <!-- PUSAT PEMULIHAN DATA DARURAT -->
+      <div class="pt-2 border-t border-slate-200/80">
+        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+              <i class="fa-solid fa-shield-halved text-emerald-600"></i> Pusat Pemulihan Data Karyawan (Jika Terhapus)
+            </span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">Safety Center</span>
+          </div>
+          <p class="text-[11px] text-slate-500 leading-relaxed">
+            Jika data karyawan pernah tidak sengaja terhapus atau dikosongkan, Anda dapat mengembalikannya secara instan:
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button type="button" onclick="EmployeesManager.closeBatchModal(); EmployeesManager.promptRestoreBackup();" class="p-2.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl text-left transition cursor-pointer">
+              <p class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                <i class="fa-solid fa-rotate-left text-amber-600"></i> Pulihkan Cadangan Otomatis
+              </p>
+              <p class="text-[10px] text-amber-700 mt-0.5">Mengembalikan daftar karyawan yang terakhir dikosongkan.</p>
+            </button>
+            <button type="button" onclick="EmployeesManager.closeBatchModal(); EmployeesManager.promptRecoverFromAttendance();" class="p-2.5 bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded-xl text-left transition cursor-pointer">
+              <p class="text-xs font-bold text-teal-900 flex items-center gap-1.5">
+                <i class="fa-solid fa-wand-magic-sparkles text-teal-600"></i> Rekonstruksi dari Riwayat Absensi
+              </p>
+              <p class="text-[10px] text-teal-700 mt-0.5">Ekstrak profil nama &amp; ID dari riwayat absensi makan.</p>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
         <button type="button" onclick="EmployeesManager.closeBatchModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer">
           Batal
@@ -2749,16 +2787,16 @@
   <script src="js/libs/chart.min.js"></script>
   <script src="js/libs/html2pdf.bundle.min.js"></script>
 
-  <script src="js/store.js?v=20261014_2"></script>
-  <script src="js/auth.js?v=20261014_2"></script>
-  <script src="js/dashboard.js?v=20261014_2"></script>
-  <script src="js/attendance.js?v=20261014_2"></script>
-  <script src="js/training.js?v=20261014_2"></script>
-  <script src="js/tenants.js?v=20261014_2"></script>
-  <script src="js/employees.js?v=20261014_2"></script>
-  <script src="js/qr_cards.js?v=20261014_2"></script>
-  <script src="js/reports.js?v=20261014_2"></script>
-  <script src="js/app.js?v=20261014_2"></script>
+  <script src="js/store.js?v=20261014_3"></script>
+  <script src="js/auth.js?v=20261014_3"></script>
+  <script src="js/dashboard.js?v=20261014_3"></script>
+  <script src="js/attendance.js?v=20261014_3"></script>
+  <script src="js/training.js?v=20261014_3"></script>
+  <script src="js/tenants.js?v=20261014_3"></script>
+  <script src="js/employees.js?v=20261014_3"></script>
+  <script src="js/qr_cards.js?v=20261014_3"></script>
+  <script src="js/reports.js?v=20261014_3"></script>
+  <script src="js/app.js?v=20261014_3"></script>
 
 </body>
 </html>
