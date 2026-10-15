@@ -28,7 +28,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
   <!-- Custom Style & Print CSS -->
-  <link rel="stylesheet" href="css/style.css?v=20261014_2">
+  <link rel="stylesheet" href="css/style.css?v=20261015_liquid">
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col antialiased">
 
@@ -63,6 +63,13 @@
     <!-- BACKGROUND DENGAN BG.JPG & OVERLAY MEWAH KHAS HOTEL -->
     <div class="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat" style="background-image: url('bg.jpg');"></div>
     <div class="fixed inset-0 z-0 bg-gradient-to-br from-emerald-950/70 via-slate-950/75 to-slate-900/80 backdrop-blur-[1px]"></div>
+
+    <!-- AMBIENT LIQUID FLUID ORBS (BACKGROUND LOGIN) -->
+    <div class="liquid-bg-container pointer-events-none fixed inset-0 overflow-hidden z-0 no-print" aria-hidden="true">
+      <div class="liquid-blob liquid-blob-1"></div>
+      <div class="liquid-blob liquid-blob-2"></div>
+      <div class="liquid-blob liquid-blob-3"></div>
+    </div>
 
     <!-- TOP HEADER BAR PADA HALAMAN LOGIN -->
     <header class="relative z-10 w-full p-4 sm:p-5 flex items-center justify-between border-b border-white/10 bg-black/25 backdrop-blur-md">
@@ -199,7 +206,15 @@
   </div>
 
   <!-- ================= SHELL UTAMA APLIKASI (HEADER, NAV, DASHBOARD, DLL.) ================= -->
-  <div id="app-shell" class="min-h-screen flex flex-col hidden">
+  <div id="app-shell" class="min-h-screen flex flex-col hidden relative">
+
+    <!-- AMBIENT LIQUID FLUID ORBS (BACKGROUND DASHBOARD & FITUR) -->
+    <div class="liquid-bg-container pointer-events-none fixed inset-0 overflow-hidden z-0 no-print" aria-hidden="true">
+      <div class="liquid-blob liquid-blob-1"></div>
+      <div class="liquid-blob liquid-blob-2"></div>
+      <div class="liquid-blob liquid-blob-3"></div>
+      <div class="liquid-blob liquid-blob-4"></div>
+    </div>
 
   <!-- ================= TOP HEADER BAR ================= -->
   <header class="bg-emerald-900 text-white shadow-md sticky top-0 z-30">
@@ -216,7 +231,7 @@
               BeSS Mansion Hotel Surabaya
             </h1>
             <p class="text-[11px] text-emerald-300 font-medium tracking-wide">
-              Sistem Absensi Makan Karyawan (Kantin & Admin)
+              Sistem Absensi Makan Karyawan
             </p>
           </div>
         </div>
@@ -323,7 +338,7 @@
   </nav>
 
   <!-- ================= MAIN CONTENT VIEWS ================= -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
 
     <!-- BANNER PERINGATAN PROTOKOL HTTPS (PUBLISH CHECK) -->
     <div id="https-warning-banner" class="hidden mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-300 text-amber-900 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
@@ -2865,7 +2880,7 @@
   </script>
 
   <!-- Footer -->
-  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 relative z-10">
     <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
       <p>&copy; 2026 <span class="hotel-name-display font-semibold">BeSS Mansion Hotel Surabaya</span>. Sistem Absensi Makan Karyawan.</p>
       <p class="text-[11px] text-slate-400">Shift Siang (11.00-15.00) &bull; Shift Sore (15.01-19.00) &bull; 1x Makan Per Hari</p>

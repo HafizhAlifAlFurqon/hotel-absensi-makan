@@ -7,12 +7,16 @@ html, body {
 }
 
 body {
-  background-image: linear-gradient(rgba(15, 23, 42, 0.35), rgba(15, 23, 42, 0.35)), url('../bg.jpg');
+  background-image:
+    radial-gradient(ellipse at 15% 15%, rgba(16, 185, 129, 0.22) 0%, transparent 48%),
+    radial-gradient(ellipse at 85% 85%, rgba(6, 182, 212, 0.18) 0%, transparent 52%),
+    linear-gradient(rgba(15, 23, 42, 0.40), rgba(15, 23, 42, 0.52)),
+    url('../bg.jpg');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
   background-repeat: no-repeat;
-  background-color: #0f172a;
+  background-color: #0b1320;
 }
 
 code, pre, .font-mono {
@@ -106,8 +110,282 @@ table.report-table tfoot {
   display: none !important;
 }
 
+/* ==========================================================================
+   TEMA LIQUID & FROSTED GLASS (MODERN, FLUID & NON-BORING HOTEL THEME)
+   ========================================================================== */
+
+/* 1. Latar Belakang Liquid Ambient Orbs (Fixed & Non-Intrusive) */
+.liquid-bg-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.liquid-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(85px);
+  opacity: 0.35;
+  will-change: transform, border-radius;
+  pointer-events: none;
+}
+
+.liquid-blob-1 {
+  width: 550px;
+  height: 550px;
+  top: -100px;
+  left: -80px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.75) 0%, rgba(13, 148, 136, 0.5) 50%, rgba(6, 78, 59, 0) 100%);
+  animation: liquidFloat1 24s ease-in-out infinite alternate;
+}
+
+.liquid-blob-2 {
+  width: 500px;
+  height: 500px;
+  top: 30%;
+  right: -90px;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.65) 0%, rgba(14, 165, 233, 0.45) 50%, rgba(2, 132, 199, 0) 100%);
+  animation: liquidFloat2 28s ease-in-out infinite alternate;
+}
+
+.liquid-blob-3 {
+  width: 480px;
+  height: 480px;
+  bottom: -80px;
+  left: 20%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.40) 0%, rgba(217, 119, 6, 0.25) 50%, rgba(180, 83, 9, 0) 100%);
+  animation: liquidFloat3 26s ease-in-out infinite alternate;
+}
+
+.liquid-blob-4 {
+  width: 420px;
+  height: 420px;
+  top: 65%;
+  left: -60px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.35) 0%, rgba(79, 70, 229, 0.20) 50%, rgba(49, 46, 129, 0) 100%);
+  animation: liquidFloat2 32s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes liquidFloat1 {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+    border-radius: 58% 42% 65% 35% / 48% 55% 45% 52%;
+  }
+  50% {
+    transform: translate3d(60px, 45px, 0) scale(1.08) rotate(15deg);
+    border-radius: 42% 58% 35% 65% / 55% 45% 52% 48%;
+  }
+  100% {
+    transform: translate3d(-40px, 80px, 0) scale(0.95) rotate(-10deg);
+    border-radius: 65% 35% 58% 42% / 45% 52% 48% 55%;
+  }
+}
+
+@keyframes liquidFloat2 {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+    border-radius: 45% 55% 52% 48% / 58% 42% 65% 35%;
+  }
+  50% {
+    transform: translate3d(-70px, -50px, 0) scale(1.06) rotate(-12deg);
+    border-radius: 60% 40% 48% 52% / 42% 58% 35% 65%;
+  }
+  100% {
+    transform: translate3d(35px, -80px, 0) scale(0.94) rotate(18deg);
+    border-radius: 48% 52% 58% 42% / 52% 48% 60% 40%;
+  }
+}
+
+@keyframes liquidFloat3 {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    border-radius: 50% 50% 45% 55% / 55% 45% 50% 50%;
+  }
+  50% {
+    transform: translate3d(55px, -35px, 0) scale(1.10);
+    border-radius: 40% 60% 55% 45% / 45% 55% 40% 60%;
+  }
+  100% {
+    transform: translate3d(-50px, 30px, 0) scale(0.92);
+    border-radius: 55% 45% 40% 60% / 50% 50% 55% 45%;
+  }
+}
+
+/* 2. Kartu Liquid Frosted Glass (Kecuali Dokumen Cetak/Kertas Laporan) */
+#app-shell .bg-white:not(.a4-document-paper):not(#printable-report-area):not(#training-view-report):not(#pdf-preview-paper):not(.no-liquid) {
+  background: rgba(255, 255, 255, 0.90) !important;
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.70) !important;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+  transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#app-shell .bg-white:not(.a4-document-paper):not(#printable-report-area):not(#training-view-report):not(#pdf-preview-paper):not(.no-liquid):hover {
+  border-color: rgba(52, 211, 153, 0.45) !important;
+  box-shadow: 0 14px 32px -5px rgba(16, 185, 129, 0.14), 0 4px 10px -2px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+}
+
+/* 3. Header & Navbar Liquid Glassmorphism */
+#app-shell > header {
+  background: rgba(6, 78, 59, 0.85) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(52, 211, 153, 0.22) !important;
+  box-shadow: 0 4px 20px -2px rgba(6, 78, 59, 0.25) !important;
+}
+
+#app-shell > nav {
+  background: rgba(4, 47, 46, 0.82) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(20, 184, 166, 0.22) !important;
+}
+
+#app-shell nav button {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+#app-shell nav button:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  transform: translateY(-1px);
+}
+
+#app-shell nav button.bg-emerald-700 {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(13, 148, 136, 0.95)) !important;
+  box-shadow: 0 4px 16px -2px rgba(16, 185, 129, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+/* 4. Efek Liquid Shimmer Reflection pada Tombol Utama */
+button.bg-emerald-600,
+button.bg-emerald-700,
+button.bg-emerald-800,
+button.bg-teal-600,
+button.bg-blue-600 {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px -2px rgba(16, 185, 129, 0.35);
+}
+
+button.bg-emerald-600:hover,
+button.bg-emerald-700:hover,
+button.bg-emerald-800:hover,
+button.bg-teal-600:hover,
+button.bg-blue-600:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 20px -2px rgba(16, 185, 129, 0.45);
+}
+
+button.bg-emerald-600::after,
+button.bg-emerald-700::after,
+button.bg-teal-600::after {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: -70%;
+  width: 45%;
+  height: 220%;
+  background: linear-gradient(
+    60deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.28) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(25deg);
+  pointer-events: none;
+  transition: all 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+}
+
+button.bg-emerald-600:hover::after,
+button.bg-emerald-700:hover::after,
+button.bg-teal-600:hover::after {
+  left: 140%;
+  opacity: 1;
+}
+
+/* 5. Liquid Glass Input & Select Elements */
+#app-shell input[type="text"]:not(#printable-report-area *),
+#app-shell input[type="password"]:not(#printable-report-area *),
+#app-shell input[type="date"]:not(#printable-report-area *),
+#app-shell input[type="number"]:not(#printable-report-area *),
+#app-shell select:not(#printable-report-area *) {
+  background-color: rgba(248, 250, 252, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  transition: all 0.2s ease;
+}
+
+#app-shell input:focus:not(#printable-report-area *),
+#app-shell select:focus:not(#printable-report-area *) {
+  background-color: #ffffff;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18), 0 2px 8px rgba(16, 185, 129, 0.12);
+}
+
+/* 6. Liquid Glass Modals */
+[id$="-modal"],
+[id*="modal"],
+#pdf-preview-modal,
+#emp-recovery-modal,
+#login-modal,
+#canteen-manual-modal,
+#emp-password-modal,
+#scan-result-modal,
+#emp-batch-modal,
+#canteen-scan-confirm-modal,
+#hosting-guide-modal,
+#camera-test-modal,
+#training-modal-add {
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  background-color: rgba(15, 23, 42, 0.65) !important;
+}
+
+/* 7. Liquid Scrollbar Elegan */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.5), rgba(13, 148, 136, 0.6));
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.8), rgba(13, 148, 136, 0.9));
+}
+
+/* 8. Jaminan Kertas Laporan Cetak & PDF Tetap Solid Murni Putih */
+#printable-report-area,
+#training-view-report,
+.a4-document-paper,
+#pdf-preview-paper {
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
 /* Aturan Khusus Cetak / Print Stylesheet */
 @media print {
+  .liquid-bg-container,
+  .liquid-blob {
+    display: none !important;
+  }
   @page {
     size: A4 portrait;
     margin: 4mm 6mm;
