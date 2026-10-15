@@ -1036,16 +1036,39 @@ const Store = {
     return [];
   },
 
-  // Periksa ketersediaan cadangan pengaman otomatis
+  // Periksa ketersediaan cadangan pengaman otomatis (hanya karyawan yang belum ada di database)
   getSafetyBackup() {
     try {
       const raw = localStorage.getItem('hotel_employees_safety_backup');
       if (!raw) return null;
       const parsed = JSON.parse(raw);
-      if (parsed && Array.isArray(parsed.employees) && parsed.employees.length > 0) {
-        return parsed;
+      if (!parsed || !Array.isArray(parsed.employees) || parsed.employees.length === 0) {
+        localStorage.removeItem('hotel_employees_safety_backup');
+        return null;
       }
-      return null;
+
+      // Bandingkan dengan data karyawan aktif saat ini dan daftar yang dihapus permanen
+      const existingEmployees = Store.getEmployees();
+      const existingIds = new Set(existingEmployees.map(e => (e.id || '').toUpperCase().trim()));
+      const dismissedList = JSON.parse(localStorage.getItem('hotel_dismissed_recovery_ids') || '[]');
+      const dismissedSet = new Set(dismissedList.map(id => (id || '').toUpperCase().trim()));
+
+      const pendingEmployees = parsed.employees.filter(emp => {
+        const uid = (emp.id || '').toUpperCase().trim();
+        return uid && !existingIds.has(uid) && !dismissedSet.has(uid);
+      });
+
+      // Jika seluruh karyawan cadangan sudah ada di database saat ini, bersihkan backup usang
+      if (pendingEmployees.length === 0) {
+        localStorage.removeItem('hotel_employees_safety_backup');
+        return null;
+      }
+
+      return {
+        ...parsed,
+        count: pendingEmployees.length,
+        employees: pendingEmployees
+      };
     } catch (e) {
       return null;
     }
@@ -1055,15 +1078,26 @@ const Store = {
   async restoreSafetyBackupEmployees() {
     const backup = this.getSafetyBackup();
     if (backup && Array.isArray(backup.employees) && backup.employees.length > 0) {
-      localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(backup.employees));
+      const currentEmployees = Store.getEmployees();
+      const existingIds = new Set(currentEmployees.map(e => (e.id || '').toUpperCase().trim()));
+
+      const toAdd = backup.employees.filter(e => {
+        const uid = (e.id || '').toUpperCase().trim();
+        return uid && !existingIds.has(uid);
+      });
+
+      const mergedEmployees = [...currentEmployees, ...toAdd];
+      localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(mergedEmployees));
+      localStorage.removeItem('hotel_employees_safety_backup');
+
       // Sinkronkan ke MySQL
       await Store.apiPost('restore_employees_safety', {});
       await Store.syncWithBackend(true);
       return {
         success: true,
-        count: backup.employees.length,
+        count: toAdd.length,
         timestamp: backup.timestamp,
-        message: `Berhasil memulihkan ${backup.employees.length} data karyawan dari cadangan pengaman!`
+        message: `Berhasil memulihkan ${toAdd.length} data karyawan dari cadangan pengaman!`
       };
     }
 
@@ -1071,6 +1105,7 @@ const Store = {
     const res = await Store.apiPost('restore_employees_safety', {});
     if (res && res.success) {
       await Store.syncWithBackend(true);
+      localStorage.removeItem('hotel_employees_safety_backup');
       return {
         success: true,
         count: res.restored_count || 0,

@@ -957,6 +957,12 @@ const EmployeesManager = {
     if (!tbody) return;
 
     let employees = Store.getEmployees();
+    const totalAll = employees.length;
+
+    // Perbarui badge jumlah karyawan aktif
+    if (countBadge) {
+      countBadge.innerText = `${totalAll} Karyawan`;
+    }
 
     // Filters
     const searchVal = (document.getElementById('emp-search-input')?.value || '').toLowerCase().trim();
@@ -979,15 +985,32 @@ const EmployeesManager = {
       employees = employees.filter(e => e.status === statusVal);
     }
 
+    if (countBadge && (searchVal || deptVal || statusVal)) {
+      countBadge.innerText = `${employees.length} dari ${totalAll} Karyawan`;
+    }
+
+    // Tombol Pulihkan: Hanya muncul jika ada data cadangan yang BELUM ada di database
     const undoBtn = document.getElementById('btn-undo-clear-emp');
     const hasBackup = Store.getSafetyBackup();
     if (undoBtn) {
-      if (hasBackup) {
+      if (hasBackup && hasBackup.count > 0) {
         undoBtn.classList.remove('hidden');
         undoBtn.innerHTML = `<i class="fa-solid fa-rotate-left text-amber-600"></i> Pulihkan (${hasBackup.count} Karyawan)`;
       } else {
         undoBtn.classList.add('hidden');
       }
+
+      // Verifikasi asynchronous ke SafetyBackupCandidates (MySQL & Soft Delete) agar selalu 100% sinkron
+      Store.getSafetyBackupCandidates().then(candidates => {
+        const btn = document.getElementById('btn-undo-clear-emp');
+        if (!btn) return;
+        if (candidates && candidates.length > 0) {
+          btn.classList.remove('hidden');
+          btn.innerHTML = `<i class="fa-solid fa-rotate-left text-amber-600"></i> Pulihkan (${candidates.length} Karyawan)`;
+        } else {
+          btn.classList.add('hidden');
+        }
+      }).catch(() => {});
     }
 
     if (employees.length === 0) {
