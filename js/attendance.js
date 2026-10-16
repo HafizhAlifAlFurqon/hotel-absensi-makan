@@ -72,10 +72,9 @@ const AttendanceManager = {
         if (pillsContainer) {
           pillsContainer.innerHTML = tenants.map(t => {
             const isActive = t.id === tenantKey;
-            const tenantArgument = Store.escapeHtml(JSON.stringify(t.id));
             return `
-              <button onclick="AttendanceManager.switchCanteenPageTenant(${tenantArgument})" class="px-3 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${isActive ? 'bg-emerald-600 text-white shadow-xs' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'}">
-                <i class="fa-solid fa-store mr-1"></i> ${Store.escapeHtml(t.name)}
+              <button onclick="AttendanceManager.switchCanteenPageTenant('${t.id}')" class="px-3 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${isActive ? 'bg-emerald-600 text-white shadow-xs' : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'}">
+                <i class="fa-solid fa-store mr-1"></i> ${t.name}
               </button>
             `;
           }).join('');
@@ -372,9 +371,6 @@ const AttendanceManager = {
   renderTenantHeader(tenantKey) {
     const s = Store.getSettings();
     const tenantName = Store.getTenantName(tenantKey);
-    const safeTenantName = Store.escapeHtml(tenantName);
-    const safeHotelName = Store.escapeHtml(s.hotelName);
-    const safeQrText = JSON.stringify(`DEPOT:${tenantKey}`).replace(/</g, '\\u003c');
     const titleEl = document.getElementById(`${tenantKey}-title`);
     const badgeEl = document.getElementById(`${tenantKey}-header-badge`);
 
@@ -450,7 +446,7 @@ const AttendanceManager = {
         <div class="mt-2 p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-800 flex items-start gap-2">
           <i class="fa-solid fa-circle-exclamation text-rose-600 mt-0.5"></i>
           <div>
-            <span class="font-bold">Sudah Makan Hari Ini:</span> di <b>${Store.escapeHtml(alreadyEaten.tenantName)}</b> pukul <b>${alreadyEaten.time}</b> (${alreadyEaten.shift}).
+            <span class="font-bold">Sudah Makan Hari Ini:</span> di <b>${alreadyEaten.tenantName}</b> pukul <b>${alreadyEaten.time}</b> (${alreadyEaten.shift}).
           </div>
         </div>
       `;
@@ -532,7 +528,7 @@ const AttendanceManager = {
                 <b>${res.record.employeeName}</b> (${res.record.employeeId}) • ${res.record.department}
               </p>
               <p class="text-xs text-emerald-100">
-                Shift: <b>${res.record.shift}</b> • Pukul: <b>${res.record.time} WIB</b> • Depot: <b>${Store.escapeHtml(res.record.tenantName)}</b>
+                Shift: <b>${res.record.shift}</b> • Pukul: <b>${res.record.time} WIB</b> • Depot: <b>${res.record.tenantName}</b>
               </p>
             </div>
           </div>
@@ -743,7 +739,7 @@ const AttendanceManager = {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>QR Stand Meja - ${safeTenantName}</title>
+        <title>QR Stand Meja - ${tenantName}</title>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
         <style>
           body {
@@ -823,9 +819,9 @@ const AttendanceManager = {
       </head>
       <body>
         <div class="stand-card">
-          <div class="hotel-header">${safeHotelName}</div>
+          <div class="hotel-header">${s.hotelName}</div>
           <h1 class="stand-title">Scan Absensi Makan</h1>
-          <div class="depot-name">${safeTenantName}</div>
+          <div class="depot-name">${tenantName}</div>
           <div class="qr-box">
             <div id="stand-qrcode"></div>
           </div>
@@ -841,7 +837,7 @@ const AttendanceManager = {
         </div>
         <script>
           new QRCode(document.getElementById('stand-qrcode'), {
-            text: ${safeQrText},
+            text: 'DEPOT:${tenantKey}',
             width: 200,
             height: 200,
             colorDark: '#0f172a',
@@ -862,9 +858,6 @@ const AttendanceManager = {
     const tenantName = Store.getTenantName(tenantKey);
     const mainEl = document.querySelector('main');
     if (!mainEl) return;
-    const safeTenantName = Store.escapeHtml(tenantName);
-    const safeTenantKey = Store.escapeHtml(tenantKey);
-    const tenantKeyArgument = Store.escapeHtml(JSON.stringify(tenantKey));
 
     const section = document.createElement('section');
     section.id = `page-${tenantKey}`;
@@ -877,16 +870,16 @@ const AttendanceManager = {
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <h2 id="${safeTenantKey}-title" class="text-xl font-extrabold text-slate-900 tracking-tight">${safeTenantName}</h2>
-              <span id="${safeTenantKey}-header-badge" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">Kantin</span>
+              <h2 id="${tenantKey}-title" class="text-xl font-extrabold text-slate-900 tracking-tight">${tenantName}</h2>
+              <span id="${tenantKey}-header-badge" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">Kantin</span>
             </div>
-            <p class="text-xs text-slate-500 mt-0.5">Kasir absensi makan karyawan untuk ${safeTenantName}</p>
+            <p class="text-xs text-slate-500 mt-0.5">Kasir absensi makan karyawan untuk ${tenantName}</p>
           </div>
         </div>
 
         <div class="flex items-center gap-2">
           <label class="text-xs font-semibold text-slate-600">Pilihan Tanggal Hari Ini:</label>
-          <input type="date" id="${safeTenantKey}-date-input" onchange="AttendanceManager.renderTodayList(${tenantKeyArgument})" class="px-3 py-1.5 text-xs font-semibold border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50">
+          <input type="date" id="${tenantKey}-date-input" onchange="AttendanceManager.renderTodayList('${tenantKey}')" class="px-3 py-1.5 text-xs font-semibold border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50">
         </div>
       </div>
 
@@ -894,25 +887,25 @@ const AttendanceManager = {
         <div class="lg:col-span-7 space-y-5">
           <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
             <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
-              <button id="${safeTenantKey}-btn-tab-scanner" onclick="AttendanceManager.switchCanteenTab(${tenantKeyArgument}, 'scanner')" class="px-3.5 py-1.5 text-xs font-bold rounded-lg shadow-xs transition bg-emerald-600 text-white">
+              <button id="${tenantKey}-btn-tab-scanner" onclick="AttendanceManager.switchCanteenTab('${tenantKey}', 'scanner')" class="px-3.5 py-1.5 text-xs font-bold rounded-lg shadow-xs transition bg-emerald-600 text-white">
                 <i class="fa-solid fa-camera mr-1.5"></i> Kasir Scan Karyawan
               </button>
-              <button id="${safeTenantKey}-btn-tab-stand" onclick="AttendanceManager.switchCanteenTab(${tenantKeyArgument}, 'stand')" class="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
+              <button id="${tenantKey}-btn-tab-stand" onclick="AttendanceManager.switchCanteenTab('${tenantKey}', 'stand')" class="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition">
                 <i class="fa-solid fa-qrcode mr-1.5"></i> Tampilkan QR Meja Kasir
               </button>
             </div>
 
-            <div id="${safeTenantKey}-tab-scanner" class="space-y-4">
+            <div id="${tenantKey}-tab-scanner" class="space-y-4">
               <h3 class="font-bold text-slate-900 text-sm flex items-center justify-between">
                 <span class="flex items-center gap-2">
                   <i class="fa-solid fa-qrcode text-emerald-600"></i> Scan QR atau Masukkan ID Karyawan
                 </span>
-                <button id="${safeTenantKey}-btn-toggle-cam" onclick="AttendanceManager.toggleScanner(${tenantKeyArgument})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition flex items-center gap-1.5">
+                <button id="${tenantKey}-btn-toggle-cam" onclick="AttendanceManager.toggleScanner('${tenantKey}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition flex items-center gap-1.5">
                   <i class="fa-solid fa-camera"></i> Buka Kamera Scan QR
                 </button>
               </h3>
 
-              <div id="${safeTenantKey}-qr-reader" class="hidden w-full bg-black rounded-xl overflow-hidden relative"></div>
+              <div id="${tenantKey}-qr-reader" class="hidden w-full bg-black rounded-xl overflow-hidden relative"></div>
 
               <div>
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
@@ -922,11 +915,11 @@ const AttendanceManager = {
                   <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                     <i class="fa-solid fa-id-card"></i>
                   </div>
-                  <input type="text" id="${safeTenantKey}-emp-id-input" placeholder="Contoh: EMP-001 (Tekan Enter untuk konfirmasi)" class="w-full pl-10 pr-4 py-2.5 text-sm font-mono font-bold uppercase rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none transition bg-slate-50">
+                  <input type="text" id="${tenantKey}-emp-id-input" placeholder="Contoh: EMP-001 (Tekan Enter untuk konfirmasi)" class="w-full pl-10 pr-4 py-2.5 text-sm font-mono font-bold uppercase rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none transition bg-slate-50">
                 </div>
               </div>
 
-              <div id="${safeTenantKey}-preview-container">
+              <div id="${tenantKey}-preview-container">
                 <div class="p-6 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-xl">
                   <i class="fa-solid fa-id-badge text-3xl mb-2 text-slate-300"></i>
                   <p class="text-xs font-medium">Scan QR atau ketik ID Karyawan untuk melihat informasi</p>
@@ -934,23 +927,23 @@ const AttendanceManager = {
               </div>
 
               <div>
-                <button id="${safeTenantKey}-btn-confirm" onclick="AttendanceManager.confirmAttendance(${tenantKeyArgument})" class="w-full py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-sm rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+                <button id="${tenantKey}-btn-confirm" onclick="AttendanceManager.confirmAttendance('${tenantKey}')" class="w-full py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-sm rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
                   <i class="fa-solid fa-circle-check text-base"></i> Konfirmasi Absensi Makan
                 </button>
               </div>
 
-              <div id="${safeTenantKey}-result-message"></div>
+              <div id="${tenantKey}-result-message"></div>
             </div>
 
-            <div id="${safeTenantKey}-tab-stand" class="hidden space-y-4 text-center py-4">
+            <div id="${tenantKey}-tab-stand" class="hidden space-y-4 text-center py-4">
               <div class="p-4 bg-emerald-50/70 border border-emerald-200 rounded-2xl max-w-sm mx-auto">
-                <h4 class="font-extrabold text-sm text-slate-900 uppercase tracking-tight">QR Meja Kasir ${safeTenantName}</h4>
+                <h4 class="font-extrabold text-sm text-slate-900 uppercase tracking-tight">QR Meja Kasir ${tenantName}</h4>
                 <p class="text-xs text-slate-500 mt-0.5">Karyawan dapat memindai QR ini dari HP mereka</p>
                 <div class="my-4 p-4 bg-white rounded-2xl shadow-sm border border-emerald-200 inline-block">
-                  <div id="${safeTenantKey}-stand-qr-box" class="flex items-center justify-center min-w-[170px] min-h-[170px]"></div>
+                  <div id="${tenantKey}-stand-qr-box" class="flex items-center justify-center min-w-[170px] min-h-[170px]"></div>
                 </div>
               </div>
-              <button onclick="AttendanceManager.printCanteenStand(${tenantKeyArgument})" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition inline-flex items-center gap-2 cursor-pointer">
+              <button onclick="AttendanceManager.printCanteenStand('${tenantKey}')" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition inline-flex items-center gap-2 cursor-pointer">
                 <i class="fa-solid fa-print"></i> Cetak Stand Meja Kantin (A4)
               </button>
             </div>
@@ -972,11 +965,11 @@ const AttendanceManager = {
                 <h3 class="font-bold text-slate-900 text-sm">Sudah Makan di Kantin Ini</h3>
                 <p class="text-[11px] text-slate-400">Data tanggal terpilih</p>
               </div>
-              <span id="${safeTenantKey}-today-count-badge" class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+              <span id="${tenantKey}-today-count-badge" class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
                 0 Karyawan
               </span>
             </div>
-            <div id="${safeTenantKey}-today-list" class="max-h-[500px] overflow-y-auto space-y-2 pr-1">
+            <div id="${tenantKey}-today-list" class="max-h-[500px] overflow-y-auto space-y-2 pr-1">
             </div>
           </div>
         </div>
@@ -1045,7 +1038,7 @@ const AttendanceManager = {
               <i class="fa-solid fa-triangle-exclamation text-rose-500 mt-0.5"></i>
               <div>
                 <p class="font-bold">Sudah Mengambil Jatah Makan Hari Ini:</p>
-                <p class="mt-0.5">Di <b>${Store.escapeHtml(res.existingAttendance.tenantName || 'Kantin')}</b> pukul <b>${res.existingAttendance.time || ''} WIB</b> (${res.existingAttendance.shift || ''}).</p>
+                <p class="mt-0.5">Di <b>${res.existingAttendance.tenantName || 'Kantin'}</b> pukul <b>${res.existingAttendance.time || ''} WIB</b> (${res.existingAttendance.shift || ''}).</p>
                 <p class="mt-1 text-[11px] text-rose-600 font-medium">Ketentuan: Setiap karyawan hanya memiliki 1x kuota makan per hari.</p>
               </div>
             </div>
@@ -1180,6 +1173,10 @@ const AttendanceManager = {
             </span>
           </div>
           <p class="text-xs text-slate-500 font-mono mt-0.5">${emp.id} &bull; ${emp.department} &bull; ${emp.position || 'Staff'}</p>
+          <div class="flex items-center gap-1.5 mt-1.5 text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg inline-flex border border-emerald-200">
+            <i class="fa-solid fa-key text-amber-500"></i>
+            <span>Password Akun: <b class="font-mono text-slate-700">${emp.password || 'password123'}</b></span>
+          </div>
         </div>
       </div>
     `;
@@ -1199,7 +1196,7 @@ const AttendanceManager = {
             <div>
               <p class="text-xs font-bold text-rose-900">Jatah Makan Hari Ini Sudah Diambil</p>
               <p class="text-[11px] text-rose-700 mt-0.5">
-                Sudah makan di <b>${Store.escapeHtml(recordToday.tenantName)}</b> pukul <b>${recordToday.time}</b> (${recordToday.shift}).
+                Sudah makan di <b>${recordToday.tenantName}</b> pukul <b>${recordToday.time}</b> (${recordToday.shift}).
               </p>
             </div>
           </div>
@@ -1263,7 +1260,7 @@ const AttendanceManager = {
       const c = colors[idx % colors.length];
       return `
         <button onclick="AttendanceManager.simulateScanCanteen('${t.id}')" class="py-2 px-3 rounded-xl ${c.bg} ${c.hover} ${c.text} text-xs font-bold border ${c.border} transition flex items-center justify-center gap-1.5 shadow-xs">
-          <i class="fa-solid fa-store ${c.icon}"></i> Scan Meja ${Store.escapeHtml(t.name)}
+          <i class="fa-solid fa-store ${c.icon}"></i> Scan Meja ${t.name}
         </button>
       `;
     }).join('');
@@ -1352,7 +1349,7 @@ const AttendanceManager = {
           <td class="py-2.5 px-3 text-xs font-bold text-slate-800 font-mono">${r.date} ${r.time}</td>
           <td class="py-2.5 px-3 text-xs font-extrabold text-emerald-800">
             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200">
-              <i class="fa-solid fa-store text-emerald-600"></i> ${Store.escapeHtml(r.tenantName)}
+              <i class="fa-solid fa-store text-emerald-600"></i> ${r.tenantName}
             </span>
           </td>
           <td class="py-2.5 px-3 text-xs">
@@ -1477,7 +1474,7 @@ const AttendanceManager = {
                   Selamat Makan, <b>${res.record.employeeName}</b> (${res.record.employeeId})!
                 </p>
                 <p class="text-xs text-emerald-200 mt-1">
-                  Kantin: <b>${Store.escapeHtml(res.record.tenantName)}</b> &bull; Shift: <b>${res.record.shift}</b> (${res.record.time} WIB)
+                  Kantin: <b>${res.record.tenantName}</b> &bull; Shift: <b>${res.record.shift}</b> (${res.record.time} WIB)
                 </p>
               </div>
             </div>
@@ -1529,7 +1526,7 @@ const AttendanceManager = {
     const noBtn = document.getElementById('canteen-scan-confirm-no');
 
     if (modal && msgEl && yesBtn && noBtn) {
-      msgEl.innerHTML = `Apakah Anda yakin ingin melakukan scan absensi makan di <strong class="text-slate-900 font-extrabold">${Store.escapeHtml(tenantName)}</strong>?`;
+      msgEl.innerHTML = `Apakah Anda yakin ingin melakukan scan absensi makan di <strong class="text-slate-900 font-extrabold">${tenantName}</strong>?`;
       modal.classList.remove('hidden');
 
       const handleYes = () => {
@@ -1558,7 +1555,7 @@ const AttendanceManager = {
   },
 
   // Fitur Ganti Password Sendiri oleh Karyawan
-  async changeCurrentEmployeePassword() {
+  changeCurrentEmployeePassword() {
     const currentEmpId = Auth.getActiveEmployeeId();
     if (!currentEmpId) {
       alert('Tidak ada sesi karyawan aktif.');
@@ -1583,11 +1580,11 @@ const AttendanceManager = {
       return;
     }
 
-    if (newPass.length < 12) {
+    if (newPass.length < 4) {
       if (alertEl) {
         alertEl.innerHTML = `
           <div class="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-medium flex items-center gap-1.5">
-            <i class="fa-solid fa-circle-exclamation text-rose-500"></i> Password minimal 12 karakter.
+            <i class="fa-solid fa-circle-exclamation text-rose-500"></i> Password minimal 4 karakter.
           </div>
         `;
       }
@@ -1605,7 +1602,7 @@ const AttendanceManager = {
       return;
     }
 
-    const res = await Store.updateEmployeePassword(currentEmpId, newPass);
+    const res = Store.updateEmployeePassword(currentEmpId, newPass);
     if (res.success) {
       if (newPassEl) newPassEl.value = '';
       if (confirmPassEl) confirmPassEl.value = '';

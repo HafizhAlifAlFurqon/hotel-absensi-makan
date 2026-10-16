@@ -10,9 +10,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap">
 
-  <!-- Tailwind CSS CDN & Config -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
+  <!-- Tailwind CSS CDN & Config (Bypass Cloudflare Rocket Loader) -->
+  <script data-cfasync="false" src="https://cdn.tailwindcss.com"></script>
+  <script data-cfasync="false">
     tailwind.config = {
       theme: {
         extend: {
@@ -28,7 +28,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
   <!-- Custom Style & Print CSS -->
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=20261016_ultralight">
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col antialiased">
 
@@ -46,7 +46,7 @@
       </div>
     </div>
   </div>
-  <script>
+  <script data-cfasync="false">
     // Safety auto-dismiss: otomatis hilangkan loading screen jika melebihi 600ms
     setTimeout(function() {
       var ls = document.getElementById('app-loading-screen');
@@ -64,9 +64,24 @@
     <div class="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat" style="background-image: url('bg.jpg');"></div>
     <div class="fixed inset-0 z-0 bg-gradient-to-br from-emerald-950/70 via-slate-950/75 to-slate-900/80 backdrop-blur-[1px]"></div>
 
+    <!-- AMBIENT LIQUID FLUID ORBS (BACKGROUND LOGIN) -->
+    <div class="liquid-bg-container pointer-events-none fixed inset-0 overflow-hidden z-0 no-print" aria-hidden="true">
+      <div class="liquid-blob liquid-blob-1"></div>
+      <div class="liquid-blob liquid-blob-2"></div>
+      <div class="liquid-blob liquid-blob-3"></div>
+      <div class="liquid-blob liquid-blob-4"></div>
+      <div class="liquid-blob liquid-blob-5"></div>
+    </div>
+
     <!-- TOP HEADER BAR PADA HALAMAN LOGIN -->
     <header class="relative z-10 w-full p-4 sm:p-5 flex items-center justify-between border-b border-white/10 bg-black/25 backdrop-blur-md">
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2.5 sm:gap-3">
+        <!-- Tombol Kembali jika user sedang ganti akun -->
+        <button id="login-back-btn" onclick="Auth.cancelSwitchAccount()" type="button" class="hidden px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 text-white text-xs font-bold transition flex items-center gap-2 border border-white/25 backdrop-blur-md cursor-pointer shadow-md group" title="Batal ganti akun dan kembali ke aplikasi">
+          <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
+          <span>Kembali</span>
+        </button>
+
         <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-950/50">
           <i class="fa-solid fa-hotel text-lg sm:text-xl"></i>
         </div>
@@ -98,8 +113,29 @@
 
     <!-- CENTER AREA: KARTU LOGIN UTAMA -->
     <main class="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 my-auto">
-      <div class="w-full max-w-md bg-white/95 backdrop-blur-xl rounded-3xl p-6 sm:p-9 shadow-2xl shadow-black/60 border border-white/40 space-y-6 animate-bounce-short">
+      <div class="w-full max-w-md bg-white/90 backdrop-blur-2xl rounded-3xl p-6 sm:p-9 shadow-2xl shadow-black/60 border border-white/50 space-y-6 animate-bounce-short relative overflow-hidden">
         
+        <!-- Specular Liquid Highlight Bar at Top -->
+        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500"></div>
+
+        <!-- BANNER & TOMBOL BATAL GANTI AKUN JIKA USER SUDAH LOGIN -->
+        <div id="login-switch-banner" class="hidden p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-emerald-500/15 border border-emerald-400/40 text-emerald-950 flex flex-col gap-2.5 backdrop-blur-md shadow-xs">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 text-xs font-bold text-emerald-900">
+              <span class="relative flex h-2.5 w-2.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              <span>Login aktif: <b id="login-current-user-name" class="text-emerald-700 font-extrabold">-</b></span>
+            </div>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">Ganti Akun</span>
+          </div>
+          <button type="button" onclick="Auth.cancelSwitchAccount()" class="w-full py-2.5 px-3 rounded-xl bg-white hover:bg-emerald-50 text-slate-800 hover:text-emerald-800 font-bold text-xs transition border border-emerald-300 shadow-sm flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]">
+            <i class="fa-solid fa-arrow-left text-emerald-600"></i>
+            <span>Batal & Kembali ke Aplikasi</span>
+          </button>
+        </div>
+
         <!-- Icon & Salam Pembuka -->
         <div class="text-center space-y-2">
           <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-600/30 flex items-center justify-center mx-auto transform -rotate-3 hover:rotate-0 transition duration-300">
@@ -163,7 +199,7 @@
               <div class="flex items-start gap-2">
                 <span class="w-5 h-5 rounded-md bg-teal-100 text-teal-800 flex items-center justify-center text-[10px] font-bold shrink-0">1</span>
                 <div>
-                  <span class="font-bold text-slate-800">Administrator:</span> Masukkan username dan password yang diberikan oleh pengelola server.
+                  <span class="font-bold text-slate-800">Administrator:</span> Masukkan <code>admin</code> (Password: <code>admin123</code>) untuk membuka Dashboard & seluruh menu.
                 </div>
               </div>
               <div class="flex items-start gap-2">
@@ -179,8 +215,9 @@
                 </div>
               </div>
 
+              <!-- Tombol Cepat / Quick Login Buttons Container -->
               <div class="pt-2 border-t border-slate-200">
-                <p class="text-[11px] text-slate-500">Password bawaan wajib diganti saat login pertama kali.</p>
+                <p class="text-[11px] font-bold text-slate-500 mb-1.5">Akses Cepat (Klik untuk Mengisi Otomatis):</p>
                 <div id="quick-login-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5"></div>
               </div>
             </div>
@@ -198,7 +235,16 @@
   </div>
 
   <!-- ================= SHELL UTAMA APLIKASI (HEADER, NAV, DASHBOARD, DLL.) ================= -->
-  <div id="app-shell" class="min-h-screen flex flex-col hidden">
+  <div id="app-shell" class="min-h-screen flex flex-col hidden relative">
+
+    <!-- AMBIENT LIQUID FLUID ORBS (BACKGROUND DASHBOARD & FITUR) -->
+    <div class="liquid-bg-container pointer-events-none fixed inset-0 overflow-hidden z-0 no-print" aria-hidden="true">
+      <div class="liquid-blob liquid-blob-1"></div>
+      <div class="liquid-blob liquid-blob-2"></div>
+      <div class="liquid-blob liquid-blob-3"></div>
+      <div class="liquid-blob liquid-blob-4"></div>
+      <div class="liquid-blob liquid-blob-5"></div>
+    </div>
 
   <!-- ================= TOP HEADER BAR ================= -->
   <header class="bg-emerald-900 text-white shadow-md sticky top-0 z-30">
@@ -214,9 +260,6 @@
             <h1 class="font-extrabold text-base sm:text-lg tracking-tight leading-none hotel-name-display">
               BeSS Mansion Hotel Surabaya
             </h1>
-            <p class="text-[11px] text-emerald-300 font-medium tracking-wide">
-              Sistem Absensi Makan Karyawan (Kantin & Admin)
-            </p>
           </div>
         </div>
 
@@ -236,7 +279,7 @@
             <i class="fa-regular fa-clock text-emerald-400"></i>
             <span id="header-live-clock">--:--:-- WIB</span>
           </div>
-          <script>
+          <script data-cfasync="false">
             (function() {
               try {
                 var d = new Date();
@@ -322,7 +365,7 @@
   </nav>
 
   <!-- ================= MAIN CONTENT VIEWS ================= -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
 
     <!-- BANNER PERINGATAN PROTOKOL HTTPS (PUBLISH CHECK) -->
     <div id="https-warning-banner" class="hidden mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-300 text-amber-900 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
@@ -952,7 +995,8 @@
           </div>
           
           <div class="p-2 bg-slate-50 rounded-xl border border-slate-100 text-[10px] text-slate-500 flex items-center justify-between">
-            <span>Password akun tidak ditampilkan di halaman ini.</span>
+            <span>Pass Default Karyawan: <code class="font-bold text-slate-700">password123</code></span>
+            <span>Training: <code class="font-bold text-slate-700">nama_depan</code></span>
           </div>
         </div>
 
@@ -975,7 +1019,7 @@
           </div>
           <div class="relative sm:col-span-3">
             <i class="fa-solid fa-key absolute left-3.5 top-3 text-slate-400 text-xs"></i>
-            <input type="password" id="new-canteen-pass" placeholder="Password kasir (minimal 12 karakter)" class="w-full pl-10 pr-4 py-2.5 text-xs font-mono rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none">
+            <input type="text" id="new-canteen-pass" placeholder="Password (Default: kantin123)" class="w-full pl-10 pr-4 py-2.5 text-xs font-mono rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none">
           </div>
           <div class="sm:col-span-2">
             <button onclick="TenantManager.addNewCanteen()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer">
@@ -1077,12 +1121,12 @@
             </label>
             <div class="relative">
               <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-xs text-slate-400"><i class="fa-solid fa-key"></i></span>
-              <input type="password" id="setting-admin-password" placeholder="Kosongkan jika tidak ingin mengubah (min. 12 karakter)" autocomplete="new-password" class="w-full pl-9 pr-10 py-2.5 text-xs font-medium rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-500 outline-none">
+              <input type="password" id="setting-admin-password" placeholder="admin123" class="w-full pl-9 pr-10 py-2.5 text-xs font-medium rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-500 outline-none">
               <button type="button" onclick="togglePasswordVisibility('setting-admin-password', this)" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer">
                 <i class="fa-solid fa-eye text-xs"></i>
               </button>
             </div>
-            <p class="text-[11px] text-slate-400 mt-1">Password baru minimal 12 karakter. Password yang tersimpan tidak ditampilkan.</p>
+            <p class="text-[11px] text-slate-400 mt-1">Default sistem: <code>admin</code> / <code>admin123</code></p>
           </div>
 
           <div id="admin-cred-alert"></div>
@@ -1187,7 +1231,13 @@
           <span id="emp-total-badge" class="px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
             0 Karyawan
           </span>
-          <button type="button" onclick="EmployeesManager.clearAllEmployees()" class="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Hapus semua data contoh agar database bersih untuk diisi data karyawan Anda sendiri">
+          <button id="btn-undo-clear-emp" type="button" onclick="EmployeesManager.promptRestoreBackup()" class="hidden px-3.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Pulihkan data karyawan dari cadangan pengaman otomatis">
+            <i class="fa-solid fa-rotate-left text-amber-600"></i> Pulihkan Terakhir (Undo)
+          </button>
+          <button type="button" onclick="EmployeesManager.promptRecoverFromAttendance()" class="px-3.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Ekstrak profil karyawan secara otomatis dari riwayat transaksi absensi makan jika data terhapus">
+            <i class="fa-solid fa-wand-magic-sparkles text-teal-600"></i> Pulihkan dari Absensi
+          </button>
+          <button type="button" onclick="EmployeesManager.clearAllEmployees()" class="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs" title="Hapus semua data contoh agar database bersih untuk diisi data karyawan Anda sendiri (Cadangan pengaman otomatis disimpan)">
             <i class="fa-solid fa-trash-can"></i> Kosongkan Daftar Karyawan
           </button>
           <button onclick="EmployeesManager.openBatchModal()" class="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
@@ -1240,7 +1290,7 @@
               <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                 Password Login *
               </label>
-              <input type="password" id="emp-form-password" placeholder="Password akun (min. 12 karakter; kosongkan saat edit untuk mempertahankan)" autocomplete="new-password" class="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none">
+              <input type="text" id="emp-form-password" placeholder="Default: password123" class="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none">
             </div>
 
             <div>
@@ -1266,6 +1316,9 @@
           </div>
         </form>
       </div>
+
+      <!-- ALERT CONTAINER UNTUK UNDO / NOTIFIKASI PEMULIHAN -->
+      <div id="emp-table-alert" class="empty:hidden"></div>
 
       <!-- DATABASE KARYAWAN DI BAWAHNYA -->
       <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
@@ -1584,18 +1637,18 @@
         <div class="report-signatures pt-2.5 mt-2.5 border-t border-slate-200 grid grid-cols-3 gap-4 text-center text-xs avoid-break">
           <div>
             <p class="text-slate-500 font-medium mb-7 text-[11px]">Dibuat Oleh,</p>
-            <p class="font-bold text-slate-900 underline font-mono text-[11px]">Petugas HRD / Absensi</p>
-            <p class="text-[9px] text-slate-400">BeSS Mansion Hotel</p>
+            <p class="font-bold text-slate-900 underline font-mono text-[11px]" id="report-sig-left-name">Petugas HRD / Absensi</p>
+            <p class="text-[9px] text-slate-400" id="report-sig-left-sub">BeSS Mansion Hotel Surabaya</p>
           </div>
           <div>
             <p class="text-slate-500 font-medium mb-7 text-[11px]">Diperiksa Oleh,</p>
-            <p class="font-bold text-slate-900 underline font-mono text-[11px]">Finance & Accounting</p>
-            <p class="text-[9px] text-slate-400">BeSS Mansion Hotel</p>
+            <p class="font-bold text-slate-900 underline font-mono text-[11px]" id="report-sig-mid-name">General Cashier</p>
+            <p class="text-[9px] text-slate-400" id="report-sig-mid-sub">Finance & Accounting</p>
           </div>
           <div>
-            <p class="text-slate-500 font-medium mb-7 text-[11px]">Disetujui Oleh,</p>
-            <p class="font-bold text-slate-900 underline font-mono text-[11px]">General Manager</p>
-            <p class="text-[9px] text-slate-400">BeSS Mansion Hotel</p>
+            <p class="text-slate-500 font-medium mb-7 text-[11px]">Mengetahui / Disetujui,</p>
+            <p class="font-bold text-slate-900 underline font-mono text-[11px]" id="report-sig-right-name">Depot Bu Mamie</p>
+            <p class="text-[9px] text-slate-400" id="report-sig-right-sub">Pihak Pengelola Depot</p>
           </div>
         </div>
 
@@ -1812,7 +1865,7 @@
             <p class="text-[11px] font-bold text-slate-800">( ........................................ )</p>
           </div>
           <div>
-            <p class="text-[11px] text-slate-500 mb-7">Surabaya, <span id="training-pdf-signature-date">--/--/----</span><br><span class="font-bold text-slate-700">Pengelola Kantin</span></p>
+            <p class="text-[11px] text-slate-500 mb-7">Surabaya, <span id="training-pdf-signature-date">--/--/----</span><br><span class="font-bold text-slate-700" id="training-pdf-canteen-sign-label">Pengelola Kantin</span></p>
             <div class="w-36 border-b border-slate-400 mx-auto mb-1"></div>
             <p class="text-[11px] font-bold text-slate-800">( ........................................ )</p>
           </div>
@@ -1889,7 +1942,7 @@
 
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Password Akun *</label>
-            <input type="password" id="trn-form-password" autocomplete="new-password" placeholder="Password akun (minimal 12 karakter)" class="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 outline-none">
+            <input type="text" id="trn-form-password" required value="training123" class="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 outline-none">
           </div>
 
           <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
@@ -1975,11 +2028,11 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Password Baru</label>
-                <input type="password" id="emp-portal-new-pass" placeholder="Minimal 12 karakter" autocomplete="new-password" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none">
+                <input type="password" id="emp-portal-new-pass" placeholder="Minimal 4 karakter" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none">
               </div>
               <div>
                 <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Konfirmasi Password Baru</label>
-                <input type="password" id="emp-portal-confirm-pass" placeholder="Ketik ulang password baru" autocomplete="new-password" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none">
+                <input type="password" id="emp-portal-confirm-pass" placeholder="Ketik ulang password baru" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none">
               </div>
             </div>
             <div id="emp-portal-pass-alert"></div>
@@ -2214,7 +2267,7 @@
           Nama Lengkap, Departemen, Jabatan, Password
         </p>
         <p class="text-[11px] text-emerald-800">
-          *Format impor: Nama, Departemen, Jabatan, Password. Password tiap akun wajib dicantumkan dan minimal 12 karakter.
+          *Departemen, Jabatan, dan Password opsional. Jika hanya menuliskan Nama (contoh: <code>Budi Santoso</code>), sistem otomatis membuatkan ID urut (contoh: <code>EMP-016</code>), departemen default, dan password <b>password123</b>.
         </p>
       </div>
 
@@ -2238,6 +2291,35 @@
 
       <div id="batch-modal-alert"></div>
 
+      <!-- PUSAT PEMULIHAN DATA DARURAT -->
+      <div class="pt-2 border-t border-slate-200/80">
+        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+              <i class="fa-solid fa-shield-halved text-emerald-600"></i> Pusat Pemulihan Data Karyawan (Jika Terhapus)
+            </span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">Safety Center</span>
+          </div>
+          <p class="text-[11px] text-slate-500 leading-relaxed">
+            Jika data karyawan pernah tidak sengaja terhapus atau dikosongkan, Anda dapat mengembalikannya secara instan:
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button type="button" onclick="EmployeesManager.closeBatchModal(); EmployeesManager.promptRestoreBackup();" class="p-2.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl text-left transition cursor-pointer">
+              <p class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                <i class="fa-solid fa-rotate-left text-amber-600"></i> Pulihkan Cadangan Otomatis
+              </p>
+              <p class="text-[10px] text-amber-700 mt-0.5">Mengembalikan daftar karyawan yang terakhir dikosongkan.</p>
+            </button>
+            <button type="button" onclick="EmployeesManager.closeBatchModal(); EmployeesManager.promptRecoverFromAttendance();" class="p-2.5 bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded-xl text-left transition cursor-pointer">
+              <p class="text-xs font-bold text-teal-900 flex items-center gap-1.5">
+                <i class="fa-solid fa-wand-magic-sparkles text-teal-600"></i> Rekonstruksi dari Riwayat Absensi
+              </p>
+              <p class="text-[10px] text-teal-700 mt-0.5">Ekstrak profil nama &amp; ID dari riwayat absensi makan.</p>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
         <button type="button" onclick="EmployeesManager.closeBatchModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer">
           Batal
@@ -2245,6 +2327,100 @@
         <button type="button" onclick="EmployeesManager.handleBatchSubmit()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
           <i class="fa-solid fa-users-plus"></i> Simpan Database Karyawan
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL PEMULIHAN DATA KARYAWAN SATU-PER-SATU / TERPILIH ================= -->
+  <div id="emp-recovery-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-4xl w-full shadow-2xl border border-slate-100 space-y-4 max-h-[92vh] flex flex-col animate-fade-in">
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-lg shadow-inner">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-slate-900 text-base">Pusat Pemulihan Data Karyawan (Satu per Satu)</h3>
+            <p class="text-xs text-slate-500">Pilih dan pulihkan data karyawan yang hilang satu per satu atau secara selektif.</p>
+          </div>
+        </div>
+        <button type="button" onclick="EmployeesManager.closeRecoveryModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer" title="Tutup">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Tab Navigasi Sumber Pemulihan -->
+      <div class="flex items-center gap-2 border-b border-slate-200 pb-2 shrink-0">
+        <button id="rec-tab-btn-attendance" type="button" onclick="EmployeesManager.switchRecoveryTab('attendance')" class="px-3.5 py-1.5 text-xs font-bold rounded-xl transition flex items-center gap-2 cursor-pointer bg-teal-600 text-white shadow-xs">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Riwayat Absensi Makan
+          <span id="rec-tab-badge-attendance" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-teal-800 text-teal-100">0</span>
+        </button>
+        <button id="rec-tab-btn-backup" type="button" onclick="EmployeesManager.switchRecoveryTab('backup')" class="px-3.5 py-1.5 text-xs font-bold rounded-xl transition flex items-center gap-2 cursor-pointer text-slate-600 hover:bg-slate-100">
+          <i class="fa-solid fa-shield-heart text-amber-500"></i> Cadangan Pengaman Otomatis
+          <span id="rec-tab-badge-backup" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-200 text-slate-700">0</span>
+        </button>
+      </div>
+
+      <!-- Info Box Edukatif (Penjelasan Lengkap) -->
+      <div id="rec-info-box" class="p-3.5 bg-teal-50 border border-teal-200 rounded-2xl text-teal-950 text-xs shrink-0 space-y-1">
+        <p class="font-extrabold flex items-center gap-1.5 text-teal-900">
+          <i class="fa-solid fa-circle-question text-teal-600"></i> Apa itu Pulihkan dari Riwayat Absensi?
+        </p>
+        <p class="text-[11px] text-teal-800 leading-relaxed">
+          Setiap kali karyawan makan di kantin/depot, transaksi absensi menyimpan <b>snapshot data abadi</b> (Nama Lengkap, ID Karyawan, Departemen, &amp; Jabatan). Jika master data karyawan terhapus, Anda dapat memilih dan mengembalikan karyawan yang diinginkan <b>satu per satu</b> melalui tombol <b>"Pulihkan Karyawan Ini"</b> di bawah tanpa harus memulihkan massal.
+        </p>
+      </div>
+
+      <!-- Toolbar Filter & Search -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
+        <div class="relative flex-1">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
+          <input type="text" id="rec-search-input" oninput="EmployeesManager.filterRecoveryList()" placeholder="Cari nama, ID, departemen, atau jabatan..." class="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-teal-500 outline-none bg-white">
+        </div>
+        <div class="flex items-center gap-3">
+          <label class="flex items-center gap-1.5 text-xs font-bold text-slate-700 cursor-pointer select-none">
+            <input type="checkbox" id="rec-select-all" onchange="EmployeesManager.toggleSelectAllRecovery(this.checked)" class="rounded text-teal-600 focus:ring-teal-500 cursor-pointer">
+            <span>Pilih Semua</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Container Tabel Kandidat (Scrollable) -->
+      <div class="flex-1 overflow-y-auto border border-slate-200 rounded-2xl min-h-[220px]">
+        <table class="w-full text-left border-collapse">
+          <thead class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-wider sticky top-0 border-b border-slate-200 shadow-2xs">
+            <tr>
+              <th class="py-2.5 px-3 w-8">#</th>
+              <th class="py-2.5 px-3">ID Karyawan</th>
+              <th class="py-2.5 px-3">Nama Karyawan</th>
+              <th class="py-2.5 px-3">Departemen / Jabatan</th>
+              <th class="py-2.5 px-3">Jejak Terakhir</th>
+              <th class="py-2.5 px-3 text-right">Aksi Pulihkan</th>
+            </tr>
+          </thead>
+          <tbody id="rec-table-body" class="divide-y divide-slate-100 text-xs">
+            <!-- Data baris akan dirender dinamis -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer Aksi -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100 shrink-0">
+        <div class="text-xs text-slate-500">
+          <span id="rec-selected-count" class="font-bold text-slate-800">0</span> karyawan dipilih
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="EmployeesManager.closeRecoveryModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer">
+            Tutup
+          </button>
+          <button id="rec-btn-restore-selected" type="button" onclick="EmployeesManager.restoreSelectedRecovery()" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+            <i class="fa-solid fa-user-check"></i> Pulihkan yang Dipilih
+          </button>
+          <button id="rec-btn-restore-all" type="button" onclick="EmployeesManager.restoreAllRecovery()" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-extrabold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-users"></i> Pulihkan Semua
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -2390,7 +2566,7 @@
           <div class="space-y-1">
             <h5 class="font-bold text-slate-900 text-xs">Uji Coba Live & Ganti Password Admin Default</h5>
             <p class="text-slate-600 leading-relaxed">
-              Buka website lewat alamat HTTPS server hotel. Login awal akan meminta penggantian password bawaan. Pastikan admin dan seluruh akun kantin/karyawan memakai password unik sebelum sistem dipakai.
+              Buka website lewat domain Anda (misal: <code>https://absen.bessmansionhotel.com</code>). Login sebagai admin, pastikan database tersinkronisasi, dan ganti password admin default (<code>admin123</code>) ke password baru demi keamanan properti hotel.
             </p>
           </div>
         </div>
@@ -2530,7 +2706,7 @@
     </div>
   </div>
 
-  <script>
+  <script data-cfasync="false">
     function togglePasswordVisibility(inputId, btn) {
       const input = document.getElementById(inputId);
       if (!input) return;
@@ -2550,13 +2726,7 @@
       }
     }
 
-    function escapeLoginMessage(message) {
-      return String(message || '').replace(/[&<>"']/g, char => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-      })[char]);
-    }
-
-    async function handleStandaloneLoginSubmit() {
+    function handleStandaloneLoginSubmit() {
       const idEl = document.getElementById('login-page-identifier');
       const passEl = document.getElementById('login-page-password');
       const alertEl = document.getElementById('login-page-alert');
@@ -2591,15 +2761,15 @@
         btnEl.disabled = true;
       }
 
-      setTimeout(async () => {
+      setTimeout(() => {
         try {
-          const res = await Auth.loginWithPassword(id, pass);
+          const res = Auth.loginWithPassword(id, pass);
           if (!res.success) {
             if (alertEl) {
               alertEl.innerHTML = `
                 <div class="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-bold flex items-center gap-2">
                   <i class="fa-solid fa-circle-exclamation text-rose-500 text-base"></i>
-                  <span>${escapeLoginMessage(res.message || 'ID/Username atau Password salah!')}</span>
+                  <span>${res.message || 'ID/Username atau Password salah!'}</span>
                 </div>
               `;
             }
@@ -2670,13 +2840,74 @@
     function renderQuickLoginButtons() {
       const container = document.getElementById('quick-login-grid');
       if (!container) return;
-      container.replaceChildren();
+      const tenants = (window.Store && typeof Store.getTenants === 'function') ? Store.getTenants() : [
+        { id: 'tenant1', name: 'Depot Bu Mamie', password: 'depota123' },
+        { id: 'tenant2', name: 'Depot Bu Yuli', password: 'depotyuli123' }
+      ];
+      const emps = (window.Store && typeof Store.getEmployees === 'function') ? Store.getEmployees().filter(e => e.status === 'Aktif') : [];
+      const s = (window.Store && typeof Store.getSettings === 'function') ? Store.getSettings() : { adminUsername: 'admin', adminPassword: 'admin123' };
+
+      let html = '';
+
+      // Tampilkan tombol karyawan terdaftar nyata jika ada
+      if (emps.length > 0) {
+        const displayEmps = emps.slice(0, 2);
+        displayEmps.forEach(emp => {
+          html += `
+            <button type="button" onclick="quickFillAndLogin('${emp.id}', '${emp.password || 'password123'}')" class="p-2.5 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/50 transition flex items-center justify-between text-left group cursor-pointer ${emps.length === 1 ? 'sm:col-span-2' : ''}">
+              <div class="flex items-center gap-2 min-w-0">
+                <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center justify-center shrink-0">${emp.name.charAt(0)}</div>
+                <div class="truncate">
+                  <span class="font-bold text-xs text-slate-800 block truncate leading-tight">${emp.name}</span>
+                  <span class="text-[10px] text-slate-500 font-mono">${emp.id} (pass: ${emp.password || 'password123'})</span>
+                </div>
+              </div>
+              <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 shrink-0 ml-1">Karyawan</span>
+            </button>
+          `;
+        });
+      }
+
+      // Kasir Kantin
+      tenants.forEach((t, idx) => {
+        const isEven = idx % 2 === 0;
+        html += `
+          <button type="button" onclick="quickFillAndLogin('${t.id}', '${t.password || 'kantin123'}')" class="p-2.5 rounded-xl border border-slate-200 hover:border-${isEven ? 'blue' : 'purple'}-500 hover:bg-${isEven ? 'blue' : 'purple'}-50/50 transition flex items-center justify-between text-left group cursor-pointer">
+            <div class="flex items-center gap-2 min-w-0">
+              <div class="w-7 h-7 rounded-lg bg-${isEven ? 'blue' : 'purple'}-100 text-${isEven ? 'blue' : 'purple'}-800 font-bold text-xs flex items-center justify-center shrink-0">
+                <i class="fa-solid ${isEven ? 'fa-bowl-food' : 'fa-utensils'}"></i>
+              </div>
+              <div class="truncate">
+                <span class="font-bold text-xs text-slate-800 block truncate leading-tight label-${t.id}-name">${t.name}</span>
+                <span class="text-[10px] text-slate-500 font-mono">${t.id} (pass: ${t.password || 'kantin123'})</span>
+              </div>
+            </div>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-${isEven ? 'blue' : 'purple'}-100 text-${isEven ? 'blue' : 'purple'}-800 shrink-0 ml-1">Kasir</span>
+          </button>
+        `;
+      });
+
+      // Admin Utama
+      html += `
+        <button type="button" onclick="quickFillAndLogin('${s.adminUsername || 'admin'}', '${s.adminPassword || 'admin123'}')" class="p-2.5 rounded-xl border border-slate-200 hover:border-teal-500 hover:bg-teal-50/50 transition flex items-center justify-between text-left group cursor-pointer sm:col-span-2">
+          <div class="flex items-center gap-2 min-w-0">
+            <div class="w-7 h-7 rounded-lg bg-teal-100 text-teal-800 font-bold text-xs flex items-center justify-center shrink-0"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="truncate">
+              <span class="font-bold text-xs text-slate-800 block truncate leading-tight">Administrator Hotel (Akses Penuh)</span>
+              <span class="text-[10px] text-slate-500 font-mono">${s.adminUsername || 'admin'} (pass: ${s.adminPassword || 'admin123'})</span>
+            </div>
+          </div>
+          <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-teal-100 text-teal-800 shrink-0 ml-1">Admin Utama</span>
+        </button>
+      `;
+
+      container.innerHTML = html;
     }
     window.renderQuickLoginButtons = renderQuickLoginButtons;
   </script>
 
   <!-- Footer -->
-  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 relative z-10">
     <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
       <p>&copy; 2026 <span class="hotel-name-display font-semibold">BeSS Mansion Hotel Surabaya</span>. Sistem Absensi Makan Karyawan.</p>
       <p class="text-[11px] text-slate-400">Shift Siang (11.00-15.00) &bull; Shift Sore (15.01-19.00) &bull; 1x Makan Per Hari</p>
@@ -2686,22 +2917,22 @@
   </div> <!-- END #app-shell -->
 
   <!-- ================= SCRIPTS ================= -->
-  <!-- Library Pustaka Lokal (Cepat & Bebas Lag Internet) -->
-  <script src="js/libs/qrcode.min.js"></script>
-  <script src="js/libs/html5-qrcode.min.js"></script>
-  <script src="js/libs/chart.min.js"></script>
-  <script src="js/libs/html2pdf.bundle.min.js"></script>
+  <!-- Library Pustaka Lokal (Cepat & Bebas Lag Internet, Bypass Cloudflare Rocket Loader) -->
+  <script data-cfasync="false" src="js/libs/qrcode.min.js"></script>
+  <script data-cfasync="false" src="js/libs/html5-qrcode.min.js"></script>
+  <script data-cfasync="false" src="js/libs/chart.min.js"></script>
+  <script data-cfasync="false" src="js/libs/html2pdf.bundle.min.js"></script>
 
-  <script src="js/store.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/dashboard.js"></script>
-  <script src="js/attendance.js"></script>
-  <script src="js/training.js"></script>
-  <script src="js/tenants.js"></script>
-  <script src="js/employees.js"></script>
-  <script src="js/qr_cards.js"></script>
-  <script src="js/reports.js"></script>
-  <script src="js/app.js"></script>
+  <script data-cfasync="false" src="js/store.js?v=20261016_hosting"></script>
+  <script data-cfasync="false" src="js/auth.js?v=20261016_hosting"></script>
+  <script data-cfasync="false" src="js/dashboard.js?v=20261016_hosting"></script>
+  <script data-cfasync="false" src="js/attendance.js?v=20261016_hosting"></script>
+  <script data-cfasync="false" src="js/training.js?v=20261016_hosting"></script>
+  <script data-cfasync="false" src="js/tenants.js?v=20261016_hosting"></script>
+  <script data-cfasync="false" src="js/employees.js?v=20261016_hosting"></script>
+  <script data-cfasync="false" src="js/qr_cards.js?v=20261016_hosting"></script>
+  <script data-cfasync="false" src="js/reports.js?v=20261016_hosting"></script>
+  <script data-cfasync="false" src="js/app.js?v=20261016_hosting"></script>
 
 </body>
 </html>

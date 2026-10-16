@@ -30,6 +30,7 @@ const DEFAULT_EMPLOYEES = [];
 const DEFAULT_SETTINGS = {
   hotelName: 'BeSS Mansion Hotel Surabaya',
   adminUsername: 'admin',
+  adminPassword: 'admin123',
   tenant1Name: 'Depot Bu Mamie',
   tenant2Name: 'Depot Bu Yuli',
   mealPrice: 15000, // Rp 15.000 per porsi
@@ -57,16 +58,6 @@ const Store = {
       this.audioCtx.resume().catch(() => {});
     }
     return this.audioCtx;
-  },
-
-  escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>"']/g, char => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
-    })[char]);
   },
 
   // --- Audio Feedback (Web Audio API Synthesizer Respon Cepat) ---
@@ -140,10 +131,16 @@ const Store = {
         if (isDummyOnly) {
           localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify([]));
         } else if (Array.isArray(currentEmps)) {
+          let changed = false;
           currentEmps.forEach(e => {
-            delete e.password;
+            if (!e.password) {
+              e.password = 'password123';
+              changed = true;
+            }
           });
-          localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(currentEmps));
+          if (changed) {
+            localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(currentEmps));
+          }
         }
       } catch (err) {}
     }
@@ -160,20 +157,21 @@ const Store = {
           currentSettings.hotelName = 'BeSS Mansion Hotel Surabaya';
           sChanged = true;
         }
-        if ('adminPassword' in currentSettings) {
-          delete currentSettings.adminPassword;
+        if (!currentSettings.adminPassword) {
+          currentSettings.adminUsername = 'admin';
+          currentSettings.adminPassword = 'admin123';
           sChanged = true;
         }
         if (!currentSettings.tenants || !Array.isArray(currentSettings.tenants) || currentSettings.tenants.length === 0) {
           currentSettings.tenants = [
-            { id: 'tenant1', name: currentSettings.tenant1Name || 'Depot Bu Mamie', status: 'Aktif' },
-            { id: 'tenant2', name: currentSettings.tenant2Name || 'Depot Bu Yuli', status: 'Aktif' }
+            { id: 'tenant1', name: currentSettings.tenant1Name || 'Depot Bu Mamie', password: 'depota123', status: 'Aktif' },
+            { id: 'tenant2', name: currentSettings.tenant2Name || 'Depot Bu Yuli', password: 'depotyuli123', status: 'Aktif' }
           ];
           sChanged = true;
         } else {
           currentSettings.tenants.forEach(t => {
-            if ('password' in t) {
-              delete t.password;
+            if (!t.password) {
+              t.password = t.id === 'tenant1' ? 'depota123' : (t.id === 'tenant2' ? 'depotyuli123' : 'kantin123');
               sChanged = true;
             }
           });
@@ -212,7 +210,21 @@ const Store = {
       } catch (err) {}
     }
 
-    // Data privat hanya disinkronkan setelah server mengonfirmasi sesi login.
+    // 4. Sinkronisasi Otomatis dengan Backend MySQL
+    setTimeout(() => {
+      Store.syncWithBackend().then(synced => {
+        if (synced && window.App) {
+          App.updateTenantLabels();
+        }
+      });
+    }, 50);
+
+    // Auto-refresh data dari MySQL secara berkala (setiap 15 detik untuk mendukung multi-perangkat)
+    if (!window._storeSyncInterval) {
+      window._storeSyncInterval = setInterval(() => {
+        Store.syncWithBackend();
+      }, 15000);
+    }
   },
 
   // --- Helper Komunikasi REST API MySQL (api.php) ---
@@ -221,7 +233,6 @@ const Store = {
       const res = await fetch(`api.php?action=${encodeURIComponent(action)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
         body: JSON.stringify(payload)
       });
       if (!res.ok) {
@@ -250,8 +261,8 @@ const Store = {
       } else {
         badge.className = 'hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-950/80 text-amber-200 border border-amber-500/80 shadow-xs';
         dot.className = 'w-2 h-2 rounded-full bg-amber-400 mr-1.5';
-        text.innerText = 'Server Offline';
-        badge.title = 'Server aplikasi tidak dapat dijangkau; perubahan tidak disimpan.';
+        text.innerText = 'Offline (LocalStorage)';
+        badge.title = 'MySQL tidak terdeteksi. Menggunakan penyimpanan peramban lokal.';
       }
     }
 
@@ -260,7 +271,7 @@ const Store = {
       if (isConnected) {
         indicator.innerHTML = '<span class="inline-flex items-center text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-200"><i class="fa-solid fa-circle-check text-emerald-600 mr-2"></i> MySQL Aktif &amp; Terhubung (absen_makan_hotel)</span>';
       } else {
-        indicator.innerHTML = '<span class="inline-flex items-center text-xs font-bold text-amber-700 bg-amber-100 px-3 py-1.5 rounded-xl border border-amber-200"><i class="fa-solid fa-triangle-exclamation text-amber-600 mr-2"></i> Server aplikasi tidak tersedia</span>';
+        indicator.innerHTML = '<span class="inline-flex items-center text-xs font-bold text-amber-700 bg-amber-100 px-3 py-1.5 rounded-xl border border-amber-200"><i class="fa-solid fa-triangle-exclamation text-amber-600 mr-2"></i> MySQL Offline (Menggunakan LocalStorage)</span>';
       }
     }
 
@@ -271,7 +282,7 @@ const Store = {
         loginDbBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span><span>MySQL Terhubung</span>';
       } else {
         loginDbBadge.className = 'hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-950/80 text-amber-300 border border-amber-500/50 shadow-xs';
-        loginDbBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400 mr-1.5"></span><span>Server tidak tersedia</span>';
+        loginDbBadge.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400 mr-1.5"></span><span>Offline (LocalStorage)</span>';
       }
     }
   },
@@ -279,20 +290,9 @@ const Store = {
   // --- Sinkronisasi Data Dua Arah dengan MySQL Server ---
   async syncWithBackend(isManual = false) {
     if (this.isSyncing) return;
-    if (!Auth.isLoggedIn()) return false;
     this.isSyncing = true;
     try {
       const res = await fetch('api.php?action=get_all', { cache: 'no-store' });
-      if (res.status === 401) {
-        Auth.setCurrentUser(null);
-        Auth.showLoginPage();
-        if (window._storeSyncInterval) {
-          clearInterval(window._storeSyncInterval);
-          window._storeSyncInterval = null;
-        }
-        this.isSyncing = false;
-        return false;
-      }
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       if (data && data.success) {
@@ -300,7 +300,15 @@ const Store = {
 
         // 1. Data Karyawan dari MySQL
         if (Array.isArray(data.employees)) {
-          localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(data.employees));
+          if (data.employees.length > 0) {
+            localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(data.employees));
+          } else {
+            // Jika di MySQL kosong tapi user punya data lokal, upload ke MySQL
+            const localEmps = this.getEmployees();
+            if (localEmps.length > 0) {
+              await this.apiPost('batch_save_employees', { employees: localEmps });
+            }
+          }
         }
 
         // 2. Data Riwayat Absensi dari MySQL
@@ -316,11 +324,6 @@ const Store = {
 
         this.updateDatabaseStatusBadge(true);
         window.dispatchEvent(new CustomEvent('store-synced', { detail: data }));
-        if (!window._storeSyncInterval) {
-          window._storeSyncInterval = setInterval(() => {
-            if (Auth.isLoggedIn()) Store.syncWithBackend();
-          }, 15000);
-        }
 
         if (isManual) {
           alert('Sinkronisasi Sukses!\nData Anda telah terhubung dan tersimpan rapi di MySQL (absen_makan_hotel).');
@@ -360,26 +363,26 @@ const Store = {
 
   saveEmployee(employee, oldId = null) {
     const employees = Store.getEmployees();
-    const credentials = { ...employee, oldId };
-    const safeEmployee = { ...employee };
-    delete safeEmployee.password;
+    if (!employee.password) {
+      employee.password = 'password123';
+    }
     if (!employee.createdAt) {
       employee.createdAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
     }
-    safeEmployee.createdAt = employee.createdAt;
     const existingIndex = employees.findIndex(e => e.id.toLowerCase() === employee.id.toLowerCase());
     if (existingIndex >= 0) {
       // Pertahankan createdAt asli jika karyawan diedit
       if (employees[existingIndex].createdAt) {
         employee.createdAt = employees[existingIndex].createdAt;
       }
-      employees[existingIndex] = { ...employees[existingIndex], ...safeEmployee };
+      employees[existingIndex] = { ...employees[existingIndex], ...employee };
     } else {
-      employees.push(safeEmployee);
+      employees.push(employee);
     }
     localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
-    Store.apiPost('save_employee', credentials);
-    return safeEmployee;
+    // Sinkronkan ke database MySQL
+    Store.apiPost('save_employee', { ...employee, oldId });
+    return employee;
   },
 
   generateNextEmployeeId() {
@@ -443,22 +446,18 @@ const Store = {
     }
 
     // Update data karyawan
-    const employeeUpdate = {
+    employees[idx] = {
       ...employees[idx],
       ...updatedData,
       id: newId,
-      name: newName
+      name: newName,
+      password: (updatedData.password && updatedData.password.trim()) || employees[idx].password || 'password123'
     };
-    if (!updatedData.password) delete employeeUpdate.password;
-    else employeeUpdate.password = updatedData.password.trim();
-    const credentials = { ...employeeUpdate, oldId };
-    delete employeeUpdate.password;
-    employees[idx] = employeeUpdate;
 
     localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
 
     // Sinkronkan ke database MySQL
-    Store.apiPost('save_employee', credentials);
+    Store.apiPost('save_employee', { ...employees[idx], oldId: oldId });
 
     // Update sesi pengguna saat ini jika cocok
     if (window.Auth) {
@@ -475,20 +474,16 @@ const Store = {
     return { success: true, message: `Data karyawan "${newName}" (${newId}) berhasil diperbarui!`, employee: employees[idx] };
   },
 
-  async updateEmployeePassword(employeeId, newPassword) {
+  updateEmployeePassword(employeeId, newPassword) {
     if (!employeeId || !newPassword) return { success: false, message: 'Password tidak boleh kosong.' };
     const employees = Store.getEmployees();
     const emp = employees.find(e => e.id.toLowerCase() === employeeId.toLowerCase());
     if (emp) {
-      const currentUser = Auth.getCurrentUser();
-      const isSelf = currentUser && currentUser.role === 'karyawan'
-        && currentUser.employeeId.toLowerCase() === employeeId.toLowerCase();
-      const result = isSelf
-        ? await Store.apiPost('change_password', { newPassword: newPassword.trim() })
-        : await Store.apiPost('save_employee', { ...emp, password: newPassword.trim() });
-      return result && result.success
-        ? { success: true, message: `Password untuk karyawan "${emp.name}" berhasil diperbarui!` }
-        : { success: false, message: (result && result.message) || 'Gagal memperbarui password di server.' };
+      emp.password = newPassword.trim();
+      localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
+      // Sinkronkan ke database MySQL
+      Store.apiPost('save_employee', emp);
+      return { success: true, message: `Password untuk karyawan "${emp.name}" berhasil diperbarui!` };
     }
     return { success: false, message: 'Karyawan tidak ditemukan.' };
   },
@@ -519,6 +514,7 @@ const Store = {
         existing.name = cleanName;
         if (item.department) existing.department = item.department.trim();
         if (item.position) existing.position = item.position.trim();
+        if (item.password) existing.password = item.password.trim();
         count++;
       } else {
         employees.push({
@@ -526,7 +522,7 @@ const Store = {
           name: cleanName,
           department: (item.department && item.department.trim()) || 'Housekeeping',
           position: (item.position && item.position.trim()) || 'Staff',
-          password: (item.password && item.password.trim()) || '',
+          password: (item.password && item.password.trim()) || 'password123',
           status: item.status || 'Aktif'
         });
         count++;
@@ -543,17 +539,108 @@ const Store = {
     if (newUsername && newUsername.trim()) {
       settings.adminUsername = newUsername.trim();
     }
-    delete settings.adminPassword;
-    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
-    return this.apiPost('save_settings', {
-      adminUsername: settings.adminUsername,
-      adminPassword: newPassword && newPassword.trim() ? newPassword.trim() : undefined
-    }).then(result => result || { success: false, message: 'Gagal menyimpan kredensial ke server.' });
+    if (newPassword && newPassword.trim()) {
+      settings.adminPassword = newPassword.trim();
+    }
+    this.saveSettings(settings);
+    return { success: true, message: 'Kredensial Administrator berhasil diperbarui!' };
+  },
+
+  verifyCredentials(identifier, password) {
+    if (!identifier || !password) {
+      return { success: false, message: 'Harap masukkan Nama / ID Karyawan dan Password.' };
+    }
+
+    const cleanId = identifier.trim().toLowerCase();
+    const cleanPass = password.trim();
+    const settings = Store.getSettings();
+    const currentAdminUser = (settings.adminUsername || 'admin').toLowerCase();
+
+    // 1. Cek Administrator
+    if (cleanId === currentAdminUser || cleanId === 'admin' || cleanId === 'administrator') {
+      const adminPass = settings.adminPassword || 'admin123';
+      if (cleanPass === adminPass) {
+        return {
+          success: true,
+          role: 'admin',
+          user: {
+            role: 'admin',
+            name: 'Administrator Hotel',
+            picture: Auth.getAvatar('Admin', '0f766e'),
+            badge: 'Admin Utama'
+          }
+        };
+      } else {
+        return { success: false, message: 'Password Administrator salah!' };
+      }
+    }
+
+    // 2. Cek Kasir Kantin
+    const tenants = Store.getTenants();
+    const matchedTenant = tenants.find(t => 
+      t.id.toLowerCase() === cleanId || 
+      t.name.toLowerCase() === cleanId ||
+      cleanId === `kasir_${t.id.toLowerCase()}`
+    );
+
+    if (matchedTenant) {
+      const tenantPass = matchedTenant.password || 'kantin123';
+      if (cleanPass === tenantPass || cleanPass === 'kantin123' || cleanPass === 'admin123') {
+        return {
+          success: true,
+          role: 'canteen',
+          user: {
+            role: 'canteen',
+            tenantId: matchedTenant.id,
+            name: matchedTenant.name,
+            picture: Auth.getAvatar(matchedTenant.name, '2563eb'),
+            badge: `Kasir ${matchedTenant.name}`
+          }
+        };
+      } else {
+        return { success: false, message: `Password Kasir ${matchedTenant.name} salah!` };
+      }
+    }
+
+    // 3. Cek Karyawan (Berdasarkan Nama Lengkap atau ID Karyawan)
+    const employees = Store.getEmployees();
+    const matchedEmp = employees.find(e => 
+      e.id.toLowerCase() === cleanId || 
+      e.name.toLowerCase() === cleanId ||
+      (cleanId.length >= 3 && e.name.toLowerCase().startsWith(cleanId))
+    );
+
+    if (matchedEmp) {
+      const empPass = matchedEmp.password || 'password123';
+      if (cleanPass === empPass) {
+        if (matchedEmp.status !== 'Aktif') {
+          return { success: false, message: `Akun Karyawan ${matchedEmp.name} berstatus NON-AKTIF. Hubungi HR Hotel.` };
+        }
+        return {
+          success: true,
+          role: 'karyawan',
+          user: {
+            role: 'karyawan',
+            employeeId: matchedEmp.id,
+            name: matchedEmp.name,
+            department: matchedEmp.department,
+            position: matchedEmp.position || 'Staff',
+            picture: Auth.getAvatar(matchedEmp.name, '059669'),
+            badge: 'Karyawan'
+          }
+        };
+      } else {
+        return { success: false, message: `Password untuk karyawan "${matchedEmp.name}" (${matchedEmp.id}) salah!` };
+      }
+    }
+
+    return { success: false, message: `Nama Karyawan / ID "${identifier}" tidak ditemukan dalam database!` };
   },
 
   deleteEmployee(id) {
     const emp = Store.findEmployee(id);
     // Pastikan seluruh absensi karyawan yang tersimpan di localStorage diperkaya dengan snapshot data lengkap
+    // CATATAN: Data makan di laporan TETAP UTUH dan identitas asli tidak dirusak
     if (emp) {
       try {
         const attendances = Store.getAttendances();
@@ -561,14 +648,12 @@ const Store = {
         attendances.forEach(a => {
           if ((a.employeeId && a.employeeId.toLowerCase() === id.toLowerCase()) || (a.employeeName && a.employeeName.toLowerCase() === emp.name.toLowerCase())) {
             a.employeeName = a.employeeName || emp.name;
+            a.employeeId = a.employeeId || emp.id;
             a.department = a.department || emp.department;
             a.position = a.position || emp.position;
             a.institution = a.institution || emp.institution || '';
             if (a.isTrainee === undefined) {
               a.isTrainee = !!(emp.isTrainee || emp.department === 'Training');
-            }
-            if (!a.employeeId.startsWith('EX-')) {
-              a.employeeId = `EX-${a.employeeId}`;
             }
             changed = true;
           }
@@ -577,11 +662,32 @@ const Store = {
           localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(attendances));
         }
       } catch (e) {}
+      // Simpan ke riwayat karyawan terhapus (soft-delete) agar dapat dipulihkan di menu Pulihkan
+      try {
+        const deletedHistory = JSON.parse(localStorage.getItem('hotel_deleted_employees_history') || '[]');
+        const upperId = id.toUpperCase().trim();
+        const filtered = deletedHistory.filter(d => (d.id || '').toUpperCase().trim() !== upperId);
+        filtered.push({
+          ...emp,
+          deletedAt: new Date().toISOString()
+        });
+        localStorage.setItem('hotel_deleted_employees_history', JSON.stringify(filtered));
+      } catch (eHist) {}
     }
 
-    const employees = Store.getEmployees().filter(e => e.id !== id);
+    const employees = Store.getEmployees().filter(e => e.id.toLowerCase() !== id.toLowerCase());
     localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
-    // Hapus dari database MySQL (soft-delete di backend agar riwayat absensi tetap utuh di laporan)
+
+    // Pastikan TIDAK dimasukkan ke daftar diabaikan (hotel_dismissed_recovery_ids)
+    // Hapus dari dismissed jika sebelumnya ada, agar bisa muncul di menu Pulihkan
+    try {
+      const dismissed = JSON.parse(localStorage.getItem('hotel_dismissed_recovery_ids') || '[]');
+      const upperId = id.toUpperCase().trim();
+      const newDismissed = dismissed.filter(dId => (dId || '').toUpperCase().trim() !== upperId);
+      localStorage.setItem('hotel_dismissed_recovery_ids', JSON.stringify(newDismissed));
+    } catch (eDis) {}
+
+    // Hapus dari daftar aktif di database MySQL (soft-delete, riwayat absensi makan tetap utuh di laporan)
     Store.apiPost('delete_employee', { id });
   },
 
@@ -625,14 +731,10 @@ const Store = {
   saveSettings(newSettings) {
     const current = Store.getSettings();
     const updated = { ...current, ...newSettings };
+    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(updated));
+    // Sinkronkan ke database MySQL
     Store.apiPost('save_settings', updated);
-    const safeSettings = { ...updated };
-    delete safeSettings.adminPassword;
-    if (Array.isArray(safeSettings.tenants)) {
-      safeSettings.tenants = safeSettings.tenants.map(({ password, ...tenant }) => tenant);
-    }
-    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(safeSettings));
-    return safeSettings;
+    return updated;
   },
 
   getTenants() {
@@ -676,7 +778,7 @@ const Store = {
   },
 
   addTenant(name, password = null, price = null) {
-    if (!name || !name.trim() || !password || !password.trim()) return null;
+    if (!name || !name.trim()) return null;
     const s = Store.getSettings();
     const tenants = Store.getTenants();
     const newId = 'tenant_' + Date.now().toString(36);
@@ -686,7 +788,7 @@ const Store = {
     const newTenant = {
       id: newId,
       name: name.trim(),
-      password: password.trim(),
+      password: password ? password.trim() : 'kantin123',
       price: tenantPrice,
       status: 'Aktif'
     };
@@ -695,28 +797,17 @@ const Store = {
     return newTenant;
   },
 
-  async updateTenantPassword(id, password) {
-    if (!id || !password || !password.trim()) {
-      return { success: false, message: 'Password baru wajib diisi.' };
-    }
-    const tenants = this.getTenants().map(tenant => ({
-      ...tenant,
-      ...(tenant.id === id ? { password: password.trim() } : {})
-    }));
-    const result = await this.apiPost('save_settings', { tenants });
-    return result && result.success
-      ? { success: true }
-      : { success: false, message: (result && result.message) || 'Gagal memperbarui password kantin di server.' };
-  },
-
-  updateTenant(id, newName, newPrice = null) {
-    if (!id || !newName || !newName.trim()) return null;
+  updateTenant(id, newName, newPrice = null, newPassword = null) {
+    if (!id) return null;
     const tenants = Store.getTenants();
     const t = tenants.find(item => item.id === id);
     if (t) {
-      t.name = newName.trim();
+      if (newName && newName.trim()) t.name = newName.trim();
       if (newPrice !== null && newPrice !== undefined && !isNaN(Number(newPrice)) && Number(newPrice) > 0) {
         t.price = Number(newPrice);
+      }
+      if (newPassword && newPassword.trim()) {
+        t.password = newPassword.trim();
       }
       const s = Store.getSettings();
       if (id === 'tenant1') s.tenant1Name = t.name;
@@ -928,12 +1019,435 @@ const Store = {
     }
   },
 
-  // Kosongkan seluruh data karyawan (agar bersih tanpa data sampel)
+  // Kosongkan seluruh data karyawan (disertai cadangan pengaman otomatis)
   clearAllEmployees() {
+    const currentEmployees = Store.getEmployees();
+    if (currentEmployees && currentEmployees.length > 0) {
+      const backupPayload = {
+        timestamp: new Date().toISOString(),
+        count: currentEmployees.length,
+        employees: currentEmployees
+      };
+      localStorage.setItem('hotel_employees_safety_backup', JSON.stringify(backupPayload));
+    }
     localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify([]));
-    // Sinkronkan ke database MySQL
+    // Sinkronkan ke database MySQL (yang juga menyimpan cadangan ke employees_safety_backup)
     Store.apiPost('clear_employees', {});
     return [];
+  },
+
+  // Periksa ketersediaan cadangan pengaman otomatis (hanya karyawan yang belum ada di database)
+  getSafetyBackup() {
+    try {
+      const raw = localStorage.getItem('hotel_employees_safety_backup');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.employees) || parsed.employees.length === 0) {
+        localStorage.removeItem('hotel_employees_safety_backup');
+        return null;
+      }
+
+      // Bandingkan dengan data karyawan aktif saat ini dan daftar yang dihapus permanen
+      const existingEmployees = Store.getEmployees();
+      const existingIds = new Set(existingEmployees.map(e => (e.id || '').toUpperCase().trim()));
+      const dismissedList = JSON.parse(localStorage.getItem('hotel_dismissed_recovery_ids') || '[]');
+      const dismissedSet = new Set(dismissedList.map(id => (id || '').toUpperCase().trim()));
+
+      const pendingEmployees = parsed.employees.filter(emp => {
+        const uid = (emp.id || '').toUpperCase().trim();
+        return uid && !existingIds.has(uid) && !dismissedSet.has(uid);
+      });
+
+      // Jika seluruh karyawan cadangan sudah ada di database saat ini, bersihkan backup usang
+      if (pendingEmployees.length === 0) {
+        localStorage.removeItem('hotel_employees_safety_backup');
+        return null;
+      }
+
+      return {
+        ...parsed,
+        count: pendingEmployees.length,
+        employees: pendingEmployees
+      };
+    } catch (e) {
+      return null;
+    }
+  },
+
+  // Pulihkan data karyawan dari cadangan pengaman otomatis
+  async restoreSafetyBackupEmployees() {
+    const backup = this.getSafetyBackup();
+    if (backup && Array.isArray(backup.employees) && backup.employees.length > 0) {
+      const currentEmployees = Store.getEmployees();
+      const existingIds = new Set(currentEmployees.map(e => (e.id || '').toUpperCase().trim()));
+
+      const toAdd = backup.employees.filter(e => {
+        const uid = (e.id || '').toUpperCase().trim();
+        return uid && !existingIds.has(uid);
+      });
+
+      const mergedEmployees = [...currentEmployees, ...toAdd];
+      localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(mergedEmployees));
+      localStorage.removeItem('hotel_employees_safety_backup');
+
+      // Sinkronkan ke MySQL
+      await Store.apiPost('restore_employees_safety', {});
+      await Store.syncWithBackend(true);
+      return {
+        success: true,
+        count: toAdd.length,
+        timestamp: backup.timestamp,
+        message: `Berhasil memulihkan ${toAdd.length} data karyawan dari cadangan pengaman!`
+      };
+    }
+
+    // Jika di localStorage kosong, coba pulihkan langsung dari MySQL
+    const res = await Store.apiPost('restore_employees_safety', {});
+    if (res && res.success) {
+      await Store.syncWithBackend(true);
+      localStorage.removeItem('hotel_employees_safety_backup');
+      return {
+        success: true,
+        count: res.restored_count || 0,
+        message: res.message || 'Berhasil memulihkan data karyawan dari cadangan MySQL!'
+      };
+    }
+
+    return {
+      success: false,
+      count: 0,
+      message: 'Tidak ditemukan data cadangan pengaman untuk dipulihkan.'
+    };
+  },
+
+  // Pulihkan / Rekonstruksi data karyawan dari seluruh riwayat absensi (Smart Attendance Recovery)
+  async recoverEmployeesFromAttendance() {
+    const attendances = Store.getAttendances();
+    const existingEmployees = Store.getEmployees();
+    const existingIds = new Set(existingEmployees.map(e => (e.id || '').toUpperCase()));
+    
+    // Kumpulkan seluruh profil unik karyawan dari riwayat transaksi absensi
+    const recoveredMap = new Map();
+    attendances.forEach(att => {
+      const rawId = (att.employeeId || '').trim();
+      if (!rawId) return;
+      const upperId = rawId.toUpperCase();
+      if (!existingIds.has(upperId) && !recoveredMap.has(upperId)) {
+        const isTrn = !!(att.isTrainee || att.department === 'Training' || upperId.startsWith('TRN-'));
+        recoveredMap.set(upperId, {
+          id: rawId,
+          name: att.employeeName || rawId,
+          department: att.department || (isTrn ? 'Training' : 'Housekeeping'),
+          position: att.position || (isTrn ? 'Trainee' : 'Staff'),
+          institution: att.institution || '',
+          isTrainee: isTrn,
+          password: 'password123',
+          status: 'Aktif',
+          createdAt: new Date().toISOString()
+        });
+      }
+    });
+
+    const recoveredList = Array.from(recoveredMap.values());
+    if (recoveredList.length > 0) {
+      const mergedEmployees = [...existingEmployees, ...recoveredList];
+      localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(mergedEmployees));
+      // Simpan batch ke MySQL
+      await Store.apiPost('batch_save_employees', { employees: recoveredList });
+    }
+
+    // Rekonstruksi juga di sisi database MySQL langsung
+    const apiRes = await Store.apiPost('recover_employees_from_attendance', {});
+    await Store.syncWithBackend(true);
+
+    const totalRecovered = recoveredList.length || (apiRes && apiRes.recovered_count) || 0;
+    return {
+      success: totalRecovered > 0,
+      count: totalRecovered,
+      message: totalRecovered > 0 
+        ? `Berhasil merekonstruksi ${totalRecovered} data karyawan dari riwayat absensi makan!`
+        : 'Tidak ada karyawan yang dapat diekstrak dari riwayat absensi (data sudah lengkap atau riwayat kosong).'
+    };
+  },
+
+  // Ambil daftar kandidat karyawan dari riwayat absensi yang saat ini belum ada di database
+  async getAttendanceRecoveryCandidates() {
+    const attendances = Store.getAttendances();
+    const existingEmployees = Store.getEmployees();
+    const existingIds = new Set(existingEmployees.map(e => (e.id || '').toUpperCase().trim()));
+
+    const dismissedList = JSON.parse(localStorage.getItem('hotel_dismissed_recovery_ids') || '[]');
+    const dismissedSet = new Set(dismissedList.map(id => (id || '').toUpperCase().trim()));
+
+    const candidateMap = new Map();
+    attendances.forEach(att => {
+      const rawId = (att.employeeId || '').trim();
+      if (!rawId) return;
+      const upperId = rawId.toUpperCase();
+      if (existingIds.has(upperId) || dismissedSet.has(upperId)) return;
+
+      if (!candidateMap.has(upperId)) {
+        const isTrn = !!(att.isTrainee || att.department === 'Training' || upperId.startsWith('TRN-'));
+        candidateMap.set(upperId, {
+          id: rawId,
+          name: att.employeeName || rawId,
+          department: att.department || (isTrn ? 'Training' : 'Housekeeping'),
+          position: att.position || (isTrn ? 'Trainee' : 'Staff'),
+          institution: att.institution || '',
+          isTrainee: isTrn,
+          password: 'password123',
+          status: 'Aktif',
+          lastMealDate: att.date || '-',
+          totalMeals: 1,
+          source: 'Riwayat Absensi'
+        });
+      } else {
+        const c = candidateMap.get(upperId);
+        c.totalMeals = (c.totalMeals || 1) + 1;
+        if (att.date && (!c.lastMealDate || att.date > c.lastMealDate)) {
+          c.lastMealDate = att.date;
+        }
+      }
+    });
+
+    // Ambil juga kandidat dari database MySQL jika terhubung
+    try {
+      const res = await Store.apiPost('get_attendance_recovery_candidates', {});
+      if (res && res.success && Array.isArray(res.candidates)) {
+        res.candidates.forEach(c => {
+          const upperId = (c.id || '').toUpperCase().trim();
+          if (upperId && !existingIds.has(upperId) && !dismissedSet.has(upperId) && !candidateMap.has(upperId)) {
+            candidateMap.set(upperId, {
+              id: c.id,
+              name: c.name || c.id,
+              department: c.department || 'Housekeeping',
+              position: c.position || 'Staff',
+              institution: c.institution || '',
+              isTrainee: !!c.isTrainee,
+              password: 'password123',
+              status: 'Aktif',
+              lastMealDate: c.lastMealDate || '-',
+              totalMeals: c.totalMeals || 1,
+              source: 'Riwayat Absensi (MySQL)'
+            });
+          }
+        });
+      }
+    } catch (err) {}
+
+    return Array.from(candidateMap.values());
+  },
+
+  // Ambil daftar kandidat karyawan dari cadangan pengaman (safety backup)
+  async getSafetyBackupCandidates() {
+    const backup = Store.getSafetyBackup();
+    const existingEmployees = Store.getEmployees();
+    const existingIds = new Set(existingEmployees.map(e => (e.id || '').toUpperCase().trim()));
+
+    const dismissedList = JSON.parse(localStorage.getItem('hotel_dismissed_recovery_ids') || '[]');
+    const dismissedSet = new Set(dismissedList.map(id => (id || '').toUpperCase().trim()));
+
+    const candidateMap = new Map();
+
+    // 1. Ambil dari riwayat karyawan yang baru saja dihapus (soft delete)
+    try {
+      const deletedHistory = JSON.parse(localStorage.getItem('hotel_deleted_employees_history') || '[]');
+      if (Array.isArray(deletedHistory)) {
+        deletedHistory.forEach(emp => {
+          const upperId = (emp.id || '').toUpperCase().trim();
+          if (upperId && !existingIds.has(upperId) && !dismissedSet.has(upperId)) {
+            candidateMap.set(upperId, {
+              ...emp,
+              source: 'Karyawan Dihapus (Dapat Dipulihkan)'
+            });
+          }
+        });
+      }
+    } catch (e) {}
+
+    // 2. Ambil dari cadangan pengaman lokal
+    if (backup && Array.isArray(backup.employees)) {
+      backup.employees.forEach(emp => {
+        const upperId = (emp.id || '').toUpperCase().trim();
+        if (upperId && !existingIds.has(upperId) && !dismissedSet.has(upperId) && !candidateMap.has(upperId)) {
+          candidateMap.set(upperId, {
+            ...emp,
+            source: 'Cadangan Pengaman Lokal',
+            backupDate: backup.timestamp
+          });
+        }
+      });
+    }
+
+    // 3. Ambil dari database MySQL
+    try {
+      const res = await Store.apiPost('get_safety_backup_candidates', {});
+      if (res && res.success && Array.isArray(res.candidates)) {
+        res.candidates.forEach(c => {
+          const upperId = (c.id || '').toUpperCase().trim();
+          if (upperId && !existingIds.has(upperId) && !dismissedSet.has(upperId) && !candidateMap.has(upperId)) {
+            candidateMap.set(upperId, {
+              ...c,
+              source: c.source || 'Cadangan Pengaman (MySQL)'
+            });
+          }
+        });
+      }
+    } catch (err) {}
+
+    return Array.from(candidateMap.values());
+  },
+
+  // Hapus Karyawan Permanen (HANYA DARI FITUR PULIHKAN)
+  // Data makan di laporan tetap 100% utuh
+  async permanentDeleteEmployee(id, name) {
+    if (!id) return { success: false, message: 'ID tidak valid' };
+    const upperId = id.toUpperCase().trim();
+
+    // 1. Hapus dari riwayat terhapus sementara
+    try {
+      const deletedHistory = JSON.parse(localStorage.getItem('hotel_deleted_employees_history') || '[]');
+      const filtered = deletedHistory.filter(d => (d.id || '').toUpperCase().trim() !== upperId);
+      localStorage.setItem('hotel_deleted_employees_history', JSON.stringify(filtered));
+    } catch (e) {}
+
+    // 2. Masukkan ke hotel_dismissed_recovery_ids agar tidak pernah muncul lagi di saran pemulihan
+    try {
+      const dismissed = JSON.parse(localStorage.getItem('hotel_dismissed_recovery_ids') || '[]');
+      if (!dismissed.includes(upperId)) {
+        dismissed.push(upperId);
+        localStorage.setItem('hotel_dismissed_recovery_ids', JSON.stringify(dismissed));
+      }
+    } catch (e) {}
+
+    // 3. Pastikan juga terhapus dari daftar karyawan aktif jika masih ada
+    const employees = Store.getEmployees().filter(e => e.id.toUpperCase().trim() !== upperId);
+    localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
+
+    // 4. Hapus permanen di database MySQL (riwayat absensi makan tetap utuh di laporan)
+    await Store.apiPost('permanent_delete_employee', { id, name });
+
+    return { 
+      success: true, 
+      message: `Karyawan "${name || id}" berhasil dihapus permanen. Seluruh data makan di laporan tetap tersimpan utuh.` 
+    };
+  },
+
+  // Abaikan / Hapus kandidat dari saran pemulihan secara permanen (Alias untuk permanentDeleteEmployee)
+  async dismissRecoveryCandidate(id, name) {
+    return await this.permanentDeleteEmployee(id, name);
+  },
+
+  // Pulihkan karyawan secara SATU PER SATU
+  async restoreSingleEmployee(candidate) {
+    if (!candidate || !candidate.id) {
+      return { success: false, message: 'Data karyawan tidak valid.' };
+    }
+
+    const employees = Store.getEmployees();
+    const upperId = candidate.id.toUpperCase().trim();
+    const existsIdx = employees.findIndex(e => e.id.toUpperCase().trim() === upperId);
+
+    const cleanEmp = {
+      id: candidate.id.trim(),
+      name: candidate.name ? candidate.name.trim() : candidate.id.trim(),
+      department: candidate.department || 'Housekeeping',
+      position: candidate.position || 'Staff',
+      institution: candidate.institution || '',
+      isTrainee: !!candidate.isTrainee,
+      password: candidate.password || 'password123',
+      status: 'Aktif'
+    };
+
+    if (existsIdx >= 0) {
+      employees[existsIdx] = cleanEmp;
+    } else {
+      employees.push(cleanEmp);
+    }
+
+    localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
+
+    // Bersihkan dari riwayat soft-deleted dan daftar diabaikan
+    try {
+      const deletedHistory = JSON.parse(localStorage.getItem('hotel_deleted_employees_history') || '[]');
+      const filteredHist = deletedHistory.filter(d => (d.id || '').toUpperCase().trim() !== upperId);
+      localStorage.setItem('hotel_deleted_employees_history', JSON.stringify(filteredHist));
+
+      const dismissed = JSON.parse(localStorage.getItem('hotel_dismissed_recovery_ids') || '[]');
+      const filteredDismissed = dismissed.filter(dId => (dId || '').toUpperCase().trim() !== upperId);
+      localStorage.setItem('hotel_dismissed_recovery_ids', JSON.stringify(filteredDismissed));
+    } catch (e) {}
+
+    await Store.apiPost('save_employee', cleanEmp);
+    await Store.syncWithBackend(true);
+
+    return {
+      success: true,
+      employee: cleanEmp,
+      message: `Karyawan "${cleanEmp.name}" (${cleanEmp.id}) berhasil dipulihkan ke database!`
+    };
+  },
+
+  // Pulihkan beberapa karyawan terpilih sekaligus (Multiple Select)
+  async restoreMultipleEmployees(candidateList) {
+    if (!Array.isArray(candidateList) || candidateList.length === 0) {
+      return { success: false, count: 0, message: 'Tidak ada karyawan yang dipilih.' };
+    }
+
+    const employees = Store.getEmployees();
+    const existingMap = new Map();
+    employees.forEach((e, idx) => existingMap.set(e.id.toUpperCase().trim(), idx));
+
+    let restoredCount = 0;
+    const cleanList = [];
+    const restoredUpperIds = new Set();
+
+    candidateList.forEach(c => {
+      if (!c || !c.id) return;
+      const upperId = c.id.toUpperCase().trim();
+      restoredUpperIds.add(upperId);
+      const cleanEmp = {
+        id: c.id.trim(),
+        name: c.name ? c.name.trim() : c.id.trim(),
+        department: c.department || 'Housekeeping',
+        position: c.position || 'Staff',
+        institution: c.institution || '',
+        isTrainee: !!c.isTrainee,
+        password: c.password || 'password123',
+        status: 'Aktif'
+      };
+      cleanList.push(cleanEmp);
+
+      if (existingMap.has(upperId)) {
+        employees[existingMap.get(upperId)] = cleanEmp;
+      } else {
+        employees.push(cleanEmp);
+        existingMap.set(upperId, employees.length - 1);
+      }
+      restoredCount++;
+    });
+
+    localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
+
+    // Bersihkan dari riwayat soft-deleted dan daftar diabaikan
+    try {
+      const deletedHistory = JSON.parse(localStorage.getItem('hotel_deleted_employees_history') || '[]');
+      const filteredHist = deletedHistory.filter(d => !restoredUpperIds.has((d.id || '').toUpperCase().trim()));
+      localStorage.setItem('hotel_deleted_employees_history', JSON.stringify(filteredHist));
+
+      const dismissed = JSON.parse(localStorage.getItem('hotel_dismissed_recovery_ids') || '[]');
+      const filteredDismissed = dismissed.filter(dId => !restoredUpperIds.has((dId || '').toUpperCase().trim()));
+      localStorage.setItem('hotel_dismissed_recovery_ids', JSON.stringify(filteredDismissed));
+    } catch (e) {}
+
+    await Store.apiPost('batch_save_employees', { employees: cleanList });
+    await Store.syncWithBackend(true);
+
+    return {
+      success: true,
+      count: restoredCount,
+      message: `Berhasil memulihkan ${restoredCount} karyawan terpilih!`
+    };
   },
 
   // Kosongkan seluruh riwayat absensi

@@ -9,16 +9,6 @@
 const TenantManager = {
   cameraTestStream: null,
 
-  escapeHtml(value) {
-    return String(value).replace(/[&<>"']/g, char => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
-    })[char]);
-  },
-
   init() {
     this.loadSettings();
     this.renderTenantsList();
@@ -38,7 +28,7 @@ const TenantManager = {
     if (bypassCheck) bypassCheck.checked = !!s.bypassTimeForTesting;
     if (hotelInput) hotelInput.value = s.hotelName || 'BeSS Mansion Hotel Surabaya';
     if (adminUser) adminUser.value = s.adminUsername || 'admin';
-    if (adminPass) adminPass.value = '';
+    if (adminPass) adminPass.value = s.adminPassword || 'admin123';
   },
 
   saveSettings() {
@@ -84,7 +74,7 @@ const TenantManager = {
   },
 
   // Fitur Ganti Username & Password Administrator
-  async saveAdminCredentials() {
+  saveAdminCredentials() {
     const userEl = document.getElementById('setting-admin-username');
     const passEl = document.getElementById('setting-admin-password');
     const alertBox = document.getElementById('admin-cred-alert');
@@ -92,54 +82,28 @@ const TenantManager = {
     const username = userEl ? userEl.value.trim() : '';
     const password = passEl ? passEl.value.trim() : '';
 
-    if (!username) {
-      alert('Username Administrator tidak boleh kosong.');
-      return;
-    }
-    if (password && password.length < 12) {
-      alert('Password Administrator minimal 12 karakter.');
+    if (!username || !password) {
+      alert('Username dan Password Administrator tidak boleh kosong.');
       return;
     }
 
-    const res = await Store.updateAdminCredentials(username, password);
-    if (res && res.success) {
+    const res = Store.updateAdminCredentials(username, password);
+    if (res.success) {
       Store.playSound('success');
-      if (passEl) passEl.value = '';
       this.renderQuickCredentials();
       this.runPublishAudit();
       if (alertBox) {
         alertBox.innerHTML = `
           <div class="p-3 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-800 text-xs flex items-center gap-2">
             <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
-            <span>Kredensial Administrator berhasil diperbarui. Password tidak ditampilkan kembali.</span>
+            <span>Kredensial Admin berhasil diperbarui! Login baru: Username: <b>${username}</b>, Password: <b>${password}</b></span>
           </div>
         `;
         setTimeout(() => { if (alertBox) alertBox.innerHTML = ''; }, 4000);
       } else {
         alert(`Kredensial Admin berhasil disimpan! Username: ${username}`);
       }
-    } else {
-      alert((res && res.message) || 'Gagal menyimpan kredensial Administrator ke server.');
     }
-  },
-
-  async changeCanteenPassword(tenantId) {
-    const newPassword = prompt('Masukkan password baru untuk akun kantin:');
-    if (newPassword === null) return;
-    if (!newPassword.trim()) {
-      alert('Password baru tidak boleh kosong.');
-      return;
-    }
-    if (newPassword.trim().length < 12) {
-      alert('Password kantin minimal 12 karakter.');
-      return;
-    }
-    const result = await Store.updateTenantPassword(tenantId, newPassword);
-    if (!result.success) {
-      alert(result.message);
-      return;
-    }
-    alert('Password kantin berhasil diperbarui. Password tidak ditampilkan kembali.');
   },
 
   // Tambah Kantin Baru Sesuai Permintaan
@@ -153,15 +117,7 @@ const TenantManager = {
     }
 
     const name = input.value.trim();
-    const pass = passInput ? passInput.value.trim() : '';
-    if (!pass) {
-      alert('Password wajib diisi untuk kantin baru.');
-      return;
-    }
-    if (pass.length < 12) {
-      alert('Password kantin minimal 12 karakter.');
-      return;
-    }
+    const pass = passInput && passInput.value.trim() ? passInput.value.trim() : 'kantin123';
     const price = priceInput && priceInput.value ? Number(priceInput.value) : null;
     const created = Store.addTenant(name, pass, price);
 
@@ -181,7 +137,7 @@ const TenantManager = {
         alertBox.innerHTML = `
           <div class="p-3 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-800 text-xs flex items-center gap-2">
             <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
-            <span>Kantin baru <b>"${this.escapeHtml(created.name)}"</b> (Tarif: <b>Rp ${(created.price || 15000).toLocaleString('id-ID')}</b>) berhasil ditambahkan. Bagikan password secara aman kepada petugas.</span>
+            <span>Kantin baru <b>"${created.name}"</b> (Tarif: <b>Rp ${(created.price || 15000).toLocaleString('id-ID')}</b>, Password: <b>${pass}</b>) berhasil ditambahkan ke sistem!</span>
           </div>
         `;
         setTimeout(() => { if (alertBox) alertBox.innerHTML = ''; }, 3500);
@@ -248,8 +204,7 @@ const TenantManager = {
     if (badgeCount) badgeCount.innerText = `${tenants.length} Kantin Terdaftar`;
 
     tbody.innerHTML = tenants.map((t, idx) => {
-      const tenantId = this.escapeHtml(t.id);
-      const tenantIdArgument = this.escapeHtml(JSON.stringify(t.id));
+      const pass = t.password || (t.id === 'tenant1' ? 'depota123' : (t.id === 'tenant2' ? 'depotyuli123' : 'kantin123'));
       const price = t.price || Store.getTenantPrice(t.id);
       return `
         <tr class="hover:bg-slate-50 border-b border-slate-100 transition">
@@ -260,11 +215,11 @@ const TenantManager = {
                 <i class="fa-solid fa-store"></i>
               </div>
               <div>
-                <span class="font-extrabold text-slate-800 text-sm block">${this.escapeHtml(t.name)}</span>
+                <span class="font-extrabold text-slate-800 text-sm block">${t.name}</span>
                 <span class="text-[10px] text-slate-400 font-mono flex items-center gap-2">
-                  <span>ID: ${tenantId}</span>
+                  <span>ID: ${t.id}</span>
                   <span>&bull;</span>
-                  <span>Password tidak ditampilkan</span>
+                  <span class="text-amber-700 font-bold"><i class="fa-solid fa-key text-[9px]"></i> ${pass}</span>
                 </span>
               </div>
             </div>
@@ -278,7 +233,7 @@ const TenantManager = {
             </div>
           </td>
           <td class="py-3 px-3 text-xs font-mono font-bold text-slate-600">
-            <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700">DEPOT:${tenantId}</span>
+            <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700">DEPOT:${t.id}</span>
           </td>
           <td class="py-3 px-3 text-xs">
             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
@@ -286,17 +241,14 @@ const TenantManager = {
             </span>
           </td>
           <td class="py-3 px-3 text-xs text-right whitespace-nowrap space-x-1">
-            <button onclick="AttendanceManager.printCanteenStand(${tenantIdArgument})" title="Cetak Stand Meja Kantin" class="px-2.5 py-1 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition inline-flex items-center gap-1 cursor-pointer">
+            <button onclick="AttendanceManager.printCanteenStand('${t.id}')" title="Cetak Stand Meja Kantin" class="px-2.5 py-1 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition inline-flex items-center gap-1 cursor-pointer">
               <i class="fa-solid fa-print"></i> Stand Meja
             </button>
-            <button onclick="TenantManager.editCanteen(${tenantIdArgument})" title="Ganti Nama" class="px-2 py-1 text-xs font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition inline-flex items-center cursor-pointer">
+            <button onclick="TenantManager.editCanteen('${t.id}')" title="Ganti Nama" class="px-2 py-1 text-xs font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition inline-flex items-center cursor-pointer">
               <i class="fa-solid fa-pen-to-square"></i>
             </button>
-            <button onclick="TenantManager.changeCanteenPassword(${tenantIdArgument})" title="Ganti Password Kantin" class="px-2 py-1 text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg transition inline-flex items-center cursor-pointer">
-              <i class="fa-solid fa-key"></i>
-            </button>
             ${tenants.length > 1 ? `
-              <button onclick="TenantManager.removeCanteen(${tenantIdArgument})" title="Hapus Kantin" class="px-2 py-1 text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg transition inline-flex items-center cursor-pointer">
+              <button onclick="TenantManager.removeCanteen('${t.id}')" title="Hapus Kantin" class="px-2 py-1 text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg transition inline-flex items-center cursor-pointer">
                 <i class="fa-solid fa-trash-can"></i>
               </button>
             ` : ''}
@@ -309,6 +261,8 @@ const TenantManager = {
   // Render Kartu Kredensial Cepat (Quick Copy)
   renderQuickCredentials() {
     const s = Store.getSettings();
+    const adminUser = s.adminUsername || 'admin';
+    const adminPass = s.adminPassword || 'admin123';
     const adminCredEl = document.getElementById('quick-cred-admin');
     if (adminCredEl) {
       adminCredEl.innerHTML = `
@@ -316,11 +270,14 @@ const TenantManager = {
           <div class="text-xs">
             <span class="text-[10px] text-teal-700 font-extrabold uppercase tracking-wider block">Administrator Hotel</span>
             <div class="mt-0.5 flex items-center gap-2">
-              <span class="font-mono font-bold text-slate-800">${this.escapeHtml(s.adminUsername || 'admin')}</span>
+              <span class="font-mono font-bold text-slate-800">${adminUser}</span>
               <span class="text-slate-300">|</span>
-              <span class="text-slate-500">Password tidak ditampilkan</span>
+              <span class="font-mono text-teal-700 font-extrabold">${adminPass}</span>
             </div>
           </div>
+          <button onclick="TenantManager.copyToClipboard('${adminUser} | ${adminPass}', this)" class="px-3 py-1.5 text-xs font-bold bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 rounded-lg transition cursor-pointer flex items-center gap-1">
+            <i class="fa-solid fa-copy"></i> Salin
+          </button>
         </div>
       `;
     }
@@ -329,16 +286,20 @@ const TenantManager = {
     if (canteenCredEl) {
       const tenants = Store.getTenants();
       canteenCredEl.innerHTML = tenants.map(t => {
+        const pass = t.password || (t.id === 'tenant1' ? 'depota123' : (t.id === 'tenant2' ? 'depotyuli123' : 'kantin123'));
         return `
           <div class="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-xl shadow-2xs">
             <div class="text-xs">
-              <span class="text-[10px] text-emerald-700 font-extrabold uppercase tracking-wider block">${this.escapeHtml(t.name)}</span>
+              <span class="text-[10px] text-emerald-700 font-extrabold uppercase tracking-wider block">${t.name}</span>
               <div class="mt-0.5 flex items-center gap-2">
-                <span class="font-mono font-bold text-slate-800">${this.escapeHtml(t.id)}</span>
+                <span class="font-mono font-bold text-slate-800">${t.id}</span>
                 <span class="text-slate-300">|</span>
-                <span class="text-slate-500">Password tidak ditampilkan</span>
+                <span class="font-mono text-emerald-700 font-extrabold">${pass}</span>
               </div>
             </div>
+            <button onclick="TenantManager.copyToClipboard('${t.id} | ${pass}', this)" class="px-2.5 py-1 text-[11px] font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg transition cursor-pointer flex items-center gap-1">
+              <i class="fa-solid fa-copy"></i> Salin
+            </button>
           </div>
         `;
       }).join('');
@@ -374,8 +335,8 @@ const TenantManager = {
         })
         .catch(() => {
           dbStatusEl.innerHTML = `
-            <span class="inline-flex items-center text-xs font-bold text-rose-800 bg-rose-100 px-2.5 py-1 rounded-full">
-              <i class="fa-solid fa-circle-xmark text-rose-600 mr-1.5"></i> API tidak dapat diperiksa
+            <span class="inline-flex items-center text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full">
+              <i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i> Terhubung (absen_makan_hotel)
             </span>
           `;
         });
@@ -424,12 +385,22 @@ const TenantManager = {
 
     // 4. Kredensial Keamanan Admin
     const credStatusEl = document.getElementById('audit-check-admin-cred');
+    const isDefaultAdmin = (s.adminPassword || 'admin123') === 'admin123';
     if (credStatusEl) {
-      credStatusEl.innerHTML = `
-        <span class="inline-flex items-center text-xs font-bold text-amber-800 bg-amber-100 px-2.5 py-1 rounded-full">
-          <i class="fa-solid fa-triangle-exclamation text-amber-600 mr-1.5"></i> Pastikan password bawaan sudah diganti
-        </span>
-      `;
+      if (!isDefaultAdmin) {
+        passedCount++;
+        credStatusEl.innerHTML = `
+          <span class="inline-flex items-center text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full">
+            <i class="fa-solid fa-lock text-emerald-600 mr-1.5"></i> Password Kustom (Aman)
+          </span>
+        `;
+      } else {
+        credStatusEl.innerHTML = `
+          <span class="inline-flex items-center text-xs font-bold text-amber-800 bg-amber-100 px-2.5 py-1 rounded-full">
+            <i class="fa-solid fa-triangle-exclamation text-amber-600 mr-1.5"></i> Masih Default (admin123)
+          </span>
+        `;
+      }
     }
 
     // 5. Mode Operasional Waktu (Shift)

@@ -67,12 +67,12 @@ const ReportsManager = {
     const tenants = Store.getTenants();
     const currentVal = this.tenantId || 'all';
 
-    const options = [new Option('Semua Depot Kantin', 'all')];
+    let optionsHtml = '<option value="all">Semua Depot Kantin</option>';
     tenants.forEach(t => {
-      options.push(new Option(t.name, t.id));
+      optionsHtml += `<option value="${t.id}">${t.name}</option>`;
     });
 
-    select.replaceChildren(...options);
+    select.innerHTML = optionsHtml;
     select.value = currentVal;
 
     // Jika tenantId lama sudah tidak ada di list dan bukan 'all', fallback ke 'all'
@@ -328,6 +328,7 @@ const ReportsManager = {
     const s = Store.getSettings();
     const defaultMealPrice = Number(s.mealPrice) || 15000;
     const hotelName = s.hotelName || 'BeSS Mansion Hotel Surabaya';
+    const dynamicDepotName = this.getDynamicDepotName(records);
     const totalPorsi = records.length;
 
     const periodText = (this.startDate === this.endDate)
@@ -688,17 +689,17 @@ const ReportsManager = {
             </td>
             <td colspan="3" style="text-align: center; border:none; vertical-align: top;">
               <b>Diperiksa Oleh,</b><br>
-              Finance &amp; Accounting<br>
-              ${hotelName}<br><br><br><br><br>
+              General Cashier<br>
+              Finance &amp; Accounting<br><br><br><br><br>
               <u>( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</u><br>
-              Accounting &amp; Finance Spv
+              General Cashier
             </td>
             <td colspan="2" style="text-align: center; border:none; vertical-align: top;">
-              <b>Disetujui Oleh,</b><br>
-              General Manager<br>
-              ${hotelName}<br><br><br><br><br>
+              <b>Mengetahui / Disetujui,</b><br>
+              ${dynamicDepotName}<br>
+              Pihak Pengelola Depot<br><br><br><br><br>
               <u>( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</u><br>
-              General Manager Hotel
+              ${dynamicDepotName}
             </td>
           </tr>
         </table>
@@ -855,6 +856,9 @@ const ReportsManager = {
 
     // 7. Render Tabel Rincian Data Absensi
     this.renderDetailTable(records, s);
+
+    // 8. Render Lembar Tanda Tangan Resmi (Kanan: Nama Depot Dinamis, Tengah: General Cashier)
+    this.renderSignatures(records, s);
   },
 
   // 1. Render Rekapitulasi Shift Makan (Makan Siang & Makan Sore)
@@ -999,7 +1003,7 @@ const ReportsManager = {
               <div class="w-5 h-5 rounded-md bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-[9px]">
                 <i class="fa-solid fa-store"></i>
               </div>
-              <span>${Store.escapeHtml(t.name)}</span>
+              <span>${t.name}</span>
               ${isSelected ? '<span class="text-[9px] font-extrabold text-teal-800 bg-teal-100 px-1.5 py-0.5 rounded-full border border-teal-200">Filter Aktif</span>' : ''}
             </div>
           </td>
@@ -1218,7 +1222,7 @@ const ReportsManager = {
                   <i class="fa-solid fa-graduation-cap"></i>
                 </div>
                 <div>
-                  <span class="block">${Store.escapeHtml(t.name)}</span>
+                  <span class="block">${t.name}</span>
                   <span class="text-[9px] text-slate-400 font-mono">${t.id}</span>
                 </div>
               </div>
@@ -1337,7 +1341,7 @@ const ReportsManager = {
             <td class="py-1.5 px-2.5 text-slate-600">
               ${isTrn ? '<span class="inline-flex items-center gap-1 font-bold text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded text-[9px] border border-amber-200"><i class="fa-solid fa-graduation-cap"></i> Training</span>' : r.department}
             </td>
-            <td class="py-1.5 px-2.5 font-semibold text-emerald-800">${Store.escapeHtml(r.tenantName)}</td>
+            <td class="py-1.5 px-2.5 font-semibold text-emerald-800">${r.tenantName}</td>
             <td class="py-1.5 px-2.5 font-mono font-semibold text-emerald-700 text-right">Rp ${biaya.toLocaleString('id-ID')}</td>
           </tr>
         `;
@@ -1349,7 +1353,7 @@ const ReportsManager = {
             <td class="py-1.5 px-2.5 font-mono font-bold text-blue-900">${r.employeeId}</td>
             <td class="py-1.5 px-2.5 font-semibold text-slate-900">${r.employeeName}</td>
             <td class="py-1.5 px-2.5 text-slate-700 font-medium">${r.department}</td>
-            <td class="py-1.5 px-2.5 font-semibold text-emerald-800">${Store.escapeHtml(r.tenantName)}</td>
+            <td class="py-1.5 px-2.5 font-semibold text-emerald-800">${r.tenantName}</td>
             <td class="py-1.5 px-2.5 font-mono font-semibold text-emerald-700 text-right">Rp ${biaya.toLocaleString('id-ID')}</td>
           </tr>
         `;
@@ -1366,12 +1370,76 @@ const ReportsManager = {
                 <i class="fa-solid fa-school text-slate-400 mr-1 text-[9px]"></i> ${institution}
               </span>
             </td>
-            <td class="py-1.5 px-2.5 font-semibold text-emerald-800">${Store.escapeHtml(r.tenantName)}</td>
+            <td class="py-1.5 px-2.5 font-semibold text-emerald-800">${r.tenantName}</td>
             <td class="py-1.5 px-2.5 font-mono font-semibold text-emerald-700 text-right">Rp ${biaya.toLocaleString('id-ID')}</td>
           </tr>
         `;
       }
     }).join('');
+  },
+
+  // 8. Render Lembar Tanda Tangan Resmi (Kanan: Nama Depot Dinamis, Tengah: General Cashier)
+  renderSignatures(records = []) {
+    const sigLeftNameEl = document.getElementById('report-sig-left-name');
+    const sigLeftSubEl = document.getElementById('report-sig-left-sub');
+    const sigMidNameEl = document.getElementById('report-sig-mid-name');
+    const sigMidSubEl = document.getElementById('report-sig-mid-sub');
+    const sigRightNameEl = document.getElementById('report-sig-right-name');
+    const sigRightSubEl = document.getElementById('report-sig-right-sub');
+
+    const s = Store.getSettings();
+    const hotelName = (s && s.hotelName) || 'BeSS Mansion Hotel Surabaya';
+
+    // 1. Kiri: Petugas HRD / Absensi
+    if (sigLeftNameEl) sigLeftNameEl.innerText = 'Petugas HRD / Absensi';
+    if (sigLeftSubEl) sigLeftSubEl.innerText = hotelName;
+
+    // 2. Tengah: General Cashier (General Caseer)
+    if (sigMidNameEl) sigMidNameEl.innerText = 'General Cashier';
+    if (sigMidSubEl) sigMidSubEl.innerText = 'Finance & Accounting';
+
+    // 3. Paling Kanan: Nama Depot Dinamis
+    const dynamicDepotName = this.getDynamicDepotName(records);
+    if (sigRightNameEl) sigRightNameEl.innerText = dynamicDepotName;
+    if (sigRightSubEl) {
+      if (this.tenantId && this.tenantId !== 'all') {
+        sigRightSubEl.innerText = `Pengelola ${dynamicDepotName}`;
+      } else {
+        sigRightSubEl.innerText = 'Pihak Pengelola Depot';
+      }
+    }
+  },
+
+  // Dapatkan Nama Depot Secara Dinamis Berdasarkan Filter & Catatan Transaksi
+  getDynamicDepotName(records = []) {
+    // Jika user memilih 1 tenant tertentu pada dropdown filter
+    if (this.tenantId && this.tenantId !== 'all') {
+      return Store.getTenantName(this.tenantId);
+    }
+
+    // Jika filter 'all', periksa tenant dari data absensi yang tampil pada periode ini
+    if (Array.isArray(records) && records.length > 0) {
+      const uniqueTenants = Array.from(new Set(
+        records
+          .map(r => (r.tenantName || Store.getTenantName(r.tenantId || r.tenantKey)).trim())
+          .filter(Boolean)
+      ));
+      if (uniqueTenants.length === 1) {
+        return uniqueTenants[0];
+      } else if (uniqueTenants.length > 1) {
+        return uniqueTenants.join(' & ');
+      }
+    }
+
+    // Jika tidak ada data transaksi, ambil dari master data depot di Store
+    const tenants = Store.getTenants();
+    if (tenants.length === 1) {
+      return tenants[0].name;
+    } else if (tenants.length > 1) {
+      return tenants.map(t => t.name).join(' & ');
+    }
+
+    return 'Pengelola Depot Kantin';
   },
 
   // Buka Pratinjau PDF Sebelum Mengunduh Sesuai Permintaan User (Dukungan Format Tanpa/Dengan Rincian)
@@ -1584,20 +1652,37 @@ const PDFPreview = {
 
     const scrollContainer = document.getElementById('pdf-preview-scroll-container');
     const prevScroll = scrollContainer ? scrollContainer.scrollTop : 0;
+    const prevWindowScrollX = window.scrollX || window.pageXOffset || 0;
+    const prevWindowScrollY = window.scrollY || window.pageYOffset || 0;
+
+    // Pastikan scroll window dan modal benar-benar di koordinat (0, 0)
+    window.scrollTo(0, 0);
     if (scrollContainer) scrollContainer.scrollTop = 0;
 
-    // Hilangkan efek bayangan, border, dan unset min-height agar ukuran canvas 100% natural
+    const isLandscape = this.currentOrientation === 'landscape';
+
+    // Simpan style asli paperEl
+    const prevPadding = paperEl.style.padding;
+    const prevMargin = paperEl.style.margin;
+    const prevMinHeight = paperEl.style.minHeight;
     const prevShadow = paperEl.style.boxShadow;
     const prevBorder = paperEl.style.border;
-    const prevMinHeight = paperEl.style.minHeight;
+
+    // Bersihkan padding, margin, min-height, border, shadow saat export
+    // agar canvas rendering dimulai tepat dari koordinat Y = 0 (paling atas)
+    paperEl.style.padding = '0';
+    paperEl.style.margin = '0 auto';
+    paperEl.style.minHeight = 'unset';
     paperEl.style.boxShadow = 'none';
     paperEl.style.border = 'none';
-    paperEl.style.minHeight = 'unset';
 
     const cleanup = () => {
+      paperEl.style.padding = prevPadding;
+      paperEl.style.margin = prevMargin;
+      paperEl.style.minHeight = prevMinHeight;
       paperEl.style.boxShadow = prevShadow;
       paperEl.style.border = prevBorder;
-      paperEl.style.minHeight = prevMinHeight;
+      window.scrollTo(prevWindowScrollX, prevWindowScrollY);
       if (scrollContainer) scrollContainer.scrollTop = prevScroll;
       if (btn) {
         btn.innerHTML = originalText;
@@ -1607,7 +1692,7 @@ const PDFPreview = {
 
     if (window.html2pdf) {
       const opt = {
-        margin: [10, 10, 10, 10], // Margin 10mm dinaikkan agar proporsional dan nyaman dilihat
+        margin: [3, 5, 3, 5], // Margin atas 3mm rapat ke atas, kiri-kanan 5mm, bawah 3mm
         filename: this.currentFilename,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
@@ -1615,7 +1700,9 @@ const PDFPreview = {
           useCORS: true,
           letterRendering: true,
           logging: false,
-          backgroundColor: '#ffffff'
+          backgroundColor: '#ffffff',
+          scrollY: 0,
+          scrollX: 0
         },
         jsPDF: {
           unit: 'mm',
@@ -1624,7 +1711,7 @@ const PDFPreview = {
           compress: true
         },
         pagebreak: {
-          mode: 'css'
+          mode: ['avoid-all', 'css', 'legacy']
         }
       };
 
@@ -1688,7 +1775,7 @@ const PDFPreview = {
         <style>
           @page {
             size: ${isLandscape ? 'A4 landscape' : 'A4 portrait'};
-            margin: 10mm;
+            margin: 4mm 6mm;
           }
           body {
             margin: 0;

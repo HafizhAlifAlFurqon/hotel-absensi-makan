@@ -64,13 +64,16 @@ const EmployeesManager = {
     });
   },
 
-  // Otomatis siapkan ID Karyawan berikutnya
+  // Otomatis siapkan ID Karyawan berikutnya & default password
   prepareFormNextId() {
     if (this.editingId) return;
     const idEl = document.getElementById('emp-form-id');
     const passEl = document.getElementById('emp-form-password');
     if (idEl && !idEl.value) {
       idEl.value = Store.generateNextEmployeeId();
+    }
+    if (passEl && !passEl.value) {
+      passEl.value = 'password123';
     }
   },
 
@@ -127,20 +130,10 @@ const EmployeesManager = {
       const dept = deptEl ? deptEl.value : '';
       const position = posEl ? posEl.value.trim() : 'Staff';
       const status = statusEl ? statusEl.value : 'Aktif';
-      const password = passEl ? passEl.value.trim() : '';
+      const password = passEl ? passEl.value.trim() : 'password123';
 
       if (!name || !id || !dept) {
         this.showFormAlert('Mohon lengkapi Nama, ID, dan Departemen karyawan.', 'error');
-        Store.playSound('error');
-        return;
-      }
-      if (!this.editingId && !password) {
-        this.showFormAlert('Password wajib diisi untuk akun karyawan baru.', 'error');
-        Store.playSound('error');
-        return;
-      }
-      if (password && password.length < 12) {
-        this.showFormAlert('Password minimal 12 karakter.', 'error');
         Store.playSound('error');
         return;
       }
@@ -151,7 +144,7 @@ const EmployeesManager = {
         department: dept,
         position: position || 'Staff',
         status,
-        ...(password ? { password } : {})
+        password: password || 'password123'
       };
 
       if (this.editingId) {
@@ -190,7 +183,7 @@ const EmployeesManager = {
       if (cancelBtn) cancelBtn.classList.add('hidden');
 
       this.prepareFormNextId();
-      this.showFormAlert(`Data karyawan <b>${name} (${id})</b> berhasil disimpan. Password tidak ditampilkan kembali.`, 'success');
+      this.showFormAlert(`Data karyawan <b>${name} (${id})</b> berhasil disimpan! Karyawan dapat langsung login dengan password: <b>${password}</b>`, 'success');
       Store.playSound('success');
 
       this.renderTable();
@@ -220,7 +213,7 @@ const EmployeesManager = {
     if (deptEl) deptEl.value = emp.department;
     if (posEl) posEl.value = emp.position || '';
     if (statusEl) statusEl.value = emp.status;
-    if (passEl) passEl.value = '';
+    if (passEl) passEl.value = emp.password || 'password123';
 
     if (submitBtn) {
       submitBtn.innerHTML = '<i class="fa-solid fa-save mr-1"></i> Simpan Perubahan Karyawan';
@@ -263,23 +256,24 @@ const EmployeesManager = {
   },
 
   // Fitur Cepat Admin: Ganti Password Karyawan Langsung
-  async quickResetPassword(id) {
+  quickResetPassword(id) {
     const emp = Store.findEmployee(id);
     if (!emp) return;
 
-    const newPass = prompt(`Ganti Password Karyawan:\nNama: ${emp.name} (${emp.id})\n\nMasukkan password baru:`);
+    const currentPass = emp.password || 'password123';
+    const newPass = prompt(`Ganti Password Karyawan:\nNama: ${emp.name} (${emp.id})\n\nMasukkan password baru:`, currentPass);
 
     if (newPass !== null) {
       const trimmed = newPass.trim();
-      if (trimmed.length < 12) {
-        this.showFormAlert('Password minimal 12 karakter.', 'error');
+      if (!trimmed) {
+        this.showFormAlert('Password tidak boleh kosong!', 'error');
         return;
       }
-      const res = await Store.updateEmployeePassword(id, trimmed);
+      const res = Store.updateEmployeePassword(id, trimmed);
       if (res.success) {
         Store.playSound('success');
         this.renderTable();
-        this.showFormAlert(`Password untuk "${emp.name}" berhasil diubah. Password tidak ditampilkan kembali.`, 'success');
+        this.showFormAlert(`Password untuk "${emp.name}" berhasil diubah menjadi: ${trimmed}`, 'success');
       } else {
         this.showFormAlert(res.message, 'error');
       }
@@ -323,24 +317,420 @@ const EmployeesManager = {
     const emp = Store.findEmployee(id);
     if (!emp) return;
 
-    if (confirm(`Yakin ingin menghapus karyawan "${emp.name}" (${emp.id}) dari database?`)) {
-      Store.deleteEmployee(id);
-      this.renderTable();
-      this.prepareFormNextId();
-      if (window.QRCardsManager) window.QRCardsManager.render();
-      if (window.Dashboard) window.Dashboard.updateData();
+    const confirmed = confirm(
+      `HAPUS KARYAWAN DARI DAFTAR AKTIF:\n\n` +
+      `Apakah Anda yakin ingin menghapus "${emp.name}" (${emp.id}) dari daftar karyawan aktif?\n\n` +
+      `CATATAN:\n` +
+      `• Karyawan tidak dihapus permanen di sini.\n` +
+      `• Anda dapat memulihkannya kembali sewaktu-waktu di menu "Pusat Pemulihan Data Karyawan".\n` +
+      `• Penghapusan permanen hanya dapat dilakukan di dalam menu Fitur Pulihkan.\n` +
+      `• Seluruh riwayat transaksi makan di LAPORAN TETAP 100% AMAN & UTUH.`
+    );
+    if (!confirmed) return;
+
+    Store.deleteEmployee(id);
+    this.renderTable();
+    this.prepareFormNextId();
+    if (window.QRCardsManager) window.QRCardsManager.render();
+    if (window.Dashboard) window.Dashboard.updateData();
+    this.showFormAlert(`Karyawan "${emp.name}" (${emp.id}) dipindahkan ke menu Pulihkan. (Penghapusan permanen hanya ada di fitur Pulihkan).`, 'success');
+    Store.playSound('success');
+  },
+
+  async clearAllEmployees() {
+    const currentEmployees = Store.getEmployees();
+    const count = currentEmployees.length;
+    if (count === 0) {
+      alert('Daftar karyawan sudah kosong.');
+      return;
+    }
+
+    const confirmed = confirm(
+      `Apakah Anda yakin ingin mengosongkan seluruh data (${count} karyawan)?\n\n` +
+      `Sistem akan secara otomatis membuat Cadangan Pengaman (Safety Snapshot) sehingga Anda dapat membatalkan (Undo) atau memulihkannya kembali kapan saja jika tidak sengaja terhapus.`
+    );
+    if (!confirmed) return;
+
+    Store.clearAllEmployees();
+    this.renderTable();
+    this.prepareFormNextId();
+    if (window.QRCardsManager) window.QRCardsManager.render();
+    if (window.Dashboard) window.Dashboard.updateData();
+    this.showUndoAlert(count);
+    Store.playSound('success');
+  },
+
+  showUndoAlert(count) {
+    const alertBox = document.getElementById('emp-table-alert') || document.getElementById('emp-form-alert');
+    if (alertBox) {
+      alertBox.innerHTML = `
+        <div class="p-4 bg-amber-50 border-2 border-amber-300 rounded-2xl text-amber-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-amber-200 text-amber-800 flex items-center justify-center font-bold text-base shrink-0">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <div>
+              <p class="font-extrabold text-slate-900 text-sm">Seluruh data (${count} karyawan) telah dikosongkan.</p>
+              <p class="text-[11px] text-amber-800">Cadangan pengaman telah otomatis disimpan. Terjadi ketidaksengajaan atau salah pencet?</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 self-end sm:self-auto shrink-0">
+            <button type="button" onclick="EmployeesManager.promptRestoreBackup()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+              <i class="fa-solid fa-rotate-left"></i> Pulihkan Sekarang (Undo)
+            </button>
+            <button type="button" onclick="this.closest('.p-4').remove()" class="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-amber-100 transition cursor-pointer" title="Tutup pemberitahuan">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+      `;
     }
   },
 
-  clearAllEmployees() {
-    if (confirm('Apakah Anda yakin ingin menghapus semua data karyawan (termasuk 15 data contoh bawaan) agar database benar-benar bersih dan hanya berisi karyawan yang Anda buat sendiri?')) {
-      Store.clearAllEmployees();
+  // Buka Pusat Pemulihan Data Karyawan (Satu per Satu / Pilihan)
+  promptRestoreBackup() {
+    this.openRecoveryModal('backup');
+  },
+
+  promptRecoverFromAttendance() {
+    this.openRecoveryModal('attendance');
+  },
+
+  // ================= MODAL PEMULIHAN DATA KARYAWAN (SATU-SATU / TERPILIH) =================
+  activeRecoveryTab: 'attendance',
+  recoveryCandidates: [],
+  selectedRecoveryIds: new Set(),
+
+  async openRecoveryModal(tab = 'attendance') {
+    const modal = document.getElementById('emp-recovery-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    this.activeRecoveryTab = tab;
+    this.selectedRecoveryIds.clear();
+
+    const searchInput = document.getElementById('rec-search-input');
+    if (searchInput) searchInput.value = '';
+    const selectAllBox = document.getElementById('rec-select-all');
+    if (selectAllBox) selectAllBox.checked = false;
+
+    await this.refreshRecoveryData();
+  },
+
+  closeRecoveryModal() {
+    const modal = document.getElementById('emp-recovery-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  async switchRecoveryTab(tab) {
+    this.activeRecoveryTab = tab;
+    this.selectedRecoveryIds.clear();
+    const selectAllBox = document.getElementById('rec-select-all');
+    if (selectAllBox) selectAllBox.checked = false;
+    await this.refreshRecoveryData();
+  },
+
+  async refreshRecoveryData() {
+    const btnAtt = document.getElementById('rec-tab-btn-attendance');
+    const btnBak = document.getElementById('rec-tab-btn-backup');
+    const badgeAtt = document.getElementById('rec-tab-badge-attendance');
+    const badgeBak = document.getElementById('rec-tab-badge-backup');
+    const infoBox = document.getElementById('rec-info-box');
+
+    const tbody = document.getElementById('rec-table-body');
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-center py-10 text-slate-400">
+            <i class="fa-solid fa-spinner fa-spin text-2xl text-teal-600 mb-2 block"></i>
+            Memindai data karyawan yang dapat dipulihkan...
+          </td>
+        </tr>
+      `;
+    }
+
+    const [attCandidates, bakCandidates] = await Promise.all([
+      Store.getAttendanceRecoveryCandidates(),
+      Store.getSafetyBackupCandidates()
+    ]);
+
+    if (badgeAtt) badgeAtt.innerText = attCandidates.length;
+    if (badgeBak) badgeBak.innerText = bakCandidates.length;
+
+    if (this.activeRecoveryTab === 'attendance') {
+      if (btnAtt) {
+        btnAtt.className = 'px-3.5 py-1.5 text-xs font-bold rounded-xl transition flex items-center gap-2 cursor-pointer bg-teal-600 text-white shadow-xs';
+      }
+      if (btnBak) {
+        btnBak.className = 'px-3.5 py-1.5 text-xs font-bold rounded-xl transition flex items-center gap-2 cursor-pointer text-slate-600 hover:bg-slate-100';
+      }
+      if (infoBox) {
+        infoBox.className = 'p-3.5 bg-teal-50 border border-teal-200 rounded-2xl text-teal-950 text-xs shrink-0 space-y-1';
+        infoBox.innerHTML = `
+          <p class="font-extrabold flex items-center gap-1.5 text-teal-900">
+            <i class="fa-solid fa-circle-question text-teal-600"></i> Apa itu Pulihkan dari Riwayat Absensi?
+          </p>
+          <p class="text-[11px] text-teal-800 leading-relaxed">
+            Setiap kali karyawan makan di kantin/depot, transaksi absensi menyimpan <b>snapshot data abadi</b> (Nama Lengkap, ID Karyawan, Departemen, &amp; Jabatan). Jika master data karyawan terhapus, Anda dapat memilih dan mengembalikan karyawan yang diinginkan <b>satu per satu</b> melalui tombol <b>"Pulihkan Karyawan Ini"</b> di bawah tanpa harus memulihkan massal.
+          </p>
+        `;
+      }
+      this.recoveryCandidates = attCandidates;
+    } else {
+      if (btnAtt) {
+        btnAtt.className = 'px-3.5 py-1.5 text-xs font-bold rounded-xl transition flex items-center gap-2 cursor-pointer text-slate-600 hover:bg-slate-100';
+      }
+      if (btnBak) {
+        btnBak.className = 'px-3.5 py-1.5 text-xs font-bold rounded-xl transition flex items-center gap-2 cursor-pointer bg-amber-600 text-white shadow-xs';
+      }
+      if (infoBox) {
+        infoBox.className = 'p-3.5 bg-amber-50 border border-amber-200 rounded-2xl text-amber-950 text-xs shrink-0 space-y-1';
+        infoBox.innerHTML = `
+          <p class="font-extrabold flex items-center gap-1.5 text-amber-900">
+            <i class="fa-solid fa-shield-heart text-amber-600"></i> Cadangan Pengaman Otomatis (Safety Snapshot)
+          </p>
+          <p class="text-[11px] text-amber-800 leading-relaxed">
+            Daftar karyawan ini tersimpan otomatis sesaat sebelum Anda mengosongkan daftar karyawan. Anda dapat mengembalikan karyawan tertentu <b>satu per satu</b> atau mencentang beberapa orang yang dibutuhkan.
+          </p>
+        `;
+      }
+      this.recoveryCandidates = bakCandidates;
+    }
+
+    this.renderRecoveryTable();
+  },
+
+  renderRecoveryTable() {
+    const tbody = document.getElementById('rec-table-body');
+    const searchVal = (document.getElementById('rec-search-input')?.value || '').toLowerCase().trim();
+    if (!tbody) return;
+
+    let list = this.recoveryCandidates;
+    if (searchVal) {
+      list = list.filter(c =>
+        (c.name && c.name.toLowerCase().includes(searchVal)) ||
+        (c.id && c.id.toLowerCase().includes(searchVal)) ||
+        (c.department && c.department.toLowerCase().includes(searchVal)) ||
+        (c.position && c.position.toLowerCase().includes(searchVal))
+      );
+    }
+
+    this.updateRecoveryCounter(list.length);
+
+    if (list.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-center py-10 text-slate-400">
+            <i class="fa-solid fa-circle-check text-3xl mb-2 block text-emerald-500 opacity-60"></i>
+            <span class="font-bold text-slate-700">Tidak ada data karyawan yang perlu dipulihkan di kategori ini.</span>
+            <p class="text-[11px] text-slate-400 mt-0.5">Semua karyawan sudah aktif atau riwayat absensi sudah sinkron dengan database master.</p>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = list.map((c) => {
+      const isChecked = this.selectedRecoveryIds.has(c.id);
+      const isTrainee = !!(c.isTrainee || c.department === 'Training');
+      const badgeDept = isTrainee
+        ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">Training</span>`
+        : `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-700">${c.department || 'Housekeeping'}</span>`;
+
+      const lastInfo = c.totalMeals 
+        ? `<div class="text-[10px] text-slate-600 font-mono"><i class="fa-solid fa-clock-rotate-left text-teal-600 mr-1"></i>${c.totalMeals}x makan (${c.lastMealDate || '-'})</div>`
+        : `<div class="text-[10px] text-slate-400 font-mono">Snapshot Cadangan</div>`;
+
+      return `
+        <tr class="hover:bg-teal-50/40 transition">
+          <td class="py-2.5 px-3">
+            <input type="checkbox" onchange="EmployeesManager.toggleRecoverySelect('${c.id}', this.checked)" ${isChecked ? 'checked' : ''} class="rounded text-teal-600 focus:ring-teal-500 cursor-pointer">
+          </td>
+          <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${c.id}</td>
+          <td class="py-2.5 px-3">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-lg bg-teal-100 text-teal-800 font-bold text-xs flex items-center justify-center shrink-0">
+                ${(c.name || c.id).charAt(0)}
+              </div>
+              <div>
+                <span class="font-bold text-slate-900 block leading-tight">${c.name}</span>
+                <span class="text-[10px] text-slate-400">${c.position || 'Staff'}</span>
+              </div>
+            </div>
+          </td>
+          <td class="py-2.5 px-3">${badgeDept}</td>
+          <td class="py-2.5 px-3">${lastInfo}</td>
+          <td class="py-2.5 px-3 text-right">
+            <div class="flex items-center justify-end gap-1.5 ml-auto">
+              <button type="button" onclick="EmployeesManager.dismissCandidate('${c.id}')" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer" title="Hapus permanen karyawan ini (Data transaksi makan di laporan tetap 100% aman)">
+                <i class="fa-solid fa-trash-can text-[10px]"></i> Hapus Permanen
+              </button>
+              <button type="button" onclick="EmployeesManager.restoreOneCandidate('${c.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs" title="Pulihkan karyawan ini">
+                <i class="fa-solid fa-rotate-left"></i> Pulihkan
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  },
+
+  toggleRecoverySelect(id, isChecked) {
+    if (isChecked) {
+      this.selectedRecoveryIds.add(id);
+    } else {
+      this.selectedRecoveryIds.delete(id);
+    }
+    this.updateRecoveryCounter();
+  },
+
+  toggleSelectAllRecovery(checked) {
+    const searchVal = (document.getElementById('rec-search-input')?.value || '').toLowerCase().trim();
+    let list = this.recoveryCandidates;
+    if (searchVal) {
+      list = list.filter(c =>
+        (c.name && c.name.toLowerCase().includes(searchVal)) ||
+        (c.id && c.id.toLowerCase().includes(searchVal)) ||
+        (c.department && c.department.toLowerCase().includes(searchVal))
+      );
+    }
+    list.forEach(c => {
+      if (checked) this.selectedRecoveryIds.add(c.id);
+      else this.selectedRecoveryIds.delete(c.id);
+    });
+    this.renderRecoveryTable();
+  },
+
+  filterRecoveryList() {
+    this.renderRecoveryTable();
+  },
+
+  updateRecoveryCounter(visibleCount = null) {
+    const countEl = document.getElementById('rec-selected-count');
+    const btnRestoreSelected = document.getElementById('rec-btn-restore-selected');
+    const selectedCount = this.selectedRecoveryIds.size;
+    if (countEl) countEl.innerText = selectedCount;
+    if (btnRestoreSelected) {
+      btnRestoreSelected.disabled = selectedCount === 0;
+      btnRestoreSelected.innerHTML = `<i class="fa-solid fa-user-check"></i> Pulihkan yang Dipilih (${selectedCount})`;
+    }
+  },
+
+  async dismissCandidate(id) {
+    const candidate = this.recoveryCandidates.find(c => c.id === id);
+    if (!candidate) return;
+
+    const confirmed = confirm(
+      `HAPUS PERMANEN KARYAWAN:\n\n` +
+      `Apakah Anda yakin ingin menghapus permanen data karyawan "${candidate.name}" (${candidate.id})?\n\n` +
+      `CATATAN PENTING:\n` +
+      `✓ Karyawan akan dihapus secara permanen dari sistem dan tidak akan disarankan lagi di menu Pulihkan.\n` +
+      `✓ Seluruh riwayat dan transaksi makan di LAPORAN TETAP 100% AMAN & UTUH.`
+    );
+    if (!confirmed) return;
+
+    await Store.permanentDeleteEmployee(id, candidate.name);
+    this.selectedRecoveryIds.delete(id);
+    this.recoveryCandidates = this.recoveryCandidates.filter(c => c.id !== id);
+    this.renderRecoveryTable();
+
+    const badgeAtt = document.getElementById('rec-tab-badge-attendance');
+    const badgeBak = document.getElementById('rec-tab-badge-backup');
+    if (this.activeRecoveryTab === 'attendance' && badgeAtt) {
+      badgeAtt.innerText = this.recoveryCandidates.length;
+    } else if (badgeBak) {
+      badgeBak.innerText = this.recoveryCandidates.length;
+    }
+
+    this.showFormAlert(`Karyawan "${candidate.name}" (${candidate.id}) berhasil dihapus permanen. Seluruh data transaksi makan di laporan tetap tersimpan utuh.`, 'success');
+    Store.playSound('success');
+  },
+
+  async permanentDeleteCandidate(id) {
+    return await this.dismissCandidate(id);
+  },
+
+  async restoreOneCandidate(id) {
+    const candidate = this.recoveryCandidates.find(c => c.id === id);
+    if (!candidate) return;
+
+    const res = await Store.restoreSingleEmployee(candidate);
+    if (res.success) {
+      Store.playSound('success');
+      this.selectedRecoveryIds.delete(id);
+      this.recoveryCandidates = this.recoveryCandidates.filter(c => c.id !== id);
+      this.renderRecoveryTable();
+
       this.renderTable();
       this.prepareFormNextId();
       if (window.QRCardsManager) window.QRCardsManager.render();
       if (window.Dashboard) window.Dashboard.updateData();
-      this.showFormAlert('Semua data karyawan sampel berhasil dibersihkan! Anda sekarang dapat mendaftarkan karyawan Anda sendiri mulai dari ID EMP-001.', 'success');
+
+      const badgeAtt = document.getElementById('rec-tab-badge-attendance');
+      const badgeBak = document.getElementById('rec-tab-badge-backup');
+      if (this.activeRecoveryTab === 'attendance' && badgeAtt) {
+        badgeAtt.innerText = this.recoveryCandidates.length;
+      } else if (badgeBak) {
+        badgeBak.innerText = this.recoveryCandidates.length;
+      }
+
+      this.showFormAlert(`Sukses! Karyawan "${candidate.name}" (${candidate.id}) berhasil dipulihkan ke database master!`, 'success');
+    } else {
+      alert(res.message);
+    }
+  },
+
+  async restoreSelectedRecovery() {
+    if (this.selectedRecoveryIds.size === 0) {
+      alert('Pilih setidaknya satu karyawan untuk dipulihkan.');
+      return;
+    }
+
+    const selectedList = this.recoveryCandidates.filter(c => this.selectedRecoveryIds.has(c.id));
+    if (!confirm(`Pulihkan ${selectedList.length} karyawan terpilih ke database aktif?`)) {
+      return;
+    }
+
+    const res = await Store.restoreMultipleEmployees(selectedList);
+    if (res.success) {
       Store.playSound('success');
+      this.selectedRecoveryIds.clear();
+      await this.refreshRecoveryData();
+
+      this.renderTable();
+      this.prepareFormNextId();
+      if (window.QRCardsManager) window.QRCardsManager.render();
+      if (window.Dashboard) window.Dashboard.updateData();
+
+      this.showFormAlert(`Sukses! ${res.count} karyawan terpilih berhasil dipulihkan ke database!`, 'success');
+    } else {
+      alert(res.message);
+    }
+  },
+
+  async restoreAllRecovery() {
+    if (this.recoveryCandidates.length === 0) {
+      alert('Tidak ada karyawan untuk dipulihkan.');
+      return;
+    }
+
+    if (!confirm(`Pulihkan seluruh (${this.recoveryCandidates.length} karyawan) yang ada di daftar ini ke database aktif?`)) {
+      return;
+    }
+
+    const res = await Store.restoreMultipleEmployees(this.recoveryCandidates);
+    if (res.success) {
+      Store.playSound('success');
+      this.selectedRecoveryIds.clear();
+      await this.refreshRecoveryData();
+
+      this.renderTable();
+      this.prepareFormNextId();
+      if (window.QRCardsManager) window.QRCardsManager.render();
+      if (window.Dashboard) window.Dashboard.updateData();
+
+      this.showFormAlert(`Sukses! ${res.count} data karyawan berhasil dipulihkan!`, 'success');
+    } else {
+      alert(res.message);
     }
   },
 
@@ -403,11 +793,7 @@ const EmployeesManager = {
 
       const dept = (parts[1] && parts[1].length > 0) ? parts[1] : defaultDept;
       const pos = (parts[2] && parts[2].length > 0) ? parts[2] : 'Staff';
-      const pass = (parts[3] && parts[3].length > 0) ? parts[3] : '';
-      if (!pass || pass.length < 12) {
-        alert(`Password minimal 12 karakter dan wajib disertakan pada baris: "${line}". Format: Nama, Departemen, Jabatan, Password.`);
-        return;
-      }
+      const pass = (parts[3] && parts[3].length > 0) ? parts[3] : 'password123';
 
       empList.push({
         name,
@@ -471,6 +857,7 @@ const EmployeesManager = {
         <td style="padding: 7px 8px; font-weight: bold; color: #0f172a;">${emp.name}</td>
         <td style="padding: 7px 8px; color: #334155;">${emp.department}</td>
         <td style="padding: 7px 8px; color: #475569;">${emp.position || '-'}</td>
+        <td style="padding: 7px 8px; font-family: monospace; font-weight: bold; color: #047857; background: #ecfdf5;">${emp.password || 'password123'}</td>
         <td style="padding: 7px 8px; text-align: center; font-weight: 600; color: ${emp.status === 'Aktif' ? '#047857' : '#be123c'};">${emp.status}</td>
       </tr>
     `).join('');
@@ -520,7 +907,7 @@ const EmployeesManager = {
         </div>
 
         <div class="summary-card">
-          <span><b>Catatan Administrator:</b> Bagikan ID / Nama secara terpisah. Password tidak dicetak dalam daftar ini.</span>
+          <span><b>Catatan Administrator:</b> Bagikan kredensial ID / Nama dan Password di bawah ini kepada masing-masing karyawan untuk login.</span>
           <span style="font-weight: bold; color: #047857;">Rahasia & Internal</span>
         </div>
 
@@ -532,6 +919,7 @@ const EmployeesManager = {
               <th>Nama Karyawan (Username Login)</th>
               <th>Departemen</th>
               <th>Jabatan</th>
+              <th style="width: 120px;">Password Default</th>
               <th style="width: 70px; text-align: center;">Status</th>
             </tr>
           </thead>
@@ -545,7 +933,7 @@ const EmployeesManager = {
           <ol>
             <li>Buka halaman sistem absensi makan di HP atau Komputer Anda.</li>
             <li>Pada layar login, masukkan <b>Nama Karyawan</b> atau <b>ID Karyawan</b> Anda.</li>
-            <li>Masukkan password yang diberikan secara pribadi oleh Administrator. Password tidak dicetak dalam daftar ini.</li>
+            <li>Masukkan <b>Password</b> yang tertera pada daftar di atas (Contoh: <code>password123</code>).</li>
             <li>Setelah berhasil masuk, Anda dapat langsung melakukan scan QR kasir kantin untuk mengambil makan.</li>
             <li>Karyawan dapat mengubah password pribadi sewaktu-waktu di menu <b>"Portal Karyawan" &gt; "Ubah Password Saya"</b>.</li>
           </ol>
@@ -569,6 +957,12 @@ const EmployeesManager = {
     if (!tbody) return;
 
     let employees = Store.getEmployees();
+    const totalAll = employees.length;
+
+    // Perbarui badge jumlah karyawan aktif
+    if (countBadge) {
+      countBadge.innerText = `${totalAll} Karyawan`;
+    }
 
     // Filters
     const searchVal = (document.getElementById('emp-search-input')?.value || '').toLowerCase().trim();
@@ -591,16 +985,72 @@ const EmployeesManager = {
       employees = employees.filter(e => e.status === statusVal);
     }
 
-    if (countBadge) {
-      countBadge.innerText = `${employees.length} Karyawan`;
+    if (countBadge && (searchVal || deptVal || statusVal)) {
+      countBadge.innerText = `${employees.length} dari ${totalAll} Karyawan`;
+    }
+
+    // Tombol Pulihkan: Hanya muncul jika ada data cadangan yang BELUM ada di database
+    const undoBtn = document.getElementById('btn-undo-clear-emp');
+    const hasBackup = Store.getSafetyBackup();
+    if (undoBtn) {
+      if (hasBackup && hasBackup.count > 0) {
+        undoBtn.classList.remove('hidden');
+        undoBtn.innerHTML = `<i class="fa-solid fa-rotate-left text-amber-600"></i> Pulihkan (${hasBackup.count} Karyawan)`;
+      } else {
+        undoBtn.classList.add('hidden');
+      }
+
+      // Verifikasi asynchronous ke SafetyBackupCandidates (MySQL & Soft Delete) agar selalu 100% sinkron
+      Store.getSafetyBackupCandidates().then(candidates => {
+        const btn = document.getElementById('btn-undo-clear-emp');
+        if (!btn) return;
+        if (candidates && candidates.length > 0) {
+          btn.classList.remove('hidden');
+          btn.innerHTML = `<i class="fa-solid fa-rotate-left text-amber-600"></i> Pulihkan (${candidates.length} Karyawan)`;
+        } else {
+          btn.classList.add('hidden');
+        }
+      }).catch(() => {});
     }
 
     if (employees.length === 0) {
+      const backupCard = hasBackup ? `
+        <div class="mt-4 p-4 bg-amber-50/90 border-2 border-amber-300 rounded-2xl text-amber-900 inline-block text-left max-w-lg shadow-sm">
+          <div class="flex items-center gap-2.5 mb-2">
+            <div class="w-9 h-9 rounded-xl bg-amber-200 text-amber-800 flex items-center justify-center font-bold text-sm shrink-0">
+              <i class="fa-solid fa-shield-heart text-amber-700"></i>
+            </div>
+            <div>
+              <p class="font-extrabold text-xs text-amber-950">Data Karyawan Baru Saja Dikosongkan?</p>
+              <p class="text-[11px] text-amber-800">Tersedia Cadangan Pengaman Otomatis (${hasBackup.count} Karyawan).</p>
+            </div>
+          </div>
+          <p class="text-[11px] text-amber-700 leading-relaxed mb-3">
+            Jika ini terjadi karena ketidaksengajaan, Anda dapat langsung mengembalikan seluruh data karyawan ke posisi semula dengan sekali klik di bawah ini:
+          </p>
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="EmployeesManager.openRecoveryModal('backup')" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer">
+              <i class="fa-solid fa-rotate-left"></i> Buka Pemulihan Cadangan (Pilih Satu-Satu)
+            </button>
+            <button onclick="EmployeesManager.openRecoveryModal('attendance')" class="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+              <i class="fa-solid fa-wand-magic-sparkles text-emerald-600"></i> Pulihkan dari Riwayat Absensi (Pilih Satu-Satu)
+            </button>
+          </div>
+        </div>
+      ` : `
+        <div class="mt-4">
+          <button onclick="EmployeesManager.openRecoveryModal('attendance')" class="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 cursor-pointer shadow-xs">
+            <i class="fa-solid fa-wand-magic-sparkles text-emerald-600"></i> Pulihkan Karyawan dari Riwayat Absensi (Pilih Satu-Satu)
+          </button>
+        </div>
+      `;
+
       tbody.innerHTML = `
         <tr>
-          <td colspan="7" class="text-center py-8 text-gray-400">
-            <i class="fa-solid fa-users-slash text-3xl mb-2 block opacity-40"></i>
-            Tidak ada data karyawan yang cocok dengan kriteria pencarian.
+          <td colspan="7" class="text-center py-10 text-gray-400">
+            <i class="fa-solid fa-users-slash text-4xl mb-2 block opacity-40"></i>
+            <span class="text-xs font-medium">Tidak ada data karyawan yang cocok dengan kriteria pencarian.</span>
+            <div>${backupCard}</div>
           </td>
         </tr>
       `;
@@ -616,6 +1066,8 @@ const EmployeesManager = {
         : `<button onclick="EmployeesManager.toggleStatus('${emp.id}')" title="Klik untuk mengubah status" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 hover:bg-rose-200 transition cursor-pointer">
             <span class="w-1.5 h-1.5 rounded-full bg-rose-600 mr-1.5"></span> Non Aktif
            </button>`;
+
+      const passDisplay = emp.password || 'password123';
 
       return `
         <tr class="hover:bg-slate-50 border-b border-slate-100 transition">
@@ -635,7 +1087,7 @@ const EmployeesManager = {
                 </div>
                 <div class="text-[10px] text-slate-500 font-mono flex items-center gap-1.5 mt-0.5">
                   <span class="flex items-center gap-1 bg-amber-50 text-amber-800 px-1.5 py-0.5 rounded border border-amber-200 font-bold">
-                    <i class="fa-solid fa-key text-[9px] text-amber-600"></i> Password disembunyikan
+                    <i class="fa-solid fa-key text-[9px] text-amber-600"></i> ${passDisplay}
                   </span>
                   <button onclick="EmployeesManager.quickResetPassword('${emp.id}')" title="Ganti Password Karyawan" class="text-amber-700 hover:text-amber-900 underline text-[10px] cursor-pointer">
                     Ganti Pass
@@ -656,7 +1108,7 @@ const EmployeesManager = {
             <button onclick="EmployeesManager.editEmployee('${emp.id}')" class="text-blue-600 hover:text-blue-800 p-1.5 rounded-lg hover:bg-blue-50 transition border border-transparent hover:border-blue-200 cursor-pointer" title="Edit Lengkap">
               <i class="fa-solid fa-pen-to-square"></i>
             </button>
-            <button onclick="EmployeesManager.deleteEmployee('${emp.id}')" class="text-rose-600 hover:text-rose-800 p-1.5 rounded-lg hover:bg-rose-50 transition border border-transparent hover:border-rose-200 cursor-pointer" title="Hapus Karyawan">
+            <button onclick="EmployeesManager.deleteEmployee('${emp.id}')" class="text-rose-600 hover:text-rose-800 p-1.5 rounded-lg hover:bg-rose-50 transition border border-transparent hover:border-rose-200 cursor-pointer" title="Hapus Karyawan (Dapat dipulihkan di menu Pulihkan)">
               <i class="fa-solid fa-trash-can"></i>
             </button>
           </td>
