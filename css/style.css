@@ -6,6 +6,11 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Core Safety Utilities (Pencegah Tampilan Rusak jika Tailwind CDN Terhambat) */
+.hidden {
+  display: none !important;
+}
+
 body {
   background-image:
     radial-gradient(ellipse at 15% 15%, rgba(16, 185, 129, 0.28) 0%, transparent 48%),

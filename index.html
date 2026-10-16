@@ -10,9 +10,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap">
 
-  <!-- Tailwind CSS CDN & Config -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
+  <!-- Tailwind CSS CDN & Config (Bypass Cloudflare Rocket Loader) -->
+  <script data-cfasync="false" src="https://cdn.tailwindcss.com"></script>
+  <script data-cfasync="false">
     tailwind.config = {
       theme: {
         extend: {
@@ -46,7 +46,7 @@
       </div>
     </div>
   </div>
-  <script>
+  <script data-cfasync="false">
     // Safety auto-dismiss: otomatis hilangkan loading screen jika melebihi 600ms
     setTimeout(function() {
       var ls = document.getElementById('app-loading-screen');
@@ -279,7 +279,7 @@
             <i class="fa-regular fa-clock text-emerald-400"></i>
             <span id="header-live-clock">--:--:-- WIB</span>
           </div>
-          <script>
+          <script data-cfasync="false">
             (function() {
               try {
                 var d = new Date();
@@ -2706,7 +2706,7 @@
     </div>
   </div>
 
-  <script>
+  <script data-cfasync="false">
     function togglePasswordVisibility(inputId, btn) {
       const input = document.getElementById(inputId);
       if (!input) return;
@@ -2917,22 +2917,22 @@
   </div> <!-- END #app-shell -->
 
   <!-- ================= SCRIPTS ================= -->
-  <!-- Library Pustaka Lokal (Cepat & Bebas Lag Internet) -->
-  <script src="js/libs/qrcode.min.js"></script>
-  <script src="js/libs/html5-qrcode.min.js"></script>
-  <script src="js/libs/chart.min.js"></script>
-  <script src="js/libs/html2pdf.bundle.min.js"></script>
+  <!-- Library Pustaka Lokal (Cepat & Bebas Lag Internet, Bypass Cloudflare Rocket Loader) -->
+  <script data-cfasync="false" src="js/libs/qrcode.min.js"></script>
+  <script data-cfasync="false" src="js/libs/html5-qrcode.min.js"></script>
+  <script data-cfasync="false" src="js/libs/chart.min.js"></script>
+  <script data-cfasync="false" src="js/libs/html2pdf.bundle.min.js"></script>
 
-  <script src="js/store.js?v=20261015_fixrecovery"></script>
-  <script src="js/auth.js?v=20261015_fixrecovery"></script>
-  <script src="js/dashboard.js?v=20261015_fixrecovery"></script>
-  <script src="js/attendance.js?v=20261015_fixrecovery"></script>
-  <script src="js/training.js?v=20261015_fixrecovery"></script>
-  <script src="js/tenants.js?v=20261015_fixrecovery"></script>
-  <script src="js/employees.js?v=20261015_fixrecovery"></script>
-  <script src="js/qr_cards.js?v=20261015_fixrecovery"></script>
-  <script src="js/reports.js?v=20261015_fixrecovery"></script>
-  <script src="js/app.js?v=20261015_fixrecovery"></script>
+  <script data-cfasync="false" src="js/store.js?v=20261016_hosting"></script>
+  <script data-cfasync="false" src="js/auth.js?v=20261016_hosting"></script>
+  <script data-cfasync="false" src="js/dashboard.js?v=20261016_hosting"></script>
+  <script data-cfasync="false" src="js/attendance.js?v=20261016_hosting"></script>
+  <script data-cfasync="false" src="js/training.js?v=20261016_hosting"></script>
+  <script data-cfasync="false" src="js/tenants.js?v=20261016_hosting"></script>
+  <script data-cfasync="false" src="js/employees.js?v=20261016_hosting"></script>
+  <script data-cfasync="false" src="js/qr_cards.js?v=20261016_hosting"></script>
+  <script data-cfasync="false" src="js/reports.js?v=20261016_hosting"></script>
+  <script data-cfasync="false" src="js/app.js?v=20261016_hosting"></script>
 
 </body>
 </html>
