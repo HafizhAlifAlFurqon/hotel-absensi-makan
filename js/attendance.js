@@ -106,8 +106,8 @@ const AttendanceManager = {
     if (prevCont) {
       prevCont.innerHTML = `
         <div class="p-6 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-xl">
-          <i class="fa-solid fa-id-badge text-3xl mb-2 text-slate-300"></i>
-          <p class="text-xs font-medium">Scan QR atau ketik ID Karyawan untuk melihat informasi</p>
+          <i class="fa-solid fa-qrcode text-3xl mb-2 text-slate-300"></i>
+          <p class="text-xs font-medium">Klik <b>Buka Kamera Scan QR</b> dan arahkan ke Kartu QR Karyawan / Trainee</p>
         </div>
       `;
     }
@@ -191,8 +191,8 @@ const AttendanceManager = {
     if (!employeeId) {
       previewContainer.innerHTML = `
         <div class="p-6 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-xl">
-          <i class="fa-solid fa-id-badge text-3xl mb-2 text-slate-300"></i>
-          <p class="text-xs font-medium">Scan QR atau ketik ID Karyawan untuk melihat informasi</p>
+          <i class="fa-solid fa-qrcode text-3xl mb-2 text-slate-300"></i>
+          <p class="text-xs font-medium">Klik <b>Buka Kamera Scan QR</b> dan arahkan ke Kartu QR Karyawan / Trainee</p>
         </div>
       `;
       return;
@@ -238,13 +238,15 @@ const AttendanceManager = {
     `;
   },
 
-  confirmCanteenAttendance() {
+  confirmCanteenAttendance(scannedEmpId) {
     const tenantKey = this.currentCanteenKey || 'tenant1';
     const input = document.getElementById('canteen-emp-id-input');
-    const empId = input ? input.value.trim() : '';
+    const empId = (typeof scannedEmpId === 'string' && scannedEmpId.trim())
+      ? scannedEmpId.trim()
+      : (input ? input.value.trim() : (this.lastScannedEmpId || ''));
 
     if (!empId) {
-      alert('Mohon ketik atau scan ID Karyawan / Trainee terlebih dahulu.');
+      alert('Mohon scan Kartu QR Karyawan / Trainee terlebih dahulu.');
       return;
     }
 
@@ -257,6 +259,7 @@ const AttendanceManager = {
       Store.playSound('success');
       this.renderCanteenTodayList();
       if (input) input.value = '';
+      this.lastScannedEmpId = '';
       this.previewCanteenEmployee('');
       this.showScanModal(result, empId);
     } else {
@@ -340,7 +343,8 @@ const AttendanceManager = {
           this.previewCanteenEmployee(decodedText);
           const empInput = document.getElementById('canteen-emp-id-input');
           if (empInput) empInput.value = decodedText;
-          this.confirmCanteenAttendance();
+          this.lastScannedEmpId = decodedText;
+          this.confirmCanteenAttendance(decodedText);
           qrScanner.stop().then(() => {
             this.activeScanner.canteen = null;
             readerEl.classList.add('hidden');
@@ -405,8 +409,8 @@ const AttendanceManager = {
     if (!employeeId) {
       previewContainer.innerHTML = `
         <div class="p-6 text-center text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
-          <i class="fa-solid fa-id-badge text-3xl mb-2 text-gray-300"></i>
-          <p class="text-sm font-medium">Scan QR atau ketik ID Karyawan untuk melihat informasi</p>
+          <i class="fa-solid fa-qrcode text-3xl mb-2 text-gray-300"></i>
+          <p class="text-sm font-medium">Klik <b>Buka Kamera Scan QR</b> dan arahkan ke Kartu QR Karyawan</p>
         </div>
       `;
       return;
@@ -488,24 +492,26 @@ const AttendanceManager = {
     `;
   },
 
-  // Tombol Konfirmasi Absensi
-  confirmAttendance(tenantKey) {
+  // Tombol / Aksi Konfirmasi Absensi
+  confirmAttendance(tenantKey, scannedEmpId) {
     const input = document.getElementById(`${tenantKey}-emp-id-input`);
     const dateInput = document.getElementById(`${tenantKey}-date-input`);
     const resultBox = document.getElementById(`${tenantKey}-result-message`);
 
-    if (!input || !resultBox) return;
-
-    const empId = input.value.trim();
+    const empId = (typeof scannedEmpId === 'string' && scannedEmpId.trim())
+      ? scannedEmpId.trim()
+      : (input ? input.value.trim() : '');
     const dateStr = dateInput ? dateInput.value : Store.getTodayDateString();
 
     if (!empId) {
-      resultBox.innerHTML = `
-        <div class="p-3.5 bg-amber-50 border border-amber-300 rounded-xl text-amber-800 text-xs flex items-center gap-2">
-          <i class="fa-solid fa-triangle-exclamation text-base"></i>
-          <span>Harap masukkan ID Karyawan atau scan QR terlebih dahulu.</span>
-        </div>
-      `;
+      if (resultBox) {
+        resultBox.innerHTML = `
+          <div class="p-3.5 bg-amber-50 border border-amber-300 rounded-xl text-amber-800 text-xs flex items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation text-base"></i>
+            <span>Harap scan Kartu QR Karyawan terlebih dahulu.</span>
+          </div>
+        `;
+      }
       return;
     }
 
@@ -611,13 +617,13 @@ const AttendanceManager = {
         config,
         (decodedText) => {
           // Ketika QR terbaca
+          const empId = decodedText.trim();
           const input = document.getElementById(`${tenantKey}-emp-id-input`);
           if (input) {
-            input.value = decodedText.trim();
-            AttendanceManager.previewEmployee(tenantKey, decodedText.trim());
-            // Play notification tone
-            Store.playSound('success');
+            input.value = empId;
           }
+          AttendanceManager.previewEmployee(tenantKey, empId);
+          AttendanceManager.confirmAttendance(tenantKey, empId);
         },
         (errorMessage) => {
           // Scanning frame error, ignore
@@ -898,7 +904,7 @@ const AttendanceManager = {
             <div id="${tenantKey}-tab-scanner" class="space-y-4">
               <h3 class="font-bold text-slate-900 text-sm flex items-center justify-between">
                 <span class="flex items-center gap-2">
-                  <i class="fa-solid fa-qrcode text-emerald-600"></i> Scan QR atau Masukkan ID Karyawan
+                  <i class="fa-solid fa-qrcode text-emerald-600"></i> Scan QR Karyawan
                 </span>
                 <button id="${tenantKey}-btn-toggle-cam" onclick="AttendanceManager.toggleScanner('${tenantKey}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition flex items-center gap-1.5">
                   <i class="fa-solid fa-camera"></i> Buka Kamera Scan QR
@@ -907,29 +913,11 @@ const AttendanceManager = {
 
               <div id="${tenantKey}-qr-reader" class="hidden w-full bg-black rounded-xl overflow-hidden relative"></div>
 
-              <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  ID Karyawan (Ketik atau gunakan Barcode Scanner)
-                </label>
-                <div class="relative">
-                  <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <i class="fa-solid fa-id-card"></i>
-                  </div>
-                  <input type="text" id="${tenantKey}-emp-id-input" placeholder="Contoh: EMP-001 (Tekan Enter untuk konfirmasi)" class="w-full pl-10 pr-4 py-2.5 text-sm font-mono font-bold uppercase rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none transition bg-slate-50">
-                </div>
-              </div>
-
               <div id="${tenantKey}-preview-container">
                 <div class="p-6 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-xl">
-                  <i class="fa-solid fa-id-badge text-3xl mb-2 text-slate-300"></i>
-                  <p class="text-xs font-medium">Scan QR atau ketik ID Karyawan untuk melihat informasi</p>
+                  <i class="fa-solid fa-qrcode text-3xl mb-2 text-slate-300"></i>
+                  <p class="text-xs font-medium">Klik <b>Buka Kamera Scan QR</b> dan arahkan ke Kartu QR Karyawan</p>
                 </div>
-              </div>
-
-              <div>
-                <button id="${tenantKey}-btn-confirm" onclick="AttendanceManager.confirmAttendance('${tenantKey}')" class="w-full py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-sm rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
-                  <i class="fa-solid fa-circle-check text-base"></i> Konfirmasi Absensi Makan
-                </button>
               </div>
 
               <div id="${tenantKey}-result-message"></div>

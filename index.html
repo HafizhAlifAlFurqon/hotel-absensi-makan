@@ -660,11 +660,11 @@
               </button>
             </div>
 
-            <!-- TAB 1: Kasir Scan Karyawan (Scanner Kamera & Manual ID) -->
+            <!-- TAB 1: Kasir Scan Karyawan (Scanner Kamera QR) -->
             <div id="canteen-tab-scanner" class="space-y-4">
               <h3 class="font-bold text-slate-900 text-sm flex flex-wrap items-center justify-between gap-2">
                 <span class="flex items-center gap-2">
-                  <i class="fa-solid fa-qrcode text-emerald-600"></i> Scan QR atau Masukkan ID Karyawan
+                  <i class="fa-solid fa-qrcode text-emerald-600"></i> Scan QR Karyawan / Training
                 </span>
                 <div class="flex items-center gap-1.5">
                   <button type="button" onclick="Store.playSound('success')" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold border border-slate-200 transition flex items-center gap-1 cursor-pointer" title="Uji Coba Suara Beep Scanner">
@@ -678,32 +678,11 @@
 
               <div id="canteen-qr-reader" class="hidden w-full bg-black rounded-xl overflow-hidden relative"></div>
 
-              <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  ID Karyawan / Anak Training (Ketik atau Barcode Scanner)
-                </label>
-                <div class="relative">
-                  <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <i class="fa-solid fa-id-card"></i>
-                  </div>
-                  <input type="text" id="canteen-emp-id-input" placeholder="Contoh: EMP-001 / TRN-001 (Tekan Enter untuk konfirmasi)" class="w-full pl-10 pr-4 py-2.5 text-sm font-mono font-bold uppercase rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition bg-slate-50">
-                </div>
-                <p class="text-[11px] text-slate-400 mt-1">
-                  Ketik ID atau arahkan kartu QR ke scanner. Sistem otomatis memvalidasi jatah makan.
-                </p>
-              </div>
-
               <div id="canteen-preview-container">
                 <div class="p-6 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-xl">
-                  <i class="fa-solid fa-id-badge text-3xl mb-2 text-slate-300"></i>
-                  <p class="text-xs font-medium">Scan QR atau ketik ID Karyawan untuk melihat informasi</p>
+                  <i class="fa-solid fa-qrcode text-3xl mb-2 text-slate-300"></i>
+                  <p class="text-xs font-medium">Klik <b>Buka Kamera Scan QR</b> dan arahkan ke Kartu QR Karyawan / Siswa Magang</p>
                 </div>
-              </div>
-
-              <div>
-                <button id="canteen-btn-confirm" onclick="AttendanceManager.confirmCanteenAttendance()" class="w-full py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-sm rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
-                  <i class="fa-solid fa-circle-check text-base"></i> Konfirmasi Absensi Makan
-                </button>
               </div>
 
               <div id="canteen-result-message"></div>
@@ -2926,7 +2905,7 @@
   <script data-cfasync="false" src="js/store.js?v=20261016_hosting"></script>
   <script data-cfasync="false" src="js/auth.js?v=20261016_hosting"></script>
   <script data-cfasync="false" src="js/dashboard.js?v=20261017_today"></script>
-  <script data-cfasync="false" src="js/attendance.js?v=20261016_hosting"></script>
+  <script data-cfasync="false" src="js/attendance.js?v=20261017_no_input_id"></script>
   <script data-cfasync="false" src="js/training.js?v=20261016_hosting"></script>
   <script data-cfasync="false" src="js/tenants.js?v=20261016_hosting"></script>
   <script data-cfasync="false" src="js/employees.js?v=20261016_hosting"></script>
