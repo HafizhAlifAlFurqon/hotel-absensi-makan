@@ -190,7 +190,7 @@ const App = {
 
     // Inisialisasi konten halaman terpilih
     if (pageId === 'dashboard' && window.Dashboard) {
-      window.Dashboard.render();
+      window.Dashboard.init();
     } else if (pageId === 'canteen' && window.AttendanceManager) {
       window.AttendanceManager.initCanteenPage();
     } else if (pageId === 'training' && window.TrainingManager) {

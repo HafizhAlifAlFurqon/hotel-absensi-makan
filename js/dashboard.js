@@ -10,26 +10,54 @@ const Dashboard = {
   endDate: Store.getTodayDateString(),
   chartInstance: null,
 
-  init() {
+  initInputs() {
+    const todayStr = Store.getTodayDateString();
     const singleInput = document.getElementById('dash-single-date');
     const startEl = document.getElementById('dash-start-date');
     const endEl = document.getElementById('dash-end-date');
 
+    if (singleInput && !singleInput.value) {
+      singleInput.value = todayStr;
+    }
+    if (startEl && !startEl.value) {
+      startEl.value = todayStr;
+    }
+    if (endEl && !endEl.value) {
+      endEl.value = todayStr;
+    }
+  },
+
+  init() {
+    const todayStr = Store.getTodayDateString();
+    const singleInput = document.getElementById('dash-single-date');
+    const startEl = document.getElementById('dash-start-date');
+    const endEl = document.getElementById('dash-end-date');
+
+    this.initInputs();
+
     if (this.filterMode === 'single') {
-      if (singleInput && singleInput.value) {
-        this.startDate = singleInput.value;
-        this.endDate = singleInput.value;
-      } else if (!this.startDate) {
-        this.startDate = Store.getTodayDateString();
-        this.endDate = this.startDate;
+      if (singleInput) {
+        singleInput.value = todayStr;
       }
+      this.startDate = todayStr;
+      this.endDate = todayStr;
     } else {
-      if (startEl && startEl.value) this.startDate = startEl.value;
-      if (endEl && endEl.value) this.endDate = endEl.value;
-      if (!this.startDate) this.startDate = Store.getTodayDateString();
-      if (!this.endDate) this.endDate = Store.getTodayDateString();
+      this.startDate = (startEl && startEl.value) ? startEl.value : todayStr;
+      this.endDate = (endEl && endEl.value) ? endEl.value : todayStr;
     }
     this.render();
+  },
+
+  setSingleDate(val) {
+    const todayStr = Store.getTodayDateString();
+    const dateVal = val || todayStr;
+    this.startDate = dateVal;
+    this.endDate = dateVal;
+    const singleInput = document.getElementById('dash-single-date');
+    if (singleInput) {
+      singleInput.value = dateVal;
+    }
+    this.updateData();
   },
 
   setFilterMode(mode) {
@@ -40,9 +68,13 @@ const Dashboard = {
     const btnRange = document.getElementById('dash-btn-mode-range');
     const startEl = document.getElementById('dash-start-date');
     const endEl = document.getElementById('dash-end-date');
+    const todayStr = Store.getTodayDateString();
 
     if (mode === 'single') {
-      if (singleInput) singleInput.classList.remove('hidden');
+      if (singleInput) {
+        singleInput.classList.remove('hidden');
+        singleInput.value = todayStr; // Di-set langsung ke hari ini
+      }
       if (rangeContainer) rangeContainer.classList.add('hidden');
       if (btnSingle) {
         btnSingle.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 text-white shadow-sm';
@@ -50,10 +82,8 @@ const Dashboard = {
       if (btnRange) {
         btnRange.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200';
       }
-      if (singleInput && singleInput.value) {
-        this.startDate = singleInput.value;
-      }
-      this.endDate = this.startDate;
+      this.startDate = todayStr;
+      this.endDate = todayStr;
     } else {
       if (singleInput) singleInput.classList.add('hidden');
       if (rangeContainer) rangeContainer.classList.remove('hidden');
@@ -63,8 +93,10 @@ const Dashboard = {
       if (btnRange) {
         btnRange.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 text-white shadow-sm';
       }
-      if (startEl && startEl.value) this.startDate = startEl.value;
-      if (endEl && endEl.value) this.endDate = endEl.value;
+      if (startEl && !startEl.value) startEl.value = todayStr;
+      if (endEl && !endEl.value) endEl.value = todayStr;
+      this.startDate = (startEl && startEl.value) ? startEl.value : todayStr;
+      this.endDate = (endEl && endEl.value) ? endEl.value : todayStr;
     }
     this.updateData();
   },
@@ -326,6 +358,7 @@ const Dashboard = {
   },
 
   render() {
+    this.initInputs();
     this.updateData();
   }
 };
