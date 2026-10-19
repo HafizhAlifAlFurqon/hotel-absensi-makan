@@ -77,7 +77,7 @@ const Dashboard = {
       }
       if (rangeContainer) rangeContainer.classList.add('hidden');
       if (btnSingle) {
-        btnSingle.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 text-white shadow-sm';
+        btnSingle.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white shadow-sm';
       }
       if (btnRange) {
         btnRange.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200';
@@ -91,7 +91,7 @@ const Dashboard = {
         btnSingle.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200';
       }
       if (btnRange) {
-        btnRange.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 text-white shadow-sm';
+        btnRange.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white shadow-sm';
       }
       if (startEl && !startEl.value) startEl.value = todayStr;
       if (endEl && !endEl.value) endEl.value = todayStr;

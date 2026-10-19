@@ -28,20 +28,20 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
   <!-- Custom Style & Print CSS -->
-  <link rel="stylesheet" href="css/style.css?v=20261016_ultralight">
+  <link rel="stylesheet" href="css/style.css?v=20261019_mediumblue_liquid">
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col antialiased">
 
   <!-- ================= LOADING SCREEN INITIAL (SUPER CEPAT) ================= -->
   <div id="app-loading-screen" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[100] flex flex-col items-center justify-center transition-opacity duration-300">
     <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-2xl flex flex-col items-center text-center max-w-xs sm:max-w-sm mx-4 border border-slate-100 animate-bounce-short">
-      <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white text-2xl shadow-lg mb-4 animate-bounce">
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-sky-500 flex items-center justify-center text-white text-2xl shadow-lg mb-4 animate-bounce">
         <i class="fa-solid fa-utensils"></i>
       </div>
       <h3 class="font-extrabold text-slate-900 text-base sm:text-lg hotel-name-display mb-1">BeSS Mansion Hotel Surabaya</h3>
       <p class="text-xs text-slate-500 mb-5">Memuat Sistem Absensi Makan Karyawan...</p>
-      <div class="flex items-center gap-2 text-xs text-emerald-600 font-bold bg-emerald-50 px-4 py-2 rounded-full border border-emerald-100">
-        <div class="w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+      <div class="flex items-center gap-2 text-xs text-blue-600 font-bold bg-blue-50 px-4 py-2 rounded-full border border-blue-100">
+        <div class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
         <span>Menyiapkan Sistem...</span>
       </div>
     </div>
@@ -62,7 +62,7 @@
     
     <!-- BACKGROUND DENGAN BG.JPG & OVERLAY MEWAH KHAS HOTEL -->
     <div class="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat" style="background-image: url('bg.jpg');"></div>
-    <div class="fixed inset-0 z-0 bg-gradient-to-br from-emerald-950/70 via-slate-950/75 to-slate-900/80 backdrop-blur-[1px]"></div>
+    <div class="fixed inset-0 z-0 bg-gradient-to-br from-blue-950/75 via-slate-950/80 to-blue-900/75 backdrop-blur-[1px]"></div>
 
     <!-- AMBIENT LIQUID FLUID ORBS (BACKGROUND LOGIN) -->
     <div class="liquid-bg-container pointer-events-none fixed inset-0 overflow-hidden z-0 no-print" aria-hidden="true">
@@ -71,6 +71,7 @@
       <div class="liquid-blob liquid-blob-3"></div>
       <div class="liquid-blob liquid-blob-4"></div>
       <div class="liquid-blob liquid-blob-5"></div>
+      <div class="liquid-blob liquid-blob-6"></div>
     </div>
 
     <!-- TOP HEADER BAR PADA HALAMAN LOGIN -->
@@ -82,14 +83,14 @@
           <span>Kembali</span>
         </button>
 
-        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-emerald-950/50">
+        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-sky-500 flex items-center justify-center text-white shadow-lg shadow-blue-950/50">
           <i class="fa-solid fa-hotel text-lg sm:text-xl"></i>
         </div>
         <div>
           <h1 class="font-black text-base sm:text-lg text-white tracking-tight hotel-name-display leading-tight">
             BeSS Mansion Hotel Surabaya
           </h1>
-          <p class="text-[11px] sm:text-xs text-emerald-300 font-medium">
+          <p class="text-[11px] sm:text-xs text-blue-300 font-medium">
             Sistem Absensi Makan Karyawan & Kantin
           </p>
         </div>
@@ -97,15 +98,15 @@
 
       <!-- Status Jam, Shift & Database MySQL -->
       <div class="flex items-center gap-2 sm:gap-3">
-        <div id="login-db-status" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-500/50 shadow-xs">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+        <div id="login-db-status" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-950/80 text-blue-300 border border-blue-500/50 shadow-xs">
+          <span class="w-2 h-2 rounded-full bg-blue-400 mr-1.5 animate-pulse"></span>
           <span>MySQL Terhubung</span>
         </div>
         <div id="login-shift-badge" class="hidden md:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100/90 text-amber-950 border border-amber-300 shadow-xs">
           <span class="w-2 h-2 rounded-full bg-amber-500 mr-1.5 animate-pulse"></span> Memeriksa Shift...
         </div>
-        <div class="bg-black/40 px-3 py-1.5 rounded-xl border border-white/10 font-mono text-xs sm:text-sm font-bold text-emerald-300 flex items-center gap-2 shadow-inner">
-          <i class="fa-regular fa-clock text-emerald-400"></i>
+        <div class="bg-black/40 px-3 py-1.5 rounded-xl border border-white/10 font-mono text-xs sm:text-sm font-bold text-blue-300 flex items-center gap-2 shadow-inner">
+          <i class="fa-regular fa-clock text-blue-400"></i>
           <span id="login-live-clock">--:--:-- WIB</span>
         </div>
       </div>
@@ -116,29 +117,29 @@
       <div class="w-full max-w-md bg-white/90 backdrop-blur-2xl rounded-3xl p-6 sm:p-9 shadow-2xl shadow-black/60 border border-white/50 space-y-6 animate-bounce-short relative overflow-hidden">
         
         <!-- Specular Liquid Highlight Bar at Top -->
-        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500"></div>
+        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-600 via-sky-400 to-indigo-600"></div>
 
         <!-- BANNER & TOMBOL BATAL GANTI AKUN JIKA USER SUDAH LOGIN -->
-        <div id="login-switch-banner" class="hidden p-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-emerald-500/15 border border-emerald-400/40 text-emerald-950 flex flex-col gap-2.5 backdrop-blur-md shadow-xs">
+        <div id="login-switch-banner" class="hidden p-3.5 rounded-2xl bg-gradient-to-r from-blue-500/15 via-sky-500/10 to-blue-500/15 border border-blue-400/40 text-blue-950 flex flex-col gap-2.5 backdrop-blur-md shadow-xs">
           <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2 text-xs font-bold text-emerald-900">
+            <div class="flex items-center gap-2 text-xs font-bold text-blue-900">
               <span class="relative flex h-2.5 w-2.5">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
               </span>
-              <span>Login aktif: <b id="login-current-user-name" class="text-emerald-700 font-extrabold">-</b></span>
+              <span>Login aktif: <b id="login-current-user-name" class="text-blue-700 font-extrabold">-</b></span>
             </div>
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">Ganti Akun</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800 border border-blue-300">Ganti Akun</span>
           </div>
-          <button type="button" onclick="Auth.cancelSwitchAccount()" class="w-full py-2.5 px-3 rounded-xl bg-white hover:bg-emerald-50 text-slate-800 hover:text-emerald-800 font-bold text-xs transition border border-emerald-300 shadow-sm flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]">
-            <i class="fa-solid fa-arrow-left text-emerald-600"></i>
+          <button type="button" onclick="Auth.cancelSwitchAccount()" class="w-full py-2.5 px-3 rounded-xl bg-white hover:bg-blue-50 text-slate-800 hover:text-blue-800 font-bold text-xs transition border border-blue-300 shadow-sm flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]">
+            <i class="fa-solid fa-arrow-left text-blue-600"></i>
             <span>Batal & Kembali ke Aplikasi</span>
           </button>
         </div>
 
         <!-- Icon & Salam Pembuka -->
         <div class="text-center space-y-2">
-          <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-600/30 flex items-center justify-center mx-auto transform -rotate-3 hover:rotate-0 transition duration-300">
+          <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-sky-500 text-white shadow-lg shadow-blue-600/30 flex items-center justify-center mx-auto transform -rotate-3 hover:rotate-0 transition duration-300">
             <i class="fa-solid fa-lock text-2xl text-white"></i>
           </div>
           <h2 class="text-2xl font-black text-slate-900 tracking-tight">Masuk ke Sistem</h2>
@@ -157,7 +158,7 @@
               <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                 <i class="fa-solid fa-user"></i>
               </div>
-              <input type="text" id="login-page-identifier" required autocomplete="username" placeholder="Contoh: admin / EMP-001 / Nama Karyawan" class="w-full pl-10 pr-3.5 py-3 text-sm font-medium rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition bg-slate-50 focus:bg-white text-slate-900 shadow-2xs">
+              <input type="text" id="login-page-identifier" required autocomplete="username" placeholder="Contoh: admin / EMP-001 / Nama Karyawan" class="w-full pl-10 pr-3.5 py-3 text-sm font-medium rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-slate-50 focus:bg-white text-slate-900 shadow-2xs">
             </div>
           </div>
 
@@ -169,7 +170,7 @@
               <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                 <i class="fa-solid fa-key"></i>
               </div>
-              <input type="password" id="login-page-password" required autocomplete="current-password" placeholder="Masukkan password akun Anda" class="w-full pl-10 pr-10 py-3 text-sm font-medium rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition bg-slate-50 focus:bg-white text-slate-900 shadow-2xs">
+              <input type="password" id="login-page-password" required autocomplete="current-password" placeholder="Masukkan password akun Anda" class="w-full pl-10 pr-10 py-3 text-sm font-medium rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-slate-50 focus:bg-white text-slate-900 shadow-2xs">
               <button type="button" onclick="togglePasswordVisibility('login-page-password', this)" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-700 transition cursor-pointer" title="Lihat/Sembunyikan Password">
                 <i class="fa-solid fa-eye text-sm"></i>
               </button>
@@ -180,7 +181,7 @@
           <div id="login-page-alert"></div>
 
           <!-- Tombol Masuk -->
-          <button id="login-submit-btn" type="submit" class="w-full py-3.5 px-5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-sm font-extrabold shadow-md shadow-emerald-700/20 transition flex items-center justify-center gap-2 cursor-pointer transform active:scale-[0.98]">
+          <button id="login-submit-btn" type="submit" class="w-full py-3.5 px-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-sm font-extrabold shadow-md shadow-blue-600/25 transition flex items-center justify-center gap-2 cursor-pointer transform active:scale-[0.98]">
             <i class="fa-solid fa-arrow-right-to-bracket text-base"></i>
             <span>Masuk Sekarang</span>
           </button>
@@ -191,25 +192,25 @@
           <details class="group cursor-pointer">
             <summary class="text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center justify-between list-none">
               <span class="flex items-center gap-1.5">
-                <i class="fa-solid fa-circle-question text-emerald-600"></i> Bantuan & Format Login Pengguna
+                <i class="fa-solid fa-circle-question text-blue-600"></i> Bantuan & Format Login Pengguna
               </span>
               <i class="fa-solid fa-chevron-down text-[10px] transition group-open:rotate-180"></i>
             </summary>
             <div class="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-2.5">
               <div class="flex items-start gap-2">
-                <span class="w-5 h-5 rounded-md bg-teal-100 text-teal-800 flex items-center justify-center text-[10px] font-bold shrink-0">1</span>
+                <span class="w-5 h-5 rounded-md bg-blue-100 text-blue-800 flex items-center justify-center text-[10px] font-bold shrink-0">1</span>
                 <div>
                   <span class="font-bold text-slate-800">Administrator:</span> Masukkan <code>admin</code> (Password: <code>admin123</code>) untuk membuka Dashboard & seluruh menu.
                 </div>
               </div>
               <div class="flex items-start gap-2">
-                <span class="w-5 h-5 rounded-md bg-blue-100 text-blue-800 flex items-center justify-center text-[10px] font-bold shrink-0">2</span>
+                <span class="w-5 h-5 rounded-md bg-sky-100 text-sky-800 flex items-center justify-center text-[10px] font-bold shrink-0">2</span>
                 <div>
                   <span class="font-bold text-slate-800">Kasir Kantin:</span> Masukkan ID atau nama kantin (contoh: <code>tenant1</code> / <code>Depot Bu Mamie</code>) untuk membuka kasir scan.
                 </div>
               </div>
               <div class="flex items-start gap-2">
-                <span class="w-5 h-5 rounded-md bg-emerald-100 text-emerald-800 flex items-center justify-center text-[10px] font-bold shrink-0">3</span>
+                <span class="w-5 h-5 rounded-md bg-blue-100 text-blue-800 flex items-center justify-center text-[10px] font-bold shrink-0">3</span>
                 <div>
                   <span class="font-bold text-slate-800">Karyawan / Training:</span> Masukkan Nama Karyawan atau ID Karyawan (contoh: <code>EMP-001</code> / <code>TRN-001</code>) untuk membuka Portal Mandiri.
                 </div>
@@ -228,7 +229,7 @@
     </main>
 
     <!-- FOOTER HALAMAN LOGIN -->
-    <footer class="relative z-10 w-full py-3 px-4 text-center text-xs text-emerald-200/70 border-t border-white/5 bg-black/30 backdrop-blur-md">
+    <footer class="relative z-10 w-full py-3 px-4 text-center text-xs text-blue-200/70 border-t border-white/5 bg-black/30 backdrop-blur-md">
       <p>&copy; 2026 BeSS Mansion Hotel Surabaya &bull; Sistem Absensi Makan Karyawan Terintegrasi</p>
     </footer>
 
@@ -244,16 +245,17 @@
       <div class="liquid-blob liquid-blob-3"></div>
       <div class="liquid-blob liquid-blob-4"></div>
       <div class="liquid-blob liquid-blob-5"></div>
+      <div class="liquid-blob liquid-blob-6"></div>
     </div>
 
   <!-- ================= TOP HEADER BAR ================= -->
-  <header class="bg-emerald-900 text-white shadow-md sticky top-0 z-30">
+  <header class="bg-blue-900 text-white shadow-md sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         
         <!-- Logo & Hotel Name -->
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-inner">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-500 to-sky-400 flex items-center justify-center shadow-inner">
             <i class="fa-solid fa-utensils text-white text-lg"></i>
           </div>
           <div>
@@ -265,18 +267,18 @@
 
         <!-- Right Side: Clock, Shift Status, & Role Switcher -->
         <div class="flex items-center gap-2 sm:gap-4">
-          <div id="header-shift-badge" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-800 text-emerald-100 border border-emerald-700">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span> Memeriksa Shift...
+          <div id="header-shift-badge" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-800 text-blue-100 border border-blue-700">
+            <span class="w-2 h-2 rounded-full bg-blue-400 mr-1.5 animate-pulse"></span> Memeriksa Shift...
           </div>
 
           <!-- Indikator Status Database MySQL -->
-          <div id="header-db-badge" onclick="Store.syncWithBackend(true)" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/80 text-emerald-200 border border-emerald-500/80 cursor-pointer transition hover:bg-emerald-900" title="Klik untuk Sinkronisasi Manual ke MySQL">
-            <span id="header-db-dot" class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+          <div id="header-db-badge" onclick="Store.syncWithBackend(true)" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-950/80 text-blue-200 border border-blue-500/80 cursor-pointer transition hover:bg-blue-900" title="Klik untuk Sinkronisasi Manual ke MySQL">
+            <span id="header-db-dot" class="w-2 h-2 rounded-full bg-blue-400 mr-1.5 animate-pulse"></span>
             <span id="header-db-text">MySQL Terhubung</span>
           </div>
 
-          <div class="bg-emerald-950/60 px-3 py-1 rounded-lg border border-emerald-800/80 font-mono text-xs sm:text-sm font-bold text-emerald-200 flex items-center gap-2">
-            <i class="fa-regular fa-clock text-emerald-400"></i>
+          <div class="bg-blue-950/60 px-3 py-1 rounded-lg border border-blue-800/80 font-mono text-xs sm:text-sm font-bold text-blue-200 flex items-center gap-2">
+            <i class="fa-regular fa-clock text-blue-400"></i>
             <span id="header-live-clock">--:--:-- WIB</span>
           </div>
           <script data-cfasync="false">
@@ -304,16 +306,16 @@
           </script>
 
           <!-- Profil Pengguna & Hak Akses -->
-          <div class="flex items-center gap-2 bg-emerald-950/70 border border-emerald-700/80 px-2.5 py-1 rounded-xl">
-            <img id="header-user-avatar" src="https://ui-avatars.com/api/?name=Admin&background=0f766e&color=fff&rounded=true" alt="Avatar" class="w-7 h-7 rounded-full border border-emerald-400 object-cover">
+          <div class="flex items-center gap-2 bg-blue-950/70 border border-blue-700/80 px-2.5 py-1 rounded-xl">
+            <img id="header-user-avatar" src="https://ui-avatars.com/api/?name=Admin&background=1d4ed8&color=fff&rounded=true" alt="Avatar" class="w-7 h-7 rounded-full border border-blue-400 object-cover">
             <div class="hidden sm:block text-left">
               <div class="flex items-center gap-1.5 leading-none">
                 <span id="header-user-badge" class="font-extrabold text-xs text-white">Administrator</span>
               </div>
-              <span id="header-user-email" class="text-[10px] text-emerald-300 font-medium truncate block max-w-[140px]">Administrator Hotel</span>
+              <span id="header-user-email" class="text-[10px] text-blue-300 font-medium truncate block max-w-[140px]">Administrator Hotel</span>
             </div>
-            <button onclick="Auth.openLoginModal()" title="Ganti Akun / Login" class="ml-1 px-2.5 py-1.5 bg-emerald-800 hover:bg-emerald-700 rounded-lg text-emerald-100 hover:text-white transition text-xs font-semibold flex items-center gap-1.5 cursor-pointer">
-              <i class="fa-solid fa-arrow-right-to-bracket text-emerald-300 text-[11px]"></i>
+            <button onclick="Auth.openLoginModal()" title="Ganti Akun / Login" class="ml-1 px-2.5 py-1.5 bg-blue-800 hover:bg-blue-700 rounded-lg text-blue-100 hover:text-white transition text-xs font-semibold flex items-center gap-1.5 cursor-pointer">
+              <i class="fa-solid fa-arrow-right-to-bracket text-blue-300 text-[11px]"></i>
               <span class="hidden lg:inline text-[11px]">Ganti Akun</span>
             </button>
           </div>
@@ -324,7 +326,7 @@
   </header>
 
   <!--  8 HALAMAN NAVIGATION BAR (DILENGKAPI RBAC)  -->
-  <nav class="bg-emerald-800 text-emerald-100 shadow-sm sticky top-16 z-20 overflow-x-auto scrollbar-none border-b border-emerald-900">
+  <nav class="bg-blue-800 text-blue-100 shadow-sm sticky top-16 z-20 overflow-x-auto scrollbar-none border-b border-blue-900">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex space-x-1 sm:space-x-2 py-2 min-w-max text-xs font-semibold">
         <!-- Admin Dashboard -->
@@ -337,7 +339,7 @@
         </button>
         <!-- Halaman Khusus Karyawan (Dapat Diakses Karyawan & Admin) -->
         <button data-page-target="employee-portal" class="nav-karyawan-only nav-admin-only px-3.5 py-2 rounded-lg transition flex items-center gap-2">
-          <i class="fa-solid fa-mobile-screen-button text-sm text-emerald-300"></i> Portal Karyawan
+          <i class="fa-solid fa-mobile-screen-button text-sm text-blue-300"></i> Portal Karyawan
         </button>
         <!-- Halaman Khusus Anak Training (Magang) -->
         <button data-page-target="training" class="nav-admin-only px-3.5 py-2 rounded-lg transition flex items-center gap-2">

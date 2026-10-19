@@ -96,7 +96,7 @@ const App = {
           }
 
           if (settings.bypassTimeForTesting) {
-            badge.innerHTML += ` <span class="ml-1 text-[10px] text-emerald-700 font-bold bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-300">SIMULASI</span>`;
+            badge.innerHTML += ` <span class="ml-1 text-[10px] text-blue-700 font-bold bg-blue-100 px-1.5 py-0.5 rounded border border-blue-300">SIMULASI</span>`;
           }
         });
       } catch (e) {
@@ -180,11 +180,11 @@ const App = {
     document.querySelectorAll('[data-page-target]').forEach(btn => {
       const target = btn.getAttribute('data-page-target');
       if (target === pageId) {
-        btn.classList.add('bg-emerald-700', 'text-white', 'shadow-xs');
-        btn.classList.remove('text-emerald-100', 'hover:bg-emerald-800/60');
+        btn.classList.add('bg-blue-600', 'text-white', 'shadow-xs');
+        btn.classList.remove('text-blue-100', 'hover:bg-blue-700/60');
       } else {
-        btn.classList.remove('bg-emerald-700', 'text-white', 'shadow-xs');
-        btn.classList.add('text-emerald-100', 'hover:bg-emerald-800/60');
+        btn.classList.remove('bg-blue-600', 'text-white', 'shadow-xs');
+        btn.classList.add('text-blue-100', 'hover:bg-blue-700/60');
       }
     });
 
