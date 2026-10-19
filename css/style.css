@@ -132,183 +132,177 @@ table.report-table tfoot {
    TEMA LIQUID & FROSTED GLASS (MODERN, FLUID & ELEGAN MEDIUM BLUE HOTEL THEME)
    ========================================================================== */
 
-/* 1. Ambient Liquid Floating Blobs (Ultra-Lightweight GPU Accelerated dengan Fluid Morphing) */
+/* 1. Ambient Liquid Floating Blobs (Ultra-Lightweight GPU Accelerated) */
 .liquid-bg-container {
   overflow: hidden;
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.72;
-  filter: blur(48px);
-  -webkit-filter: blur(48px);
+  opacity: 0.60;
   contain: strict;
+  transform: translate3d(0, 0, 0);
 }
 
 .liquid-blob {
   position: absolute;
-  border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
   pointer-events: none;
   transform: translate3d(0, 0, 0);
-  will-change: transform, border-radius;
+  will-change: transform;
+  filter: blur(16px);
+  -webkit-filter: blur(16px);
   contain: layout style paint;
 }
 
 .liquid-blob-1 {
-  width: 620px;
-  height: 620px;
+  width: 580px;
+  height: 580px;
   top: -80px;
   left: -50px;
-  background: radial-gradient(circle at 45% 45%, rgba(37, 99, 235, 0.75) 0%, rgba(59, 130, 246, 0.40) 45%, rgba(29, 78, 216, 0) 70%);
-  animation: liquidFloat1 24s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate;
+  border-radius: 46% 54% 60% 40% / 48% 45% 55% 52%;
+  background: radial-gradient(circle at 45% 45%, rgba(37, 99, 235, 0.70) 0%, rgba(59, 130, 246, 0.35) 45%, rgba(29, 78, 216, 0) 70%);
+  animation: liquidFloat1 28s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate;
 }
 
 .liquid-blob-2 {
-  width: 540px;
-  height: 540px;
+  width: 500px;
+  height: 500px;
   top: 20%;
   right: -70px;
-  background: radial-gradient(circle at 45% 45%, rgba(2, 132, 199, 0.70) 0%, rgba(14, 165, 233, 0.38) 45%, rgba(3, 105, 161, 0) 70%);
-  animation: liquidFloat2 28s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate;
+  border-radius: 58% 42% 38% 62% / 38% 60% 40% 62%;
+  background: radial-gradient(circle at 45% 45%, rgba(2, 132, 199, 0.65) 0%, rgba(14, 165, 233, 0.32) 45%, rgba(3, 105, 161, 0) 70%);
+  animation: liquidFloat2 32s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate;
 }
 
 .liquid-blob-3 {
-  width: 500px;
-  height: 500px;
+  width: 460px;
+  height: 460px;
   bottom: -50px;
   left: 20%;
-  background: radial-gradient(circle at 45% 45%, rgba(99, 102, 241, 0.60) 0%, rgba(79, 70, 229, 0.28) 45%, rgba(49, 46, 129, 0) 70%);
-  animation: liquidFloat3 26s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate;
+  border-radius: 40% 60% 65% 35% / 55% 35% 65% 45%;
+  background: radial-gradient(circle at 45% 45%, rgba(99, 102, 241, 0.55) 0%, rgba(79, 70, 229, 0.25) 45%, rgba(49, 46, 129, 0) 70%);
+  animation: liquidFloat3 30s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate;
 }
 
 .liquid-blob-4 {
-  width: 480px;
-  height: 480px;
+  width: 420px;
+  height: 420px;
   top: 55%;
   left: -70px;
-  background: radial-gradient(circle at 45% 45%, rgba(29, 78, 216, 0.65) 0%, rgba(37, 99, 235, 0.30) 45%, rgba(30, 64, 175, 0) 70%);
-  animation: liquidFloat2 30s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate-reverse;
+  border-radius: 52% 48% 42% 58% / 45% 52% 48% 55%;
+  background: radial-gradient(circle at 45% 45%, rgba(29, 78, 216, 0.55) 0%, rgba(37, 99, 235, 0.25) 45%, rgba(30, 64, 175, 0) 70%);
+  animation: liquidFloat2 36s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate-reverse;
 }
 
 .liquid-blob-5 {
-  width: 480px;
-  height: 480px;
+  width: 420px;
+  height: 420px;
   bottom: 12%;
   right: 20%;
-  background: radial-gradient(circle at 45% 45%, rgba(14, 165, 233, 0.65) 0%, rgba(59, 130, 246, 0.32) 45%, rgba(2, 132, 199, 0) 70%);
-  animation: liquidFloat4 30s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate;
+  border-radius: 62% 38% 50% 50% / 42% 58% 42% 58%;
+  background: radial-gradient(circle at 45% 45%, rgba(14, 165, 233, 0.55) 0%, rgba(59, 130, 246, 0.28) 45%, rgba(2, 132, 199, 0) 70%);
+  animation: liquidFloat4 34s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate;
 }
 
 .liquid-blob-6 {
-  width: 440px;
-  height: 440px;
+  width: 380px;
+  height: 380px;
   top: 30%;
   left: 40%;
-  background: radial-gradient(circle at 45% 45%, rgba(37, 99, 235, 0.55) 0%, rgba(96, 165, 250, 0.28) 45%, rgba(29, 78, 216, 0) 70%);
-  animation: liquidFloat1 32s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate-reverse;
+  border-radius: 45% 55% 38% 62% / 58% 42% 58% 42%;
+  background: radial-gradient(circle at 45% 45%, rgba(37, 99, 235, 0.45) 0%, rgba(96, 165, 250, 0.22) 45%, rgba(29, 78, 216, 0) 70%);
+  animation: liquidFloat1 38s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite alternate-reverse;
 }
 
-/* Composite-only GPU transforms with Fluid Morphing (Organic Water Deformation) */
+/* Composite-only GPU transforms (Zero CPU Reflow & High FPS) */
 @keyframes liquidFloat1 {
   0% {
     transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
-    border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
   }
   50% {
-    transform: translate3d(50px, 35px, 0) rotate(12deg) scale(1.06);
-    border-radius: 58% 42% 38% 62% / 32% 65% 35% 68%;
+    transform: translate3d(40px, 25px, 0) rotate(10deg) scale(1.04);
   }
   100% {
-    transform: translate3d(-30px, 60px, 0) rotate(-10deg) scale(0.96);
-    border-radius: 35% 65% 60% 40% / 55% 30% 70% 45%;
+    transform: translate3d(-25px, 45px, 0) rotate(-8deg) scale(0.97);
   }
 }
 
 @keyframes liquidFloat2 {
   0% {
     transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
-    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
   }
   50% {
-    transform: translate3d(-50px, -40px, 0) rotate(-12deg) scale(1.05);
-    border-radius: 40% 60% 70% 30% / 40% 40% 60% 60%;
+    transform: translate3d(-40px, -30px, 0) rotate(-10deg) scale(1.03);
   }
   100% {
-    transform: translate3d(35px, -60px, 0) rotate(10deg) scale(0.95);
-    border-radius: 55% 45% 35% 65% / 35% 65% 35% 65%;
+    transform: translate3d(25px, -45px, 0) rotate(8deg) scale(0.96);
   }
 }
 
 @keyframes liquidFloat3 {
   0% {
     transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
-    border-radius: 35% 65% 60% 40% / 55% 30% 70% 45%;
   }
   50% {
-    transform: translate3d(45px, -35px, 0) rotate(15deg) scale(1.08);
-    border-radius: 50% 50% 30% 70% / 50% 50% 70% 30%;
+    transform: translate3d(35px, -25px, 0) rotate(12deg) scale(1.05);
   }
   100% {
-    transform: translate3d(-25px, 25px, 0) rotate(-8deg) scale(0.97);
-    border-radius: 65% 35% 45% 55% / 40% 60% 40% 60%;
+    transform: translate3d(-20px, 20px, 0) rotate(-6deg) scale(0.98);
   }
 }
 
 @keyframes liquidFloat4 {
   0% {
     transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
-    border-radius: 50% 50% 40% 60% / 40% 50% 50% 60%;
   }
   50% {
-    transform: translate3d(-40px, 40px, 0) rotate(-14deg) scale(1.06);
-    border-radius: 60% 40% 55% 45% / 55% 45% 55% 45%;
+    transform: translate3d(-30px, 30px, 0) rotate(-10deg) scale(1.04);
   }
   100% {
-    transform: translate3d(30px, -20px, 0) rotate(12deg) scale(0.94);
-    border-radius: 45% 55% 35% 65% / 45% 55% 45% 55%;
+    transform: translate3d(25px, -15px, 0) rotate(8deg) scale(0.96);
   }
 }
 
-/* 2. Kartu Crystal Glass (Translucent Liquid Glass dengan Refleksi Halus) */
+/* 2. Kartu Bersih & Responsif (Optimal GPU Render Tanpa Beban Overdraw) */
 #app-shell .bg-white:not(.a4-document-paper):not(#printable-report-area):not(#training-view-report):not(#pdf-preview-paper):not(.no-liquid) {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.88) 0%, rgba(240, 246, 255, 0.80) 100%) !important;
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(226, 232, 240, 0.92) !important;
   box-shadow:
-    0 12px 32px -4px rgba(37, 99, 235, 0.08),
-    0 4px 12px -2px rgba(15, 23, 42, 0.04),
-    inset 0 1.5px 0.5px rgba(255, 255, 255, 1) !important;
-  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.28s ease;
+    0 4px 16px -2px rgba(15, 23, 42, 0.04),
+    0 1px 3px 0 rgba(15, 23, 42, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.24s ease;
 }
 
-#app-shell .bg-white:not(.a4-document-paper):not(#printable-report-area):not(#training-view-report):not(#pdf-preview-paper):not(.no-liquid):hover {
-  transform: translate3d(0, -3px, 0);
-  border-color: rgba(96, 165, 250, 0.65) !important;
-  box-shadow:
-    0 20px 42px -6px rgba(37, 99, 235, 0.22),
-    0 8px 18px -2px rgba(37, 99, 235, 0.12),
-    inset 0 1.5px 0.5px rgba(255, 255, 255, 1) !important;
+@media (hover: hover) and (pointer: fine) {
+  #app-shell .bg-white:not(.a4-document-paper):not(#printable-report-area):not(#training-view-report):not(#pdf-preview-paper):not(.no-liquid):hover {
+    transform: translate3d(0, -2px, 0);
+    border-color: rgba(96, 165, 250, 0.60) !important;
+    box-shadow:
+      0 12px 24px -4px rgba(37, 99, 235, 0.12),
+      0 2px 6px -1px rgba(37, 99, 235, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+  }
 }
 
 /* 2b. Kartu Liquid Abu-Abu Muda (.liquid-card-gray) */
 .liquid-card-gray {
-  background: linear-gradient(135deg, rgba(248, 250, 252, 0.88) 0%, rgba(241, 245, 249, 0.82) 50%, rgba(226, 232, 240, 0.78) 100%) !important;
-  backdrop-filter: blur(24px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.90) !important;
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.94) 0%, rgba(241, 245, 249, 0.90) 50%, rgba(226, 232, 240, 0.86) 100%) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
   box-shadow:
-    0 16px 40px -8px rgba(15, 23, 42, 0.08),
-    0 4px 16px -2px rgba(37, 99, 235, 0.06),
+    0 12px 30px -8px rgba(15, 23, 42, 0.06),
+    0 2px 8px -2px rgba(37, 99, 235, 0.04),
     inset 0 1.5px 0.5px rgba(255, 255, 255, 0.95),
     inset 0 -1px 0 rgba(203, 213, 225, 0.45) !important;
   position: relative;
   overflow: hidden;
-  transition: transform 0.30s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.30s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.30s ease;
+  transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.26s ease;
 }
 
 .liquid-card-gray::before {
@@ -322,29 +316,32 @@ table.report-table tfoot {
   pointer-events: none;
 }
 
-.liquid-card-gray:hover {
-  transform: translate3d(0, -2px, 0);
-  border-color: rgba(147, 197, 253, 0.65) !important;
-  box-shadow:
-    0 22px 48px -10px rgba(15, 23, 42, 0.12),
-    0 6px 20px -2px rgba(37, 99, 235, 0.10),
-    inset 0 1.5px 0.5px rgba(255, 255, 255, 1) !important;
+@media (hover: hover) and (pointer: fine) {
+  .liquid-card-gray:hover {
+    transform: translate3d(0, -2px, 0);
+    border-color: rgba(147, 197, 253, 0.65) !important;
+    box-shadow:
+      0 18px 40px -10px rgba(15, 23, 42, 0.10),
+      0 4px 14px -2px rgba(37, 99, 235, 0.08),
+      inset 0 1.5px 0.5px rgba(255, 255, 255, 1) !important;
+  }
 }
 
 /* 3. Header & Navbar Glassmorphism (Aksen Biru Sedang Mewah) */
 #app-shell > header {
-  background: linear-gradient(135deg, rgba(30, 64, 175, 0.92) 0%, rgba(37, 99, 235, 0.90) 100%) !important;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.96) 0%, rgba(37, 99, 235, 0.95) 100%) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(147, 197, 253, 0.35) !important;
-  box-shadow: 0 4px 24px -2px rgba(37, 99, 235, 0.35) !important;
+  box-shadow: 0 4px 16px -2px rgba(37, 99, 235, 0.25) !important;
 }
 
 #app-shell > nav {
-  background: linear-gradient(135deg, rgba(29, 78, 216, 0.88) 0%, rgba(30, 58, 138, 0.88) 100%) !important;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: linear-gradient(135deg, rgba(29, 78, 216, 0.94) 0%, rgba(30, 58, 138, 0.94) 100%) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(96, 165, 250, 0.25) !important;
+  -webkit-overflow-scrolling: touch;
 }
 
 #app-shell nav button {
@@ -641,6 +638,125 @@ button.bg-teal-600:hover::after {
   -webkit-backdrop-filter: none !important;
   transform: none !important;
   box-shadow: none !important;
+}
+
+/* ==========================================================================
+   OPTIMASI KHUSUS USER HP (RESPONSIVE, COMFORTABLE MARGINS & ZERO LAG)
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* 1. Ringankan Animasi Background di HP (Hilangkan Beban GPU) */
+  .liquid-bg-container {
+    opacity: 0.35 !important;
+  }
+  .liquid-blob-4,
+  .liquid-blob-5,
+  .liquid-blob-6 {
+    display: none !important;
+  }
+  .liquid-blob-1,
+  .liquid-blob-2,
+  .liquid-blob-3 {
+    width: 260px !important;
+    height: 260px !important;
+    filter: blur(8px) !important;
+    animation-duration: 45s !important;
+  }
+
+  /* 2. Minimalkan Backdrop Blur di HP agar Performa Sangat Ringan & Responsif */
+  .liquid-card-gray,
+  #app-shell > header,
+  #app-shell > nav,
+  [id$="-modal"] {
+    backdrop-filter: blur(5px) !important;
+    -webkit-backdrop-filter: blur(5px) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  /* 3. Header & Nav Lebih Hemat Ruang & Nyaman di HP */
+  #app-shell > header {
+    height: 3.5rem !important; /* 56px */
+  }
+  #app-shell > header .max-w-7xl > div {
+    height: 3.5rem !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+  #app-shell > nav {
+    top: 3.5rem !important; /* Menempel presisi di bawah header */
+  }
+
+  /* 4. Margin Nyaman & Tidak Terjepit di Layar HP */
+  main {
+    padding-left: 0.625rem !important; /* 10px margin kiri */
+    padding-right: 0.625rem !important; /* 10px margin kanan */
+    padding-top: 0.75rem !important;
+    padding-bottom: 2rem !important;
+  }
+
+  /* 5. Padding Kartu Proporsional di Layar HP */
+  .liquid-card-gray {
+    padding: 0.875rem !important; /* 14px */
+    border-radius: 1.125rem !important;
+    gap: 0.875rem !important;
+  }
+  #app-shell .bg-white:not(.a4-document-paper):not(#printable-report-area):not(#training-view-report):not(#pdf-preview-paper):not(.no-liquid) {
+    padding: 0.875rem !important;
+    border-radius: 1rem !important;
+  }
+
+  /* 6. Form Input & Tombol Nyaman Disentuh di HP */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 14px !important; /* Mencegah auto-zoom di iOS Safari saat fokus input */
+  }
+
+  /* 7. Grid Dashboard 5-Card Menjadi 2-Kolom Rapi di HP */
+  #page-dashboard .grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-5,
+  #page-dashboard .grid-cols-2.sm\:grid-cols-2.lg\:grid-cols-5,
+  #page-dashboard .grid-cols-5,
+  #page-dashboard .lg\:grid-cols-5 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.625rem !important;
+  }
+  #page-dashboard .grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-5 > div:last-child,
+  #page-dashboard .grid-cols-2.sm\:grid-cols-2.lg\:grid-cols-5 > div:last-child,
+  #page-dashboard .grid-cols-5 > div:last-child,
+  #page-dashboard .lg\:grid-cols-5 > div:last-child {
+    grid-column: span 2 / span 2 !important;
+  }
+
+  /* 8. Tabel Responsif dengan Momentum Scrolling Halus */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-x: contain;
+    margin-left: -0.25rem;
+    margin-right: -0.25rem;
+  }
+  table th, table td {
+    padding: 0.5rem 0.375rem !important;
+    font-size: 0.75rem !important;
+    white-space: nowrap;
+  }
+
+  /* 9. Modal Dialog Pas & Tidak Terpotong di Layar HP */
+  [id$="-modal"] > div,
+  [id*="modal"] > div {
+    width: 95% !important;
+    max-width: 95% !important;
+    margin: 0.75rem auto !important;
+    padding: 1.125rem !important;
+    border-radius: 1.25rem !important;
+    max-height: 90vh !important;
+  }
+
+  /* 10. Kamera Scanner Meja Kantin di Layar HP */
+  #canteen-qr-reader,
+  #emp-portal-qr-reader {
+    max-width: 100% !important;
+    border-radius: 1rem !important;
+  }
 }
 
 /* Aturan Khusus Cetak / Print Stylesheet */
