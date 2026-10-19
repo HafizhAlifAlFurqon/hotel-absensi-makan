@@ -293,6 +293,44 @@ table.report-table tfoot {
     inset 0 1.5px 0.5px rgba(255, 255, 255, 1) !important;
 }
 
+/* 2b. Kartu Liquid Abu-Abu Muda (.liquid-card-gray) */
+.liquid-card-gray {
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.88) 0%, rgba(241, 245, 249, 0.82) 50%, rgba(226, 232, 240, 0.78) 100%) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.90) !important;
+  box-shadow:
+    0 16px 40px -8px rgba(15, 23, 42, 0.08),
+    0 4px 16px -2px rgba(37, 99, 235, 0.06),
+    inset 0 1.5px 0.5px rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(203, 213, 225, 0.45) !important;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.30s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.30s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.30s ease;
+}
+
+.liquid-card-gray::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95), transparent);
+  pointer-events: none;
+}
+
+.liquid-card-gray:hover {
+  transform: translate3d(0, -2px, 0);
+  border-color: rgba(147, 197, 253, 0.65) !important;
+  box-shadow:
+    0 22px 48px -10px rgba(15, 23, 42, 0.12),
+    0 6px 20px -2px rgba(37, 99, 235, 0.10),
+    inset 0 1.5px 0.5px rgba(255, 255, 255, 1) !important;
+}
+
 /* 3. Header & Navbar Glassmorphism (Aksen Biru Sedang Mewah) */
 #app-shell > header {
   background: linear-gradient(135deg, rgba(30, 64, 175, 0.92) 0%, rgba(37, 99, 235, 0.90) 100%) !important;
