@@ -2,7 +2,7 @@
  * app.js - Aplikasi Utama & Router Navigasi 8 Halaman
  * Halaman:
  * 1. Dashboard
- * 2. Depot Bu A
+ * 2. Depot Bu Mamie
  * 3. Depot Bu Yuli
  * 4. Kelola Tenant
  * 5. Karyawan
@@ -112,13 +112,41 @@ const App = {
     // Judul Hotel
     document.querySelectorAll('.hotel-name-display').forEach(el => el.innerText = s.hotelName);
 
-    // Label Kantin
+    // Label Kantin Dinamis (berdasarkan class label-{id}-name)
     tenants.forEach(t => {
       document.querySelectorAll(`.label-${t.id}-name`).forEach(el => el.innerText = t.name);
     });
 
-    if (window.ReportsManager && typeof window.ReportsManager.populateTenantSelect === 'function') {
-      window.ReportsManager.populateTenantSelect();
+    // Label di Card Dashboard
+    const dashT1 = document.getElementById('dash-label-tenant1');
+    if (dashT1) dashT1.innerText = Store.getTenantName('tenant1');
+    const dashT2 = document.getElementById('dash-label-tenant2');
+    if (dashT2) dashT2.innerText = Store.getTenantName('tenant2');
+
+    // Judul Kasir Kantin
+    const canteenTitle = document.getElementById('canteen-title');
+    if (canteenTitle) {
+      const user = window.Auth ? window.Auth.getCurrentUser() : null;
+      if (user && user.role === 'canteen') {
+        canteenTitle.innerText = Store.getTenantName(user.tenantId || 'tenant1');
+      } else {
+        canteenTitle.innerText = Store.getTenantName('tenant1');
+      }
+    }
+
+    // Perbarui Dropdown & Render Ulang Laporan agar Tanda Tangan (TTD) langsung mencerminkan nama terkini
+    if (window.ReportsManager) {
+      if (typeof window.ReportsManager.populateTenantSelect === 'function') {
+        window.ReportsManager.populateTenantSelect();
+      }
+      if (typeof window.ReportsManager.render === 'function') {
+        window.ReportsManager.render();
+      }
+    }
+
+    // Perbarui juga tanda tangan pada Laporan Training jika ada
+    if (window.TrainingManager && typeof window.TrainingManager.renderReport === 'function') {
+      window.TrainingManager.renderReport();
     }
   },
 

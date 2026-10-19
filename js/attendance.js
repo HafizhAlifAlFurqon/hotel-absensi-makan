@@ -1,6 +1,6 @@
 /**
  * attendance.js - Logika Halaman Absensi Kantin
- * Menangani Depot Bu A (tenant1) dan Depot Bu Yuli (tenant2)
+ * Menangani Depot Bu Mamie (tenant1) dan Depot Bu Yuli (tenant2)
  * Fitur: Pilihan tanggal hari ini, Scan QR Kamera / Barcode Scanner,
  * Input Manual ID, Preview Karyawan, Validasi Aturan, & Tombol Konfirmasi.
  */

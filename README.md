@@ -1,13 +1,13 @@
 # Sistem Absensi Makan Karyawan Hotel
 
-Aplikasi web terpadu untuk pengelolaan absensi makan karyawan hotel bagi pihak kantin (**Depot Bu A** dan **Depot Bu Yuli**) serta pihak **Administrator Hotel**.
+Aplikasi web terpadu untuk pengelolaan absensi makan karyawan hotel bagi pihak kantin (**Depot Bu Mamie** dan **Depot Bu Yuli**) serta pihak **Administrator Hotel**.
 
 ---
 
 ## Aturan Bisnis (Core Rules)
 1. **1x Jatah Makan Per Hari**:
    - Setiap karyawan hanya berhak mendapatkan **1 kali makan dalam sehari**.
-   - Terkunci lintas tenant: Jika karyawan sudah absen di Depot Bu A, maka otomatis tidak bisa lagi absen di Depot Bu Yuli (dan sebaliknya).
+   - Terkunci lintas tenant: Jika karyawan sudah absen di Depot Bu Mamie, maka otomatis tidak bisa lagi absen di Depot Bu Yuli (dan sebaliknya).
 2. **Jam Absensi Operasional**:
    - Hanya dapat melakukan absensi pada pukul **11.00 - 19.00 WIB**.
    - Di luar jam operasional tersebut sistem otomatis menolak absensi.
@@ -27,19 +27,19 @@ Aplikasi web terpadu untuk pengelolaan absensi makan karyawan hotel bagi pihak k
      - Berapa orang yang sudah makan di tanggal terpilih.
      - Berapa orang yang belum makan di tanggal terpilih.
      - Total biaya konsumsi (jumlah makan × tarif per porsi).
-     - Depot Bu A: Berapa orang yang sudah makan.
+     - Depot Bu Mamie: Berapa orang yang sudah makan.
      - Depot Bu Yuli: Berapa orang yang sudah makan.
    - Grafik pie perbandingan porsi antar depot & distribusi shift.
    - Tabel riwayat absensi terkini.
-2. **Depot Bu A (Tenant 1)**:
+2. **Depot Bu Mamie (Tenant 1)**:
    - Pilihan tanggal hari ini.
    - Menu scan QR via kamera langsung (webcam / HP) atau input manual ID Karyawan (kompatibel juga dengan USB barcode scanner).
    - Pratinjau profil karyawan otomatis (Nama, ID, Jabatan, Departemen, Status).
    - Tombol **Konfirmasi** untuk mencatat transaksi ke database dan langsung memperbarui dashboard.
 3. **Depot Bu Yuli (Tenant 2)**:
-   - Fitur identik dengan Depot Bu A untuk operasional Tenant 2.
+   - Fitur identik dengan Depot Bu Mamie untuk operasional Tenant 2.
 4. **Kelola Tenant**:
-   - Pengaturan ganti nama tenant (Tenant 1 default: "Depot Bu A", Tenant 2 default: "Depot Bu Yuli").
+   - Pengaturan ganti nama tenant (Tenant 1 default: "Depot Bu Mamie", Tenant 2 default: "Depot Bu Yuli").
    - Pengaturan tarif harga per porsi (default Rp 15.000).
    - Pengaturan Nama Hotel.
    - Fitur **Mode Simulasi/Bypass Jam Absensi** untuk pengujian sistem kapan saja tanpa dibatasi jam 11.00-19.00.
@@ -66,7 +66,7 @@ Aplikasi web terpadu untuk pengelolaan absensi makan karyawan hotel bagi pihak k
      5. Paling bawah: **Kartu absensi Karyawan**
    - Fitur cetak semua kartu ke kertas A4 atau cetak kartu per orangan.
 7. **Scan Karyawan (Fitur Scan Mandiri)**:
-   - Khusus untuk karyawan: Membuka kamera scanner di HP untuk memindai QR Code yang terpajang di meja kasir Depot Bu A atau Depot Bu Yuli.
+   - Khusus untuk karyawan: Membuka kamera scanner di HP untuk memindai QR Code yang terpajang di meja kasir Depot Bu Mamie atau Depot Bu Yuli.
    - Absensi otomatis dicatat, kuota diperbarui, dan status sukses langsung ditampilkan di HP karyawan sekaligus masuk ke layar kasir kantin.
 8. **Laporan**:
    - Pilihan tanggal / rentang tanggal (Hari Ini, Minggu Ini, Bulan Ini, atau Kustom).
@@ -82,7 +82,7 @@ Aplikasi web terpadu untuk pengelolaan absensi makan karyawan hotel bagi pihak k
 ## Sistem Absensi Dua Arah (Two-Way QR Scanning)
 Aplikasi ini mendukung **2 metode absensi sekaligus**:
 1. **Metode A (Karyawan Scan QR Meja Kantin)**:
-   - Pihak Kantin (Depot Bu A / Depot Bu Yuli) memilih tab **"Tampilkan QR Meja Kasir"** atau mencetak stand meja (A4).
+   - Pihak Kantin (Depot Bu Mamie / Depot Bu Yuli) memilih tab **"Tampilkan QR Meja Kasir"** atau mencetak stand meja (A4).
    - Karyawan membuka menu **Scan Karyawan** di HP mereka dan mengarahkan kamera ke QR meja kasir tersebut.
 2. **Metode B (Kantin Scan Kartu Karyawan)**:
    - Petugas kasir kantin tetap memiliki kamera scanner di tab **"Kasir Scan Karyawan"** untuk memindai kartu QR fisik karyawan atau memasukkan ID manual.
@@ -96,13 +96,13 @@ Kedua metode ini terhubung ke database terpusat yang sama sehingga otomatis menc
    - Masuk ke folder `hotel-absensi-makan` lalu klik dua kali file **`start.bat`** (pilih 1) atau cukup klik dua kali **`index.html`** langsung di browser Chrome/Edge.
 2. **Opsi 2 (Multi-Perangkat di Kantin / Jaringan Wi-Fi Hotel)**:
    - Klik dua kali **`start.bat`** lalu pilih opsi **2** (Jalankan Local Web Server).
-   - Perangkat kasir di Depot A atau Depot Bu Yuli (seperti Tablet atau HP) dapat membuka URL yang tertera di layar terminal (misal: `http://192.168.x.x:8080`).
+   - Perangkat kasir di Depot Bu Mamie atau Depot Bu Yuli (seperti Tablet atau HP) dapat membuka URL yang tertera di layar terminal (misal: `http://192.168.x.x:8080`).
 
 ---
 
 ## 4 Pihak / Role Akses
 - **Administrator**: Akses penuh ke seluruh menu, kelola tenant, database karyawan, dan cetak laporan.
-- **Pihak Depot Bu A**: Kasir tenant 1 untuk memindai kartu karyawan atau menampilkan QR meja kasir Depot Bu A.
+- **Pihak Depot Bu Mamie**: Kasir tenant 1 untuk memindai kartu karyawan atau menampilkan QR meja kasir Depot Bu Mamie.
 - **Pihak Depot Bu Yuli**: Kasir tenant 2 untuk memindai kartu karyawan atau menampilkan QR meja kasir Depot Bu Yuli.
 - **Pihak Karyawan**: Portal absensi mandiri bagi karyawan untuk memindai QR meja kantin melalui HP masing-masing.
 Ganti role kapan saja melalui tombol dropdown di pojok kanan atas layar atau saat logout.

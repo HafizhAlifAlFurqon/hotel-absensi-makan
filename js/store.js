@@ -162,6 +162,11 @@ const Store = {
           currentSettings.adminPassword = 'admin123';
           sChanged = true;
         }
+        // Migrasi otomatis nama bawaan lama Depot Bu A -> Depot Bu Mamie
+        if (currentSettings.tenant1Name === 'Depot Bu A' || !currentSettings.tenant1Name) {
+          currentSettings.tenant1Name = 'Depot Bu Mamie';
+          sChanged = true;
+        }
         if (!currentSettings.tenants || !Array.isArray(currentSettings.tenants) || currentSettings.tenants.length === 0) {
           currentSettings.tenants = [
             { id: 'tenant1', name: currentSettings.tenant1Name || 'Depot Bu Mamie', password: 'depota123', status: 'Aktif' },
@@ -170,6 +175,10 @@ const Store = {
           sChanged = true;
         } else {
           currentSettings.tenants.forEach(t => {
+            if (t.name === 'Depot Bu A' || (t.id === 'tenant1' && t.name === 'Depot Bu A')) {
+              t.name = 'Depot Bu Mamie';
+              sChanged = true;
+            }
             if (!t.password) {
               t.password = t.id === 'tenant1' ? 'depota123' : (t.id === 'tenant2' ? 'depotyuli123' : 'kantin123');
               sChanged = true;
@@ -194,8 +203,14 @@ const Store = {
           let filtered = currentAtts.filter(a => a.id !== 'ATT-1001' && a.id !== 'ATT-1002' && a.id !== 'ATT-1003');
           if (filtered.length !== currentAtts.length) attsChanged = true;
 
-          // Perbaiki absensi lama milik Kela atau payeng yang tersisa di localStorage agar berawalan EX-
+          // Migrasikan catatan absensi lama yang berlabel Depot Bu A ke Depot Bu Mamie
           filtered.forEach(a => {
+            if (a.canteenName === 'Depot Bu A' || a.tenantName === 'Depot Bu A') {
+              a.canteenName = 'Depot Bu Mamie';
+              a.tenantName = 'Depot Bu Mamie';
+              attsChanged = true;
+            }
+            // Perbaiki absensi lama milik Kela atau payeng yang tersisa di localStorage agar berawalan EX-
             if (a.employeeName && (a.employeeName.toLowerCase() === 'payeng' || a.employeeName.toLowerCase() === 'kela')) {
               if (a.employeeId && !a.employeeId.startsWith('EX-')) {
                 a.employeeId = `EX-${a.employeeId}`;
@@ -313,12 +328,26 @@ const Store = {
 
         // 2. Data Riwayat Absensi dari MySQL
         if (Array.isArray(data.attendances)) {
+          data.attendances.forEach(a => {
+            if (a.tenantName === 'Depot Bu A' || a.canteenName === 'Depot Bu A') {
+              a.tenantName = 'Depot Bu Mamie';
+              a.canteenName = 'Depot Bu Mamie';
+            }
+          });
           localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(data.attendances));
         }
 
         // 3. Pengaturan Hotel & Kantin dari MySQL
         if (data.settings) {
           const merged = { ...DEFAULT_SETTINGS, ...data.settings };
+          if (merged.tenant1Name === 'Depot Bu A') merged.tenant1Name = 'Depot Bu Mamie';
+          if (Array.isArray(merged.tenants)) {
+            merged.tenants.forEach(t => {
+              if (t.name === 'Depot Bu A' || (t.id === 'tenant1' && t.name === 'Depot Bu A')) {
+                t.name = 'Depot Bu Mamie';
+              }
+            });
+          }
           localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(merged));
         }
 
@@ -767,13 +796,15 @@ const Store = {
   },
 
   getTenantName(tenantKey) {
+    if (!tenantKey) return 'Kantin Hotel';
+    const cleanKey = String(tenantKey).trim().toLowerCase();
     const tenants = Store.getTenants();
-    const t = tenants.find(item => item.id === tenantKey);
+    const t = tenants.find(item => item.id.toLowerCase() === cleanKey || item.name.toLowerCase() === cleanKey);
     if (t) return t.name;
 
     const s = Store.getSettings();
-    if (tenantKey === 'tenant1') return s.tenant1Name || 'Depot Bu Mamie';
-    if (tenantKey === 'tenant2') return s.tenant2Name || 'Depot Bu Yuli';
+    if (cleanKey === 'tenant1' || cleanKey === 'depot bu a') return s.tenant1Name || 'Depot Bu Mamie';
+    if (cleanKey === 'tenant2') return s.tenant2Name || 'Depot Bu Yuli';
     return tenantKey;
   },
 
@@ -802,6 +833,7 @@ const Store = {
     const tenants = Store.getTenants();
     const t = tenants.find(item => item.id === id);
     if (t) {
+      const oldName = t.name;
       if (newName && newName.trim()) t.name = newName.trim();
       if (newPrice !== null && newPrice !== undefined && !isNaN(Number(newPrice)) && Number(newPrice) > 0) {
         t.price = Number(newPrice);
@@ -814,6 +846,28 @@ const Store = {
       if (id === 'tenant2') s.tenant2Name = t.name;
       s.tenants = tenants;
       Store.saveSettings(s);
+
+      // Perbarui riwayat transaksi lokal agar nama tenant konsisten dan sinkron
+      if (oldName && oldName !== t.name) {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEYS.ATTENDANCE);
+          if (raw) {
+            const list = JSON.parse(raw);
+            let changed = false;
+            list.forEach(a => {
+              if (a.tenantId === id || a.tenantKey === id || a.tenantName === oldName || a.canteenName === oldName) {
+                a.tenantName = t.name;
+                a.canteenName = t.name;
+                changed = true;
+              }
+            });
+            if (changed) {
+              localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(list));
+            }
+          }
+        } catch (e) {}
+      }
+
       return t;
     }
     return null;

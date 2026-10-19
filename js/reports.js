@@ -1386,6 +1386,7 @@ const ReportsManager = {
     const sigMidSubEl = document.getElementById('report-sig-mid-sub');
     const sigRightNameEl = document.getElementById('report-sig-right-name');
     const sigRightSubEl = document.getElementById('report-sig-right-sub');
+    const sigRightTitleEl = document.getElementById('report-sig-right-title');
 
     const s = Store.getSettings();
     const hotelName = (s && s.hotelName) || 'BeSS Mansion Hotel Surabaya';
@@ -1394,13 +1395,20 @@ const ReportsManager = {
     if (sigLeftNameEl) sigLeftNameEl.innerText = 'Petugas HRD / Absensi';
     if (sigLeftSubEl) sigLeftSubEl.innerText = hotelName;
 
-    // 2. Tengah: General Cashier (General Caseer)
+    // 2. Tengah: General Cashier
     if (sigMidNameEl) sigMidNameEl.innerText = 'General Cashier';
     if (sigMidSubEl) sigMidSubEl.innerText = 'Finance & Accounting';
 
-    // 3. Paling Kanan: Nama Depot Dinamis
+    // 3. Paling Kanan: Nama Depot Dinamis (Selalu mengambil nama terkini yang diubah/disimpan)
     const dynamicDepotName = this.getDynamicDepotName(records);
     if (sigRightNameEl) sigRightNameEl.innerText = dynamicDepotName;
+    if (sigRightTitleEl) {
+      if (this.tenantId && this.tenantId !== 'all') {
+        sigRightTitleEl.innerText = `Pihak ${dynamicDepotName}`;
+      } else {
+        sigRightTitleEl.innerText = 'Mengetahui / Disetujui,';
+      }
+    }
     if (sigRightSubEl) {
       if (this.tenantId && this.tenantId !== 'all') {
         sigRightSubEl.innerText = `Pengelola ${dynamicDepotName}`;
@@ -1412,31 +1420,49 @@ const ReportsManager = {
 
   // Dapatkan Nama Depot Secara Dinamis Berdasarkan Filter & Catatan Transaksi
   getDynamicDepotName(records = []) {
-    // Jika user memilih 1 tenant tertentu pada dropdown filter
+    // 1. Jika user memilih 1 tenant tertentu pada dropdown filter
     if (this.tenantId && this.tenantId !== 'all') {
       return Store.getTenantName(this.tenantId);
     }
 
-    // Jika filter 'all', periksa tenant dari data absensi yang tampil pada periode ini
+    const allTenants = Store.getTenants();
+
+    // 2. Jika filter 'all', periksa tenant dari data absensi yang tampil pada periode ini
     if (Array.isArray(records) && records.length > 0) {
-      const uniqueTenants = Array.from(new Set(
-        records
-          .map(r => (r.tenantName || Store.getTenantName(r.tenantId || r.tenantKey)).trim())
-          .filter(Boolean)
+      // Prioritaskan ID/Key tenant ke master Store agar nama yang tampil adalah nama terkini setelah diedit
+      const activeTenantIds = Array.from(new Set(
+        records.map(r => r.tenantId || r.tenantKey).filter(Boolean)
       ));
-      if (uniqueTenants.length === 1) {
-        return uniqueTenants[0];
-      } else if (uniqueTenants.length > 1) {
-        return uniqueTenants.join(' & ');
+
+      if (activeTenantIds.length === 1) {
+        return Store.getTenantName(activeTenantIds[0]);
+      } else if (activeTenantIds.length > 1) {
+        return activeTenantIds.map(tid => Store.getTenantName(tid)).join(' & ');
       }
+
+      // Jika data absensi lampau belum memiliki tenantId/tenantKey eksplisit, petakan string namanya
+      const uniqueNames = Array.from(new Set(
+        records.map(r => {
+          const rawName = (r.tenantName || r.canteenName || '').trim();
+          if (!rawName) return null;
+          const matched = allTenants.find(t => t.name.toLowerCase() === rawName.toLowerCase());
+          if (matched) return matched.name;
+          // Pembersihan khusus: jika masih 'Depot Bu A', alihkan ke tenant1 terkini
+          if (rawName.toLowerCase() === 'depot bu a') {
+            return Store.getTenantName('tenant1');
+          }
+          return rawName;
+        }).filter(Boolean)
+      ));
+      if (uniqueNames.length === 1) return uniqueNames[0];
+      if (uniqueNames.length > 1) return uniqueNames.join(' & ');
     }
 
-    // Jika tidak ada data transaksi, ambil dari master data depot di Store
-    const tenants = Store.getTenants();
-    if (tenants.length === 1) {
-      return tenants[0].name;
-    } else if (tenants.length > 1) {
-      return tenants.map(t => t.name).join(' & ');
+    // 3. Jika tidak ada data transaksi pada periode ini, ambil dari master data depot di Store
+    if (allTenants.length === 1) {
+      return allTenants[0].name;
+    } else if (allTenants.length > 1) {
+      return allTenants.map(t => t.name).join(' & ');
     }
 
     return 'Pengelola Depot Kantin';

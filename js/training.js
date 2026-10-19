@@ -285,7 +285,12 @@ const TrainingManager = {
     if (signDateEl) signDateEl.innerText = todayStr;
     const signCanteenEl = document.getElementById('training-pdf-canteen-sign-label');
     if (signCanteenEl) {
-      signCanteenEl.innerText = canteenFilter ? Store.getTenantName(canteenFilter) : 'Pihak Pengelola Depot';
+      if (canteenFilter && canteenFilter !== 'all') {
+        signCanteenEl.innerText = Store.getTenantName(canteenFilter);
+      } else {
+        const tenants = Store.getTenants();
+        signCanteenEl.innerText = tenants.length > 0 ? tenants.map(t => t.name).join(' & ') : 'Pihak Pengelola Depot';
+      }
     }
   },
 

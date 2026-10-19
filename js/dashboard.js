@@ -134,8 +134,8 @@ const Dashboard = {
 
   updateData() {
     const s = Store.getSettings();
-    const tenant1Name = s.tenant1Name || 'Depot Bu A';
-    const tenant2Name = s.tenant2Name || 'Depot Bu Yuli';
+    const tenant1Name = Store.getTenantName('tenant1');
+    const tenant2Name = Store.getTenantName('tenant2');
 
     // Label Tenant Dinamis di Dashboard Card
     const labelT1 = document.getElementById('dash-label-tenant1');
@@ -325,7 +325,7 @@ const Dashboard = {
       labels = tenantCountsOrDepot1.map(t => t.name);
       data = tenantCountsOrDepot1.map(t => t.count);
     } else {
-      labels = [tenant1Name || 'Depot Bu A', tenant2Name || 'Depot Bu Yuli'];
+      labels = [Store.getTenantName('tenant1'), Store.getTenantName('tenant2')];
       data = [tenantCountsOrDepot1 || 0, depot2Count || 0];
     }
 
