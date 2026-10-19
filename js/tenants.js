@@ -129,7 +129,6 @@ const TenantManager = {
       this.renderQuickCredentials();
       if (window.App) window.App.updateTenantLabels();
       if (window.Dashboard) window.Dashboard.updateData();
-      if (window.AttendanceManager) window.AttendanceManager.renderCanteenSimulationButtons();
       if (window.ReportsManager) window.ReportsManager.render();
 
       const alertBox = document.getElementById('new-canteen-alert');
@@ -155,7 +154,6 @@ const TenantManager = {
         this.renderQuickCredentials();
         if (window.App) window.App.updateTenantLabels();
         if (window.Dashboard) window.Dashboard.updateData();
-        if (window.AttendanceManager) window.AttendanceManager.renderCanteenSimulationButtons();
         if (window.ReportsManager) window.ReportsManager.render();
       }
     }
@@ -189,7 +187,6 @@ const TenantManager = {
       this.renderQuickCredentials();
       if (window.App) window.App.updateTenantLabels();
       if (window.Dashboard) window.Dashboard.updateData();
-      if (window.AttendanceManager) window.AttendanceManager.renderCanteenSimulationButtons();
       if (window.ReportsManager) window.ReportsManager.render();
     }
   },

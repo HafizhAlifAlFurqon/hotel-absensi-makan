@@ -2045,15 +2045,6 @@
               Arahkan kamera ke QR Code resmi meja kasir kantin untuk mencatat absensi.
             </p>
 
-            <!-- Tombol Simulasi Scan Cepat untuk Setiap Kantin Terdaftar -->
-            <div class="pt-3 border-t border-slate-100">
-              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
-                Simulasi Pengujian Cepat (Tanpa Kamera):
-              </span>
-              <div id="emp-canteen-sim-buttons" class="grid grid-cols-2 gap-2">
-              </div>
-            </div>
-
             <!-- Banner Notifikasi Hasil Absensi -->
             <div id="emp-portal-result"></div>
           </div>
@@ -2412,28 +2403,7 @@
     </div>
   </div>
 
-  <!-- ================= MODAL KONFIRMASI SIMULASI SCAN KANTIN ================= -->
-  <div id="canteen-scan-confirm-modal" class="fixed inset-0 bg-slate-900/75 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-100 space-y-4 text-center animate-bounce-short">
-      <div class="w-14 h-14 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto text-2xl shadow-inner">
-        <i class="fa-solid fa-circle-question"></i>
-      </div>
-      <div>
-        <h4 class="font-extrabold text-slate-900 text-base">Konfirmasi Absensi Makan</h4>
-        <p id="canteen-scan-confirm-msg" class="text-xs text-slate-600 mt-1.5 font-medium leading-relaxed">
-          Apakah Anda yakin ingin melakukan scan absensi di kantin ini?
-        </p>
-      </div>
-      <div class="flex items-center gap-2 pt-2">
-        <button id="canteen-scan-confirm-no" type="button" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer">
-          Tidak (Batal)
-        </button>
-        <button id="canteen-scan-confirm-yes" type="button" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition cursor-pointer">
-          Ya, Scan Sekarang
-        </button>
-      </div>
-    </div>
-  </div>
+
 
 
 

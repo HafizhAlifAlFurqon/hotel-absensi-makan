@@ -1088,7 +1088,6 @@ const AttendanceManager = {
     this.populateEmployeeSelector();
     this.updateEmployeePortalCard();
     this.renderEmployeePersonalQR();
-    this.renderCanteenSimulationButtons();
     this.renderPersonalHistory();
   },
 
@@ -1232,26 +1231,7 @@ const AttendanceManager = {
   },
 
   renderCanteenSimulationButtons() {
-    const container = document.getElementById('emp-canteen-sim-buttons');
-    if (!container) return;
-
-    const tenants = Store.getTenants();
-    const colors = [
-      { bg: 'bg-blue-50', hover: 'hover:bg-blue-100', text: 'text-blue-800', border: 'border-blue-200', icon: 'text-blue-600' },
-      { bg: 'bg-purple-50', hover: 'hover:bg-purple-100', text: 'text-purple-800', border: 'border-purple-200', icon: 'text-purple-600' },
-      { bg: 'bg-amber-50', hover: 'hover:bg-amber-100', text: 'text-amber-800', border: 'border-amber-200', icon: 'text-amber-600' },
-      { bg: 'bg-teal-50', hover: 'hover:bg-teal-100', text: 'text-teal-800', border: 'border-teal-200', icon: 'text-teal-600' },
-      { bg: 'bg-rose-50', hover: 'hover:bg-rose-100', text: 'text-rose-800', border: 'border-rose-200', icon: 'text-rose-600' }
-    ];
-
-    container.innerHTML = tenants.map((t, idx) => {
-      const c = colors[idx % colors.length];
-      return `
-        <button onclick="AttendanceManager.simulateScanCanteen('${t.id}')" class="py-2 px-3 rounded-xl ${c.bg} ${c.hover} ${c.text} text-xs font-bold border ${c.border} transition flex items-center justify-center gap-1.5 shadow-xs">
-          <i class="fa-solid fa-store ${c.icon}"></i> Scan Meja ${t.name}
-        </button>
-      `;
-    }).join('');
+    // Fitur tombol scan cepat tanpa kamera telah dihapus sesuai permintaan
   },
 
   renderPersonalHistory() {
@@ -1507,39 +1487,7 @@ const AttendanceManager = {
   },
 
   simulateScanCanteen(tenantKey) {
-    const tenantName = Store.getTenantName(tenantKey);
-    const modal = document.getElementById('canteen-scan-confirm-modal');
-    const msgEl = document.getElementById('canteen-scan-confirm-msg');
-    const yesBtn = document.getElementById('canteen-scan-confirm-yes');
-    const noBtn = document.getElementById('canteen-scan-confirm-no');
-
-    if (modal && msgEl && yesBtn && noBtn) {
-      msgEl.innerHTML = `Apakah Anda yakin ingin melakukan scan absensi makan di <strong class="text-slate-900 font-extrabold">${tenantName}</strong>?`;
-      modal.classList.remove('hidden');
-
-      const handleYes = () => {
-        modal.classList.add('hidden');
-        cleanup();
-        AttendanceManager.processScannedCanteenQR(`DEPOT:${tenantKey}`);
-      };
-
-      const handleNo = () => {
-        modal.classList.add('hidden');
-        cleanup();
-      };
-
-      const cleanup = () => {
-        yesBtn.removeEventListener('click', handleYes);
-        noBtn.removeEventListener('click', handleNo);
-      };
-
-      yesBtn.addEventListener('click', handleYes);
-      noBtn.addEventListener('click', handleNo);
-    } else {
-      if (confirm(`Apakah Anda yakin ingin melakukan scan absensi makan di ${tenantName}?`)) {
-        this.processScannedCanteenQR(`DEPOT:${tenantKey}`);
-      }
-    }
+    // Fitur tombol scan cepat tanpa kamera telah dihapus sesuai permintaan
   },
 
   // Fitur Ganti Password Sendiri oleh Karyawan
