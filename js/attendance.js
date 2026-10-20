@@ -1023,23 +1023,23 @@ const AttendanceManager = {
       if (errDetailEl) {
         if (res && res.existingAttendance) {
           errDetailEl.innerHTML = `
-            <div class="flex items-start gap-2">
-              <i class="fa-solid fa-triangle-exclamation text-rose-500 mt-0.5"></i>
-              <div>
-                <p class="font-bold">Sudah Mengambil Jatah Makan Hari Ini:</p>
-                <p class="mt-0.5">Di <b>${res.existingAttendance.tenantName || 'Kantin'}</b> pukul <b>${res.existingAttendance.time || ''} WIB</b> (${res.existingAttendance.shift || ''}).</p>
-                <p class="mt-1 text-[11px] text-rose-600 font-medium">Ketentuan: Setiap karyawan hanya memiliki 1x kuota makan per hari.</p>
+            <div class="flex items-start gap-2" style="background-color: transparent !important;">
+              <i class="fa-solid fa-triangle-exclamation text-rose-500 mt-0.5" style="background-color: transparent !important; color: #e11d48 !important;"></i>
+              <div style="background-color: transparent !important;">
+                <p class="font-bold text-rose-900" style="background-color: transparent !important; color: #881337 !important;">Sudah Mengambil Jatah Makan Hari Ini:</p>
+                <p class="mt-0.5 text-rose-800" style="background-color: transparent !important; color: #9f1239 !important;">Di <b>${res.existingAttendance.tenantName || 'Kantin'}</b> pukul <b>${res.existingAttendance.time || ''} WIB</b> (${res.existingAttendance.shift || ''}).</p>
+                <p class="mt-1 text-[11px] text-rose-600 font-medium" style="background-color: transparent !important; color: #be123c !important;">Ketentuan: Setiap karyawan hanya memiliki 1x kuota makan per hari.</p>
               </div>
             </div>
           `;
           errDetailEl.classList.remove('hidden');
         } else if (res && res.code === 'OUTSIDE_HOURS') {
           errDetailEl.innerHTML = `
-            <div class="flex items-start gap-2">
-              <i class="fa-solid fa-clock text-rose-500 mt-0.5"></i>
-              <div>
-                <p class="font-bold">Di Luar Jam Operasional Kantin:</p>
-                <p class="mt-0.5">Absensi makan hanya dibuka pukul <b>11:00 - 19:00 WIB</b> (Siang: 11:00-15:00, Sore: 15:01-19:00).</p>
+            <div class="flex items-start gap-2" style="background-color: transparent !important;">
+              <i class="fa-solid fa-clock text-rose-500 mt-0.5" style="background-color: transparent !important; color: #e11d48 !important;"></i>
+              <div style="background-color: transparent !important;">
+                <p class="font-bold text-rose-900" style="background-color: transparent !important; color: #881337 !important;">Di Luar Jam Operasional Kantin:</p>
+                <p class="mt-0.5 text-rose-800" style="background-color: transparent !important; color: #9f1239 !important;">Absensi makan hanya dibuka pukul <b>11:00 - 19:00 WIB</b> (Siang: 11:00-15:00, Sore: 15:01-19:00).</p>
               </div>
             </div>
           `;

@@ -1,5 +1,10 @@
-/* Font diimpor dengan preconnect di index.html untuk performa maksimal */
+/* Paksa Mode Terang Global (Cegah Algoritma Auto-Dark / Force Dark Browser Invert Tampilan) */
+:root {
+  color-scheme: light !important;
+}
+
 html, body {
+  color-scheme: light !important;
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -14,7 +19,8 @@ html, body {
 body {
   position: relative;
   min-height: 100vh;
-  background-color: #0b1320;
+  background-color: #f1f5f9;
+  color-scheme: light !important;
 }
 
 /* Hardware-accelerated fixed canvas background (Zero-repaint scrolling at 120 FPS) */
@@ -24,10 +30,10 @@ body::before {
   inset: 0;
   z-index: -2;
   background-image:
-    radial-gradient(ellipse at 15% 15%, rgba(37, 99, 235, 0.38) 0%, transparent 48%),
-    radial-gradient(ellipse at 85% 85%, rgba(2, 132, 199, 0.32) 0%, transparent 52%),
-    radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.22) 0%, transparent 58%),
-    linear-gradient(rgba(15, 23, 42, 0.32), rgba(15, 23, 42, 0.46)),
+    radial-gradient(ellipse at 15% 15%, rgba(37, 99, 235, 0.28) 0%, transparent 48%),
+    radial-gradient(ellipse at 85% 85%, rgba(2, 132, 199, 0.24) 0%, transparent 52%),
+    radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.18) 0%, transparent 58%),
+    linear-gradient(rgba(241, 245, 249, 0.65), rgba(226, 232, 240, 0.78)),
     url('../bg.jpg');
   background-size: cover;
   background-position: center;
@@ -885,3 +891,52 @@ button.bg-teal-600:hover::after {
     background: #ffffff !important;
   }
 }
+
+/* ==========================================================================
+   MODAL POP-UP SCAN: TEMA CERAH, BERSIH, ANTI-HITAM & ULTRA-LEGA
+   ========================================================================== */
+#scan-result-modal {
+  background-color: rgba(148, 163, 184, 0.35) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  color-scheme: light !important;
+}
+
+#scan-result-modal * {
+  color-scheme: light !important;
+}
+
+#scan-result-modal .scan-modal-card {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(203, 213, 225, 0.8) !important;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.8) !important;
+}
+
+#scan-result-modal h3,
+#scan-result-modal p,
+#scan-result-modal span,
+#scan-result-modal div {
+  background-image: none;
+}
+
+#scan-result-modal .scan-modal-info-table {
+  background-color: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+#scan-result-modal .scan-modal-info-table * {
+  background-color: transparent !important;
+}
+
+#scan-result-modal #scan-modal-error-detail {
+  background-color: #fff1f2 !important;
+  border: 1px solid #fecdd3 !important;
+  color: #881337 !important;
+}
+
+#scan-result-modal #scan-modal-error-detail * {
+  background-color: transparent !important;
+}
+
