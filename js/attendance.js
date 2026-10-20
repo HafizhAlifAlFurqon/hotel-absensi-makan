@@ -1024,11 +1024,11 @@ const AttendanceManager = {
         if (res && res.existingAttendance) {
           errDetailEl.innerHTML = `
             <div class="flex items-start gap-2" style="background-color: transparent !important;">
-              <i class="fa-solid fa-triangle-exclamation text-rose-500 mt-0.5" style="background-color: transparent !important; color: #e11d48 !important;"></i>
+              <i class="fa-solid fa-triangle-exclamation text-base mt-0.5" style="background-color: transparent !important; color: #dc2626 !important;"></i>
               <div style="background-color: transparent !important;">
-                <p class="font-bold text-rose-900" style="background-color: transparent !important; color: #881337 !important;">Sudah Mengambil Jatah Makan Hari Ini:</p>
-                <p class="mt-0.5 text-rose-800" style="background-color: transparent !important; color: #9f1239 !important;">Di <b>${res.existingAttendance.tenantName || 'Kantin'}</b> pukul <b>${res.existingAttendance.time || ''} WIB</b> (${res.existingAttendance.shift || ''}).</p>
-                <p class="mt-1 text-[11px] text-rose-600 font-medium" style="background-color: transparent !important; color: #be123c !important;">Ketentuan: Setiap karyawan hanya memiliki 1x kuota makan per hari.</p>
+                <p class="font-bold text-sm" style="background-color: transparent !important; color: #dc2626 !important; font-weight: 900 !important;">Sudah Mengambil Jatah Makan Hari Ini:</p>
+                <p class="mt-1 text-xs" style="background-color: transparent !important; color: #dc2626 !important; font-weight: 700 !important;">Di <b style="color: #b91c1c !important;">${res.existingAttendance.tenantName || 'Kantin'}</b> pukul <b style="color: #b91c1c !important;">${res.existingAttendance.time || ''} WIB</b> (${res.existingAttendance.shift || ''}).</p>
+                <p class="mt-1.5 text-[11px] font-semibold" style="background-color: transparent !important; color: #ef4444 !important;">Ketentuan: Setiap karyawan hanya memiliki 1x kuota makan per hari.</p>
               </div>
             </div>
           `;
@@ -1036,10 +1036,10 @@ const AttendanceManager = {
         } else if (res && res.code === 'OUTSIDE_HOURS') {
           errDetailEl.innerHTML = `
             <div class="flex items-start gap-2" style="background-color: transparent !important;">
-              <i class="fa-solid fa-clock text-rose-500 mt-0.5" style="background-color: transparent !important; color: #e11d48 !important;"></i>
+              <i class="fa-solid fa-clock text-base mt-0.5" style="background-color: transparent !important; color: #dc2626 !important;"></i>
               <div style="background-color: transparent !important;">
-                <p class="font-bold text-rose-900" style="background-color: transparent !important; color: #881337 !important;">Di Luar Jam Operasional Kantin:</p>
-                <p class="mt-0.5 text-rose-800" style="background-color: transparent !important; color: #9f1239 !important;">Absensi makan hanya dibuka pukul <b>11:00 - 19:00 WIB</b> (Siang: 11:00-15:00, Sore: 15:01-19:00).</p>
+                <p class="font-bold text-sm" style="background-color: transparent !important; color: #dc2626 !important; font-weight: 900 !important;">Di Luar Jam Operasional Kantin:</p>
+                <p class="mt-1 text-xs" style="background-color: transparent !important; color: #dc2626 !important; font-weight: 700 !important;">Absensi makan hanya dibuka pukul <b style="color: #b91c1c !important;">11:00 - 19:00 WIB</b> (Siang: 11:00-15:00, Sore: 15:01-19:00).</p>
               </div>
             </div>
           `;

@@ -896,7 +896,8 @@ button.bg-teal-600:hover::after {
    MODAL POP-UP SCAN: TEMA CERAH, BERSIH, ANTI-HITAM & ULTRA-LEGA
    ========================================================================== */
 #scan-result-modal {
-  background-color: rgba(148, 163, 184, 0.35) !important;
+  background: rgba(255, 255, 255, 0.70) !important;
+  background-color: rgba(255, 255, 255, 0.70) !important;
   backdrop-filter: blur(10px) !important;
   -webkit-backdrop-filter: blur(10px) !important;
   color-scheme: light !important;
@@ -909,9 +910,9 @@ button.bg-teal-600:hover::after {
 #scan-result-modal .scan-modal-card {
   background: #ffffff !important;
   background-color: #ffffff !important;
-  color: #0f172a !important;
-  border: 1px solid rgba(203, 213, 225, 0.8) !important;
-  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.8) !important;
+  color: #1e293b !important;
+  border: 2px solid #e2e8f0 !important;
+  box-shadow: 0 25px 50px -12px rgba(37, 99, 235, 0.15) !important;
 }
 
 #scan-result-modal h3,
@@ -921,9 +922,25 @@ button.bg-teal-600:hover::after {
   background-image: none;
 }
 
+#scan-result-modal #scan-modal-error h3 {
+  color: #dc2626 !important;
+}
+
+#scan-result-modal #scan-modal-error-message {
+  color: #ef4444 !important;
+}
+
+#scan-result-modal #scan-modal-success h3 {
+  color: #2563eb !important;
+}
+
+#scan-result-modal #scan-modal-emp-name {
+  color: #1d4ed8 !important;
+}
+
 #scan-result-modal .scan-modal-info-table {
   background-color: #f8fafc !important;
-  border: 1px solid #e2e8f0 !important;
+  border: 1.5px solid #e2e8f0 !important;
 }
 
 #scan-result-modal .scan-modal-info-table * {
@@ -931,12 +948,17 @@ button.bg-teal-600:hover::after {
 }
 
 #scan-result-modal #scan-modal-error-detail {
-  background-color: #fff1f2 !important;
-  border: 1px solid #fecdd3 !important;
-  color: #881337 !important;
+  background-color: #fef2f2 !important;
+  border: 1.5px solid #fca5a5 !important;
+  color: #dc2626 !important;
 }
 
 #scan-result-modal #scan-modal-error-detail * {
   background-color: transparent !important;
+  color: #dc2626 !important;
+}
+
+#scan-result-modal button {
+  color: #ffffff !important;
 }
 

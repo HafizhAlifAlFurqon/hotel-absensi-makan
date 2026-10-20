@@ -30,7 +30,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
   <!-- Custom Style & Print CSS -->
-  <link rel="stylesheet" href="css/style.css?v=20261020_anti_dark">
+  <link rel="stylesheet" href="css/style.css?v=20261020_v3_bright">
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col antialiased">
 
@@ -1929,8 +1929,8 @@
   </main>
 
   <!-- ================= MODAL POP-UP HASIL SCAN ABSENSI KARYAWAN ================= -->
-  <div id="scan-result-modal" onclick="if(event.target === this) AttendanceManager.closeScanModal()" class="fixed inset-0 bg-slate-900/20 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden transition-all duration-300" style="background-color: rgba(148, 163, 184, 0.35) !important; color-scheme: light !important;">
-    <div class="scan-modal-card bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-slate-200 text-center animate-bounce-short relative overflow-hidden" style="background-color: #ffffff !important; color: #0f172a !important; color-scheme: light !important;">
+  <div id="scan-result-modal" onclick="if(event.target === this) AttendanceManager.closeScanModal()" class="fixed inset-0 flex items-center justify-center p-4 z-50 hidden transition-all duration-300" style="background: rgba(255, 255, 255, 0.70) !important; backdrop-filter: blur(10px) !important; -webkit-backdrop-filter: blur(10px) !important; color-scheme: light !important;">
+    <div class="scan-modal-card bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl text-center animate-bounce-short relative overflow-hidden" style="background: #ffffff !important; background-color: #ffffff !important; color: #1e293b !important; border: 2px solid #e2e8f0 !important; box-shadow: 0 20px 45px -10px rgba(37, 99, 235, 0.15) !important; color-scheme: light !important;">
       <!-- Tombol Tutup X -->
       <button type="button" onclick="AttendanceManager.closeScanModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-2.5 rounded-full hover:bg-slate-100 transition cursor-pointer z-10" title="Tutup" style="background-color: transparent !important;">
         <i class="fa-solid fa-xmark text-lg"></i>
@@ -1945,62 +1945,62 @@
           <span class="px-3.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200" style="background-color: #dbeafe !important; color: #1e40af !important;">
             Absensi Berhasil
           </span>
-          <h3 class="text-2xl font-black text-slate-900 mt-2" style="background-color: transparent !important; color: #0f172a !important;">Selamat Makan!</h3>
-          <p class="text-lg font-black text-blue-700 mt-0.5" id="scan-modal-emp-name" style="background-color: transparent !important; color: #1d4ed8 !important;">-</p>
+          <h3 class="text-2xl font-black mt-2" style="background-color: transparent !important; color: #2563eb !important;">Selamat Makan!</h3>
+          <p class="text-lg font-black mt-0.5" id="scan-modal-emp-name" style="background-color: transparent !important; color: #1d4ed8 !important;">-</p>
         </div>
 
-        <div class="scan-modal-info-table bg-slate-50 border border-slate-200 rounded-2xl p-4 text-left space-y-2 text-xs" style="background-color: #f8fafc !important; color: #0f172a !important;">
+        <div class="scan-modal-info-table bg-slate-50 border border-slate-200 rounded-2xl p-4 text-left space-y-2 text-xs" style="background-color: #f8fafc !important; border: 1.5px solid #e2e8f0 !important;">
           <div class="flex justify-between items-center pb-2 border-b border-slate-200/60" style="background-color: transparent !important;">
-            <span class="text-slate-500 font-medium" style="background-color: transparent !important; color: #64748b !important;">ID Karyawan</span>
-            <span class="font-mono font-bold text-slate-900" id="scan-modal-emp-id" style="background-color: transparent !important; color: #0f172a !important;">-</span>
+            <span class="font-medium" style="background-color: transparent !important; color: #64748b !important;">ID Karyawan</span>
+            <span class="font-mono font-bold" id="scan-modal-emp-id" style="background-color: transparent !important; color: #2563eb !important;">-</span>
           </div>
           <div class="flex justify-between items-center pb-2 border-b border-slate-200/60" style="background-color: transparent !important;">
-            <span class="text-slate-500 font-medium" style="background-color: transparent !important; color: #64748b !important;">Departemen</span>
-            <span class="font-bold text-slate-800" id="scan-modal-emp-dept" style="background-color: transparent !important; color: #1e293b !important;">-</span>
+            <span class="font-medium" style="background-color: transparent !important; color: #64748b !important;">Departemen</span>
+            <span class="font-bold" id="scan-modal-emp-dept" style="background-color: transparent !important; color: #1d4ed8 !important;">-</span>
           </div>
           <div class="flex justify-between items-center pb-2 border-b border-slate-200/60" style="background-color: transparent !important;">
-            <span class="text-slate-500 font-medium" style="background-color: transparent !important; color: #64748b !important;">Kantin / Depot</span>
-            <span class="font-bold text-blue-700 flex items-center gap-1.5" id="scan-modal-tenant" style="background-color: transparent !important; color: #1d4ed8 !important;">
-              <i class="fa-solid fa-store text-blue-600" style="background-color: transparent !important;"></i> <span id="scan-modal-tenant-name" style="background-color: transparent !important; color: #1d4ed8 !important;">-</span>
+            <span class="font-medium" style="background-color: transparent !important; color: #64748b !important;">Kantin / Depot</span>
+            <span class="font-bold flex items-center gap-1.5" id="scan-modal-tenant" style="background-color: transparent !important; color: #2563eb !important;">
+              <i class="fa-solid fa-store" style="color: #2563eb !important;"></i> <span id="scan-modal-tenant-name" style="color: #2563eb !important;">-</span>
             </span>
           </div>
           <div class="flex justify-between items-center pb-2 border-b border-slate-200/60" style="background-color: transparent !important;">
-            <span class="text-slate-500 font-medium" style="background-color: transparent !important; color: #64748b !important;">Shift Makan</span>
-            <span class="font-bold text-amber-700" id="scan-modal-shift" style="background-color: transparent !important; color: #b45309 !important;">-</span>
+            <span class="font-medium" style="background-color: transparent !important; color: #64748b !important;">Shift Makan</span>
+            <span class="font-bold" id="scan-modal-shift" style="background-color: transparent !important; color: #d97706 !important;">-</span>
           </div>
           <div class="flex justify-between items-center" style="background-color: transparent !important;">
-            <span class="text-slate-500 font-medium" style="background-color: transparent !important; color: #64748b !important;">Waktu Transaksi</span>
-            <span class="font-mono font-bold text-slate-800" id="scan-modal-time" style="background-color: transparent !important; color: #0f172a !important;">- WIB</span>
+            <span class="font-medium" style="background-color: transparent !important; color: #64748b !important;">Waktu Transaksi</span>
+            <span class="font-mono font-bold" id="scan-modal-time" style="background-color: transparent !important; color: #2563eb !important;">- WIB</span>
           </div>
         </div>
 
-        <div class="p-3 bg-blue-50/80 border border-blue-200 rounded-xl text-blue-900 text-xs font-semibold flex items-center gap-2.5 text-left" style="background-color: #eff6ff !important; color: #1e3a8a !important; border: 1px solid #bfdbfe !important;">
-          <i class="fa-solid fa-circle-info text-blue-600 text-base shrink-0" style="background-color: transparent !important;"></i>
+        <div class="p-3 rounded-xl text-xs font-semibold flex items-center gap-2.5 text-left" style="background-color: #eff6ff !important; color: #1d4ed8 !important; border: 1.5px solid #bfdbfe !important;">
+          <i class="fa-solid fa-circle-info text-base shrink-0" style="color: #2563eb !important;"></i>
           <span style="background-color: transparent !important;">Jatah makan 1x hari ini telah berhasil digunakan. Silakan tunjukkan layar ini kepada petugas kantin.</span>
         </div>
 
-        <button type="button" onclick="AttendanceManager.closeScanModal()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-xl font-black text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important; color: #ffffff !important; box-shadow: 0 4px 14px -1px rgba(37, 99, 235, 0.4) !important;">
+        <button type="button" onclick="AttendanceManager.closeScanModal()" class="w-full py-3.5 active:scale-[0.98] text-white rounded-xl font-black text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important; color: #ffffff !important; box-shadow: 0 4px 14px -1px rgba(37, 99, 235, 0.4) !important;">
           <i class="fa-solid fa-circle-check text-base"></i> Tutup
         </button>
       </div>
 
       <!-- TAMPILAN GAGAL / DITOLAK SCAN -->
       <div id="scan-modal-error" class="hidden space-y-4" style="background-color: transparent !important;">
-        <div class="w-20 h-20 rounded-full bg-rose-50 text-rose-600 mx-auto flex items-center justify-center text-4xl shadow-inner border-2 border-rose-200" style="background-color: #fff1f2 !important; color: #e11d48 !important;">
+        <div class="w-20 h-20 rounded-full mx-auto flex items-center justify-center text-4xl shadow-inner" style="background-color: #fef2f2 !important; color: #ef4444 !important; border: 2px solid #fecaca !important;">
           <i class="fa-solid fa-circle-xmark"></i>
         </div>
         <div style="background-color: transparent !important;">
-          <span class="px-3.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-200" style="background-color: #ffe4e6 !important; color: #9f1239 !important;">
+          <span class="px-3.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider" style="background-color: #fee2e2 !important; color: #dc2626 !important; border: 1.5px solid #fca5a5 !important;">
             Absensi Ditolak
           </span>
-          <h3 class="text-xl font-black text-rose-900 mt-2" style="background-color: transparent !important; color: #881337 !important;">Tidak Dapat Mengambil Makan</h3>
-          <p class="text-xs text-rose-700 mt-1 font-bold leading-relaxed" id="scan-modal-error-message" style="background-color: transparent !important; color: #be123c !important;">-</p>
+          <h3 class="text-xl font-black mt-2" style="background-color: transparent !important; color: #dc2626 !important; font-size: 1.35rem !important;">Tidak Dapat Mengambil Makan</h3>
+          <p class="text-sm mt-1.5 font-extrabold leading-relaxed" id="scan-modal-error-message" style="background-color: transparent !important; color: #ef4444 !important; line-height: 1.45 !important;">-</p>
         </div>
 
-        <div id="scan-modal-error-detail" class="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-left space-y-2 text-xs text-rose-900 hidden" style="background-color: #fff1f2 !important; border: 1px solid #fecdd3 !important; color: #881337 !important;">
+        <div id="scan-modal-error-detail" class="rounded-2xl p-4 text-left space-y-2 text-xs hidden" style="background-color: #fef2f2 !important; border: 1.5px solid #fca5a5 !important; color: #dc2626 !important;">
         </div>
 
-        <button type="button" onclick="AttendanceManager.closeScanModal()" class="w-full py-3.5 bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white rounded-xl font-black text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer" style="background: linear-gradient(135deg, #e11d48 0%, #be123c 100%) !important; color: #ffffff !important; box-shadow: 0 4px 14px -1px rgba(225, 29, 72, 0.4) !important;">
+        <button type="button" onclick="AttendanceManager.closeScanModal()" class="w-full py-3.5 active:scale-[0.98] text-white rounded-xl font-black text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important; color: #ffffff !important; box-shadow: 0 4px 14px -1px rgba(239, 68, 68, 0.45) !important;">
           <i class="fa-solid fa-xmark text-base"></i> Tutup
         </button>
       </div>
