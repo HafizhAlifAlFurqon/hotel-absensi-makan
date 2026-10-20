@@ -85,14 +85,14 @@ const App = {
           if (evaluation.isAllowed) {
             if (evaluation.shift && evaluation.shift.includes('Siang')) {
               badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-300 shadow-xs';
-              badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 mr-1.5 animate-pulse"></span> Makan Siang`;
+              badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 mr-1.5 animate-pulse"></span> Makan Siang (11:00 - 15:00)`;
             } else {
               badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-900 border border-indigo-300 shadow-xs';
-              badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-indigo-500 mr-1.5 animate-pulse"></span> Makan Sore`;
+              badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-indigo-500 mr-1.5 animate-pulse"></span> Makan Sore (15:01 - 19:00)`;
             }
           } else {
             badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-900 border border-rose-300 shadow-xs';
-            badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500 mr-1.5"></span> Kantin Tutup`;
+            badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500 mr-1.5"></span> Kantin Tutup (Buka 11:00 - 19:00)`;
           }
 
           if (settings.bypassTimeForTesting) {

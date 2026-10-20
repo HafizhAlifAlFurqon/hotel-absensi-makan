@@ -10,10 +10,41 @@ $mysqlProcess = Get-Process -Name "mysqld" -ErrorAction SilentlyContinue
 if (-not $mysqlProcess) {
     $mysqlBin = "C:\xampp\mysql\bin\mysqld.exe"
     $mysqlIni = "C:\xampp\mysql\bin\my.ini"
+    $dataDir = "C:\xampp\mysql\data"
+    $ariaChk = "C:\xampp\mysql\bin\aria_chk.exe"
+
     if (Test-Path $mysqlBin) {
-        Write-Host "Memulai MySQL / MariaDB Server (absen_makan_hotel)..." -ForegroundColor Yellow
+        Write-Host "Memeriksa status & memulai MySQL Server (absen_makan_hotel)..." -ForegroundColor Yellow
+
+        # Auto-heal: Jika ada error log indikasi Aria crash, bersihkan otomatis
+        $errLog = "$dataDir\mysql_error.log"
+        if (Test-Path $errLog) {
+            $lastErr = Get-Content $errLog -Tail 15 -ErrorAction SilentlyContinue
+            if ($lastErr -match "Aria recovery failed|Could not open mysql.plugin") {
+                Write-Host "Mendeteksi crash log Aria MariaDB, memulihkan tabel otomatis..." -ForegroundColor Cyan
+                Remove-Item "$dataDir\aria_log.*" -Force -ErrorAction SilentlyContinue
+                Remove-Item "$dataDir\aria_log_control" -Force -ErrorAction SilentlyContinue
+                if (Test-Path $ariaChk) {
+                    & $ariaChk -o "$dataDir\mysql\*.MAI" | Out-Null
+                }
+            }
+        }
+
         Start-Process -FilePath $mysqlBin -ArgumentList "--defaults-file=`"$mysqlIni`" --standalone" -WindowStyle Hidden
-        Start-Sleep -Seconds 1
+        Start-Sleep -Seconds 2
+
+        # Cek ulang, jika masih gagal maka jalankan safe-recover penuh
+        $mysqlProcess = Get-Process -Name "mysqld" -ErrorAction SilentlyContinue
+        if (-not $mysqlProcess) {
+            Write-Host "Melakukan auto-repair lanjutan pada tabel MySQL..." -ForegroundColor Yellow
+            Remove-Item "$dataDir\aria_log.*" -Force -ErrorAction SilentlyContinue
+            Remove-Item "$dataDir\aria_log_control" -Force -ErrorAction SilentlyContinue
+            if (Test-Path $ariaChk) {
+                & $ariaChk -o "$dataDir\mysql\*.MAI" | Out-Null
+            }
+            Start-Process -FilePath $mysqlBin -ArgumentList "--defaults-file=`"$mysqlIni`" --standalone" -WindowStyle Hidden
+            Start-Sleep -Seconds 2
+        }
     }
 }
 
