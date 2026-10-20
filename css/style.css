@@ -19,7 +19,7 @@ html, body {
 body {
   position: relative;
   min-height: 100vh;
-  background-color: #f1f5f9;
+  background-color: transparent;
   color-scheme: light !important;
 }
 
@@ -30,10 +30,7 @@ body::before {
   inset: 0;
   z-index: -2;
   background-image:
-    radial-gradient(ellipse at 15% 15%, rgba(37, 99, 235, 0.28) 0%, transparent 48%),
-    radial-gradient(ellipse at 85% 85%, rgba(2, 132, 199, 0.24) 0%, transparent 52%),
-    radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.18) 0%, transparent 58%),
-    linear-gradient(rgba(241, 245, 249, 0.65), rgba(226, 232, 240, 0.78)),
+    linear-gradient(rgba(248, 250, 252, 0.18), rgba(241, 245, 249, 0.24)),
     url('../bg.jpg');
   background-size: cover;
   background-position: center;
@@ -145,7 +142,7 @@ table.report-table tfoot {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.60;
+  opacity: 0.16;
   contain: strict;
   transform: translate3d(0, 0, 0);
 }
@@ -155,8 +152,8 @@ table.report-table tfoot {
   pointer-events: none;
   transform: translate3d(0, 0, 0);
   will-change: transform;
-  filter: blur(16px);
-  -webkit-filter: blur(16px);
+  filter: blur(8px);
+  -webkit-filter: blur(8px);
   contain: layout style paint;
 }
 
@@ -269,46 +266,50 @@ table.report-table tfoot {
   }
 }
 
-/* 2. Kartu Bersih & Responsif (Optimal GPU Render Tanpa Beban Overdraw) */
+/* 2. Kartu Setengah Liquid & Teroptimasi (Semi-Liquid Glassmorphism 60-120 FPS) */
 #app-shell .bg-white:not(.a4-document-paper):not(#printable-report-area):not(#training-view-report):not(#pdf-preview-paper):not(.no-liquid) {
-  background: #ffffff !important;
-  border: 1px solid rgba(226, 232, 240, 0.92) !important;
+  background: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(8px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(150%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.82) !important;
   box-shadow:
-    0 4px 16px -2px rgba(15, 23, 42, 0.04),
-    0 1px 3px 0 rgba(15, 23, 42, 0.02),
-    inset 0 1px 0 rgba(255, 255, 255, 1) !important;
-  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.24s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.24s ease;
+    0 8px 24px -4px rgba(15, 23, 42, 0.05),
+    0 2px 6px -1px rgba(15, 23, 42, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.22s ease;
+  transform: translate3d(0, 0, 0);
 }
 
 @media (hover: hover) and (pointer: fine) {
   #app-shell .bg-white:not(.a4-document-paper):not(#printable-report-area):not(#training-view-report):not(#pdf-preview-paper):not(.no-liquid):hover {
     transform: translate3d(0, -2px, 0);
-    border-color: rgba(96, 165, 250, 0.60) !important;
+    border-color: rgba(96, 165, 250, 0.70) !important;
     box-shadow:
-      0 12px 24px -4px rgba(37, 99, 235, 0.12),
-      0 2px 6px -1px rgba(37, 99, 235, 0.06),
+      0 12px 28px -4px rgba(37, 99, 235, 0.12),
+      0 3px 8px -1px rgba(37, 99, 235, 0.05),
       inset 0 1px 0 rgba(255, 255, 255, 1) !important;
   }
 }
 
 /* 2b. Kartu Liquid Abu-Abu Muda (.liquid-card-gray) */
 .liquid-card-gray {
-  background: linear-gradient(135deg, rgba(248, 250, 252, 0.94) 0%, rgba(241, 245, 249, 0.90) 50%, rgba(226, 232, 240, 0.86) 100%) !important;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.88) 0%, rgba(241, 245, 249, 0.84) 50%, rgba(226, 232, 240, 0.80) 100%) !important;
+  backdrop-filter: blur(8px) saturate(150%);
+  -webkit-backdrop-filter: blur(8px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
   box-shadow:
-    0 12px 30px -8px rgba(15, 23, 42, 0.06),
+    0 10px 25px -6px rgba(15, 23, 42, 0.05),
     0 2px 8px -2px rgba(37, 99, 235, 0.04),
     inset 0 1.5px 0.5px rgba(255, 255, 255, 0.95),
-    inset 0 -1px 0 rgba(203, 213, 225, 0.45) !important;
+    inset 0 -1px 0 rgba(203, 213, 225, 0.35) !important;
   position: relative;
   overflow: hidden;
   transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1),
               box-shadow 0.26s cubic-bezier(0.16, 1, 0.3, 1),
               border-color 0.26s ease;
+  transform: translate3d(0, 0, 0);
 }
 
 .liquid-card-gray::before {
@@ -652,7 +653,7 @@ button.bg-teal-600:hover::after {
 @media (max-width: 768px) {
   /* 1. Ringankan Animasi Background di HP (Hilangkan Beban GPU) */
   .liquid-bg-container {
-    opacity: 0.35 !important;
+    opacity: 0.10 !important;
   }
   .liquid-blob-4,
   .liquid-blob-5,
@@ -662,19 +663,20 @@ button.bg-teal-600:hover::after {
   .liquid-blob-1,
   .liquid-blob-2,
   .liquid-blob-3 {
-    width: 260px !important;
-    height: 260px !important;
-    filter: blur(8px) !important;
+    width: 200px !important;
+    height: 200px !important;
+    filter: blur(4px) !important;
     animation-duration: 45s !important;
   }
 
-  /* 2. Minimalkan Backdrop Blur di HP agar Performa Sangat Ringan & Responsif */
+  /* 2. Minimalkan Backdrop Blur di HP agar Performa Sangat Ringan & Responsif (60-120 FPS) */
+  #app-shell .bg-white:not(.a4-document-paper):not(#printable-report-area):not(#training-view-report):not(#pdf-preview-paper):not(.no-liquid),
   .liquid-card-gray,
   #app-shell > header,
   #app-shell > nav,
   [id$="-modal"] {
-    backdrop-filter: blur(5px) !important;
-    -webkit-backdrop-filter: blur(5px) !important;
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
   }
 }
 
