@@ -1876,11 +1876,29 @@
 
       <!-- TABEL RIWAYAT ABSENSI MAKAN SAYA -->
       <div class="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
-        <div class="p-3.5 sm:p-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-          <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
-            <i class="fa-solid fa-clock-rotate-left text-blue-600"></i> Riwayat Absensi Makan Saya
-          </h3>
-          <span class="text-[11px] text-slate-400 font-medium">Riwayat Absensi Karyawan Terverifikasi</span>
+        <div class="p-3.5 sm:p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <i class="fa-solid fa-clock-rotate-left text-blue-600"></i> Riwayat Absensi Makan Saya
+            </h3>
+            <span id="emp-history-count-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800">
+              0 Transaksi
+            </span>
+          </div>
+
+          <!-- Filter Tanggal Riwayat Makan -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <label for="emp-history-date-filter" class="text-xs font-semibold text-slate-600 flex items-center gap-1.5 shrink-0">
+              <i class="fa-solid fa-calendar-day text-blue-600"></i> Tanggal:
+            </label>
+            <input type="date" id="emp-history-date-filter" onchange="AttendanceManager.renderPersonalHistory()" class="px-3 py-1.5 text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-xl shadow-2xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <button type="button" onclick="AttendanceManager.setPersonalHistoryToday()" class="px-2.5 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition cursor-pointer">
+              Hari Ini
+            </button>
+            <button type="button" onclick="AttendanceManager.showAllPersonalHistory()" class="px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer">
+              Semua
+            </button>
+          </div>
         </div>
 
         <div class="overflow-x-auto">
@@ -1910,39 +1928,39 @@
   </main>
 
   <!-- ================= MODAL POP-UP HASIL SCAN ABSENSI KARYAWAN ================= -->
-  <div id="scan-result-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden transition-all duration-300">
-    <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-slate-100 text-center animate-bounce-short relative overflow-hidden">
+  <div id="scan-result-modal" onclick="if(event.target === this) AttendanceManager.closeScanModal()" class="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden transition-all duration-300">
+    <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-slate-200/90 text-center animate-bounce-short relative overflow-hidden">
       <!-- Tombol Tutup X -->
-      <button type="button" onclick="AttendanceManager.closeScanModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition cursor-pointer">
+      <button type="button" onclick="AttendanceManager.closeScanModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-2.5 rounded-full hover:bg-slate-100 transition cursor-pointer z-10" title="Tutup">
         <i class="fa-solid fa-xmark text-lg"></i>
       </button>
 
       <!-- TAMPILAN SUKSES SCAN -->
       <div id="scan-modal-success" class="space-y-4">
-        <div class="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center text-4xl shadow-inner animate-pulse">
+        <div class="w-20 h-20 rounded-full bg-emerald-50 text-emerald-600 mx-auto flex items-center justify-center text-4xl shadow-inner border-2 border-emerald-200">
           <i class="fa-solid fa-circle-check"></i>
         </div>
         <div>
-          <span class="px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800">
+          <span class="px-3.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
             Absensi Berhasil
           </span>
-          <h3 class="text-xl font-black text-slate-900 mt-2">Selamat Makan!</h3>
-          <p class="text-base font-extrabold text-emerald-700 mt-0.5" id="scan-modal-emp-name">-</p>
+          <h3 class="text-2xl font-black text-slate-900 mt-2">Selamat Makan!</h3>
+          <p class="text-lg font-black text-blue-700 mt-0.5" id="scan-modal-emp-name">-</p>
         </div>
 
-        <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-left space-y-2 text-xs">
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-left space-y-2 text-xs">
           <div class="flex justify-between items-center pb-2 border-b border-slate-200/60">
             <span class="text-slate-500 font-medium">ID Karyawan</span>
             <span class="font-mono font-bold text-slate-900" id="scan-modal-emp-id">-</span>
           </div>
           <div class="flex justify-between items-center pb-2 border-b border-slate-200/60">
             <span class="text-slate-500 font-medium">Departemen</span>
-            <span class="font-semibold text-slate-800" id="scan-modal-emp-dept">-</span>
+            <span class="font-bold text-slate-800" id="scan-modal-emp-dept">-</span>
           </div>
           <div class="flex justify-between items-center pb-2 border-b border-slate-200/60">
             <span class="text-slate-500 font-medium">Kantin / Depot</span>
-            <span class="font-bold text-emerald-800 flex items-center gap-1.5" id="scan-modal-tenant">
-              <i class="fa-solid fa-store text-emerald-600"></i> <span id="scan-modal-tenant-name">-</span>
+            <span class="font-bold text-blue-700 flex items-center gap-1.5" id="scan-modal-tenant">
+              <i class="fa-solid fa-store text-blue-600"></i> <span id="scan-modal-tenant-name">-</span>
             </span>
           </div>
           <div class="flex justify-between items-center pb-2 border-b border-slate-200/60">
@@ -1951,38 +1969,38 @@
           </div>
           <div class="flex justify-between items-center">
             <span class="text-slate-500 font-medium">Waktu Transaksi</span>
-            <span class="font-mono font-bold text-slate-700" id="scan-modal-time">- WIB</span>
+            <span class="font-mono font-bold text-slate-800" id="scan-modal-time">- WIB</span>
           </div>
         </div>
 
-        <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 text-xs font-semibold flex items-center gap-2.5 text-left">
-          <i class="fa-solid fa-circle-info text-emerald-600 text-base shrink-0"></i>
+        <div class="p-3 bg-blue-50/80 border border-blue-200 rounded-xl text-blue-900 text-xs font-semibold flex items-center gap-2.5 text-left">
+          <i class="fa-solid fa-circle-info text-blue-600 text-base shrink-0"></i>
           <span>Jatah makan 1x hari ini telah berhasil digunakan. Silakan tunjukkan layar ini kepada petugas kantin.</span>
         </div>
 
-        <button type="button" onclick="AttendanceManager.closeScanModal()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-extrabold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
-          <i class="fa-solid fa-check"></i> Selesai / Tutup
+        <button type="button" onclick="AttendanceManager.closeScanModal()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-xl font-black text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+          <i class="fa-solid fa-circle-check text-base"></i> Tutup
         </button>
       </div>
 
       <!-- TAMPILAN GAGAL / DITOLAK SCAN -->
       <div id="scan-modal-error" class="hidden space-y-4">
-        <div class="w-20 h-20 rounded-full bg-rose-100 text-rose-600 mx-auto flex items-center justify-center text-4xl shadow-inner">
+        <div class="w-20 h-20 rounded-full bg-rose-50 text-rose-600 mx-auto flex items-center justify-center text-4xl shadow-inner border-2 border-rose-200">
           <i class="fa-solid fa-circle-xmark"></i>
         </div>
         <div>
-          <span class="px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-rose-100 text-rose-800">
+          <span class="px-3.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-200">
             Absensi Ditolak
           </span>
           <h3 class="text-xl font-black text-rose-900 mt-2">Tidak Dapat Mengambil Makan</h3>
-          <p class="text-xs text-rose-700 mt-1 font-semibold leading-relaxed" id="scan-modal-error-message">-</p>
+          <p class="text-xs text-rose-700 mt-1 font-bold leading-relaxed" id="scan-modal-error-message">-</p>
         </div>
 
         <div id="scan-modal-error-detail" class="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-left space-y-2 text-xs text-rose-900 hidden">
         </div>
 
-        <button type="button" onclick="AttendanceManager.closeScanModal()" class="w-full py-3.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-extrabold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
-          <i class="fa-solid fa-xmark"></i> Tutup
+        <button type="button" onclick="AttendanceManager.closeScanModal()" class="w-full py-3.5 bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white rounded-xl font-black text-sm shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+          <i class="fa-solid fa-xmark text-base"></i> Tutup
         </button>
       </div>
     </div>

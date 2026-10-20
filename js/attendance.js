@@ -22,6 +22,7 @@ const AttendanceManager = {
   currentCanteenKey: 'tenant1',
   currentScanOwnerEmpId: null,
   scanModalTimer: null,
+  _showAllPersonalHistory: false,
 
   init(tenantKey) {
     this.initCanteenPage(tenantKey);
@@ -264,7 +265,7 @@ const AttendanceManager = {
       this.showScanModal(result, empId);
     } else {
       Store.playSound('error');
-      alert(`[GAGAL] ${result.message}`);
+      this.showScanModal(result, empId);
     }
   },
 
@@ -1056,16 +1057,28 @@ const AttendanceManager = {
     // Tampilkan modal
     modal.classList.remove('hidden');
 
-    // Reset timer auto-close
+    // Hentikan pemindai kamera aktif agar tidak terus memindai frame di background
+    if (this.activeScanner && this.activeScanner.employee) {
+      try {
+        this.activeScanner.employee.stop().then(() => {
+          this.activeScanner.employee = null;
+          const readerDiv = document.getElementById('emp-portal-qr-reader');
+          if (readerDiv) readerDiv.classList.add('hidden');
+          const btn = document.getElementById('emp-portal-btn-cam');
+          if (btn) {
+            btn.innerHTML = `<i class="fa-solid fa-camera mr-2"></i> Buka Kamera Scan QR Kantin`;
+            btn.className = `w-full py-3 sm:py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl sm:rounded-2xl text-xs font-extrabold shadow-md transition flex items-center justify-center gap-2 cursor-pointer`;
+          }
+        }).catch(() => {});
+      } catch (e) {}
+    }
+
+    // Reset timer auto-close lama dan TIDAK memasang auto-close baru
+    // Sesuai permintaan user: pop up jangan langsung ketutup, harus ada tombol "Tutup" manual
     if (this.scanModalTimer) {
       clearTimeout(this.scanModalTimer);
       this.scanModalTimer = null;
     }
-
-    // Auto dismiss dalam 8 detik jika belum ditutup manual
-    this.scanModalTimer = setTimeout(() => {
-      AttendanceManager.closeScanModal();
-    }, 8000);
   },
 
   closeScanModal() {
@@ -1083,11 +1096,38 @@ const AttendanceManager = {
   // --- Fitur Halaman Khusus Karyawan (Portal Mandiri) ---
   initEmployeePortal() {
     this.closeScanModal();
+    this._showAllPersonalHistory = false;
+    const dateInput = document.getElementById('emp-history-date-filter');
+    if (dateInput) {
+      dateInput.value = (window.Store && typeof Store.getTodayDateString === 'function')
+        ? Store.getTodayDateString()
+        : new Date().toISOString().substring(0, 10);
+    }
     const resultBox = document.getElementById('emp-portal-result');
     if (resultBox) resultBox.innerHTML = '';
     this.populateEmployeeSelector();
     this.updateEmployeePortalCard();
     this.renderEmployeePersonalQR();
+    this.renderPersonalHistory();
+  },
+
+  setPersonalHistoryToday() {
+    this._showAllPersonalHistory = false;
+    const dateInput = document.getElementById('emp-history-date-filter');
+    if (dateInput) {
+      dateInput.value = (window.Store && typeof Store.getTodayDateString === 'function')
+        ? Store.getTodayDateString()
+        : new Date().toISOString().substring(0, 10);
+    }
+    this.renderPersonalHistory();
+  },
+
+  showAllPersonalHistory() {
+    this._showAllPersonalHistory = true;
+    const dateInput = document.getElementById('emp-history-date-filter');
+    if (dateInput) {
+      dateInput.value = '';
+    }
     this.renderPersonalHistory();
   },
 
@@ -1238,6 +1278,18 @@ const AttendanceManager = {
     const tbody = document.getElementById('emp-personal-history-body');
     if (!tbody) return;
 
+    const dateInput = document.getElementById('emp-history-date-filter');
+    const countBadge = document.getElementById('emp-history-count-badge');
+
+    // Jika tanggal belum dipilih, atur sesuai tanggal hari ini
+    if (dateInput && !dateInput.value && !this._showAllPersonalHistory) {
+      dateInput.value = (window.Store && typeof Store.getTodayDateString === 'function')
+        ? Store.getTodayDateString()
+        : new Date().toISOString().substring(0, 10);
+    }
+
+    const filterDate = (!this._showAllPersonalHistory && dateInput) ? dateInput.value : null;
+
     const activeId = Auth.getActiveEmployeeId();
     if (!activeId) {
       tbody.innerHTML = `
@@ -1248,6 +1300,7 @@ const AttendanceManager = {
           </td>
         </tr>
       `;
+      if (countBadge) countBadge.innerText = '0 Transaksi';
       return;
     }
 
@@ -1257,7 +1310,7 @@ const AttendanceManager = {
     const targetCreatedAt = (currentEmp && currentEmp.createdAt) || (currentUser && currentUser.createdAt) || null;
 
     const allRecords = Store.getAttendances();
-    const myRecords = allRecords.filter(r => {
+    let myRecords = allRecords.filter(r => {
       if (!r || !r.employeeId) return false;
 
       // 1. Strict equality case-insensitive untuk Employee ID
@@ -1294,15 +1347,25 @@ const AttendanceManager = {
         }
       }
 
+      // 4. Filter Sesuai Tanggal yang dipilih (Default: Hari Ini)
+      if (filterDate && r.date !== filterDate) {
+        return false;
+      }
+
       return true;
     });
 
+    if (countBadge) {
+      countBadge.innerText = `${myRecords.length} Transaksi`;
+    }
+
     if (myRecords.length === 0) {
+      const dateText = filterDate ? ` pada tanggal ${filterDate}` : '';
       tbody.innerHTML = `
         <tr>
           <td colspan="5" class="py-6 text-center text-slate-400 text-xs">
             <i class="fa-solid fa-utensils text-2xl mb-1 block opacity-40"></i>
-            Belum ada riwayat absensi makan untuk akun Anda.
+            Tidak ada riwayat absensi makan${dateText}.
           </td>
         </tr>
       `;
@@ -1315,9 +1378,9 @@ const AttendanceManager = {
         <tr class="hover:bg-slate-50 border-b border-slate-100 transition">
           <td class="py-2.5 px-3 text-xs text-slate-400 font-mono">${idx + 1}</td>
           <td class="py-2.5 px-3 text-xs font-bold text-slate-800 font-mono">${r.date} ${r.time}</td>
-          <td class="py-2.5 px-3 text-xs font-extrabold text-emerald-800">
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200">
-              <i class="fa-solid fa-store text-emerald-600"></i> ${r.tenantName}
+          <td class="py-2.5 px-3 text-xs font-extrabold text-blue-700">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 border border-blue-200">
+              <i class="fa-solid fa-store text-blue-600"></i> ${r.tenantName}
             </span>
           </td>
           <td class="py-2.5 px-3 text-xs">
