@@ -85,11 +85,8 @@ const AttendanceManager = {
       }
     }
 
-    // Setup Date
-    const dateInput = document.getElementById('canteen-date-input');
-    if (dateInput && !dateInput.value) {
-      dateInput.value = Store.getTodayDateString();
-    }
+    // Setup Tanggal Jatah (pilihan hari ini / kemarin untuk shift malam)
+    this.initJatahControls();
 
     // Setup Manual Input & Listeners
     this.setupCanteenManualInput();
@@ -116,14 +113,43 @@ const AttendanceManager = {
 
   renderCanteenTodayList() {
     const tenantKey = this.currentCanteenKey || 'tenant1';
-    const dateInput = document.getElementById('canteen-date-input');
-    const selectedDate = (dateInput && dateInput.value) || Store.getTodayDateString();
+    const mode = (this.jatahModes && this.jatahModes['canteen']) || 'today';
+    const todayStr = Store.getTodayDateString();
+
+    let startDate = todayStr;
+    let endDate = todayStr;
+
+    if (mode === 'range') {
+      const startEl = document.getElementById('canteen-range-start');
+      const endEl = document.getElementById('canteen-range-end');
+      startDate = (startEl && startEl.value) || todayStr;
+      endDate = (endEl && endEl.value) || todayStr;
+      if (startDate > endDate) {
+        const tmp = startDate;
+        startDate = endDate;
+        endDate = tmp;
+      }
+    } else {
+      const dateInput = document.getElementById('canteen-date-input');
+      const selectedDate = (dateInput && dateInput.value) || todayStr;
+      startDate = selectedDate;
+      endDate = selectedDate;
+    }
 
     const tbody = document.getElementById('canteen-today-list');
     const badge = document.getElementById('canteen-today-count-badge');
+    const subtitle = document.getElementById('canteen-today-date-subtitle');
     if (!tbody) return;
 
-    const allAttendances = Store.getAttendances(selectedDate, selectedDate);
+    if (subtitle) {
+      if (mode === 'range') {
+        subtitle.innerText = `Rentang: ${startDate} s/d ${endDate}`;
+      } else {
+        subtitle.innerText = `Data hari ini (${startDate})`;
+      }
+    }
+
+    const allAttendances = Store.getAttendances(startDate, endDate);
     const tenantAttendances = allAttendances.filter(a => {
       const tKey = (a.tenantKey || a.tenantId || '').toLowerCase().trim();
       const target = (tenantKey || '').toLowerCase().trim();
@@ -138,7 +164,7 @@ const AttendanceManager = {
       tbody.innerHTML = `
         <div class="py-8 text-center text-slate-400 text-xs">
           <i class="fa-solid fa-utensils text-2xl mb-2 block opacity-40"></i>
-          Belum ada yang absen makan di kantin ini pada tanggal tersebut.
+          Belum ada yang absen makan di kantin ini pada periode tersebut.
         </div>
       `;
       return;
@@ -147,6 +173,7 @@ const AttendanceManager = {
     tbody.innerHTML = tenantAttendances.map((item, idx) => {
       const isLunch = item.shift && item.shift.includes('Siang');
       const isTrn = item.department === 'Training' || item.isTrainee;
+      const displayDate = (mode === 'range' && item.date) ? `<span class="text-[10px] text-slate-500 font-semibold block">${item.date}</span>` : '';
       return `
         <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs hover:bg-emerald-50/40 transition">
           <div class="flex items-center gap-2.5 min-w-0">
@@ -160,6 +187,7 @@ const AttendanceManager = {
             <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isLunch ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-800'}">
               ${item.shift}
             </span>
+            ${displayDate}
             <span class="text-[10px] text-slate-400 block font-mono mt-0.5">${item.time}</span>
           </div>
         </div>
@@ -239,6 +267,109 @@ const AttendanceManager = {
     `;
   },
 
+  // --- Pilihan Tanggal Jatah (Hari ini & Rentang Tanggal) ---
+  jatahModes: {},
+
+  getJatahDefault() {
+    return Store.getTodayDateString();
+  },
+
+  initJatahControls() {
+    ['canteen', 'emp-portal', 'tenant1', 'tenant2'].forEach(scope => this.initJatahControl(scope));
+  },
+
+  initJatahControl(scope) {
+    if (!this.jatahModes) this.jatahModes = {};
+    if (!this.jatahModes[scope]) this.jatahModes[scope] = 'today';
+
+    const todayStr = Store.getTodayDateString();
+    const input = document.getElementById(scope + '-date-input');
+    if (input) input.value = todayStr;
+
+    const startEl = document.getElementById(scope + '-range-start');
+    const endEl = document.getElementById(scope + '-range-end');
+    if (startEl && !startEl.value) startEl.value = todayStr;
+    if (endEl && !endEl.value) endEl.value = todayStr;
+
+    this.renderJatahButtons(scope);
+  },
+
+  setJatahMode(scope, mode) {
+    if (!this.jatahModes) this.jatahModes = {};
+    this.jatahModes[scope] = mode;
+
+    const todayStr = Store.getTodayDateString();
+    const input = document.getElementById(scope + '-date-input');
+    const rangeContainer = document.getElementById(scope + '-range-container');
+    const startEl = document.getElementById(scope + '-range-start');
+    const endEl = document.getElementById(scope + '-range-end');
+
+    if (mode === 'today') {
+      if (input) input.value = todayStr;
+      if (rangeContainer) rangeContainer.classList.add('hidden');
+    } else {
+      if (rangeContainer) rangeContainer.classList.remove('hidden');
+      if (startEl && !startEl.value) startEl.value = todayStr;
+      if (endEl && !endEl.value) endEl.value = todayStr;
+      if (input) input.value = todayStr;
+    }
+
+    this.renderJatahButtons(scope);
+    if (scope === 'canteen') this.renderCanteenTodayList();
+    else if (scope.indexOf('tenant') === 0) this.renderTodayList(scope);
+  },
+
+  onRangeChange(scope) {
+    if (scope === 'canteen') this.renderCanteenTodayList();
+    else if (scope.indexOf('tenant') === 0) this.renderTodayList(scope);
+  },
+
+  setJatahDate(scope, dateStr) {
+    const todayStr = Store.getTodayDateString();
+    if (dateStr === todayStr) {
+      this.setJatahMode(scope, 'today');
+    } else {
+      const input = document.getElementById(scope + '-date-input');
+      if (input) input.value = dateStr;
+      this.renderJatahButtons(scope);
+      if (scope === 'canteen') this.renderCanteenTodayList();
+      else if (scope.indexOf('tenant') === 0) this.renderTodayList(scope);
+    }
+  },
+
+  renderJatahButtons(scope) {
+    if (!this.jatahModes) this.jatahModes = {};
+    const mode = this.jatahModes[scope] || 'today';
+    const activeBg = scope === 'emp-portal' ? 'bg-blue-600' : 'bg-emerald-600';
+
+    const btnToday = document.getElementById(`jatah-btn-${scope}-today`);
+    const btnRange = document.getElementById(`jatah-btn-${scope}-range`);
+    const lblToday = document.getElementById(`jatah-label-${scope}-today`);
+
+    const todayStr = Store.getTodayDateString();
+    if (lblToday) {
+      try {
+        const p = todayStr.split('-');
+        const d = new Date(p[0], p[1] - 1, p[2]);
+        lblToday.innerText = d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
+      } catch (e) {
+        lblToday.innerText = todayStr;
+      }
+    }
+
+    if (btnToday) {
+      btnToday.className = (mode === 'today')
+        ? `px-3 py-1.5 text-xs font-bold rounded-lg shadow-xs transition ${activeBg} text-white cursor-pointer`
+        : 'px-3 py-1.5 text-xs font-bold rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 transition cursor-pointer';
+    }
+
+    if (btnRange) {
+      btnRange.className = (mode === 'range')
+        ? `px-3 py-1.5 text-xs font-bold rounded-lg shadow-xs transition ${activeBg} text-white cursor-pointer`
+        : 'px-3 py-1.5 text-xs font-bold rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 transition cursor-pointer';
+    }
+  },
+
   confirmCanteenAttendance(scannedEmpId) {
     const tenantKey = this.currentCanteenKey || 'tenant1';
     const input = document.getElementById('canteen-emp-id-input');
@@ -252,7 +383,7 @@ const AttendanceManager = {
     }
 
     const dateInput = document.getElementById('canteen-date-input');
-    const dateVal = (dateInput && dateInput.value) || Store.getTodayDateString();
+    const dateVal = (dateInput && dateInput.value) || this.getJatahDefault();
 
     const result = Store.recordAttendance(empId, tenantKey, dateVal);
 
@@ -642,15 +773,36 @@ const AttendanceManager = {
     }
   },
 
-  // Riwayat Karyawan yang Makan di Tenant Ini pada Tanggal Terpilih
+  // Riwayat Karyawan yang Makan di Tenant Ini pada Tanggal Terpilih / Rentang Tanggal
   renderTodayList(tenantKey) {
     const listContainer = document.getElementById(`${tenantKey}-today-list`);
-    const dateInput = document.getElementById(`${tenantKey}-date-input`);
     const countBadge = document.getElementById(`${tenantKey}-today-count-badge`);
     if (!listContainer) return;
 
-    const targetDate = dateInput ? dateInput.value : Store.getTodayDateString();
-    const records = Store.getAttendances(targetDate).filter(r => {
+    const mode = (this.jatahModes && this.jatahModes[tenantKey]) || 'today';
+    const todayStr = Store.getTodayDateString();
+
+    let startDate = todayStr;
+    let endDate = todayStr;
+
+    if (mode === 'range') {
+      const startEl = document.getElementById(`${tenantKey}-range-start`);
+      const endEl = document.getElementById(`${tenantKey}-range-end`);
+      startDate = (startEl && startEl.value) || todayStr;
+      endDate = (endEl && endEl.value) || todayStr;
+      if (startDate > endDate) {
+        const tmp = startDate;
+        startDate = endDate;
+        endDate = tmp;
+      }
+    } else {
+      const dateInput = document.getElementById(`${tenantKey}-date-input`);
+      const targetDate = (dateInput && dateInput.value) || todayStr;
+      startDate = targetDate;
+      endDate = targetDate;
+    }
+
+    const records = Store.getAttendances(startDate, endDate).filter(r => {
       const tKey = (r.tenantKey || r.tenantId || '').toLowerCase().trim();
       const target = (tenantKey || '').toLowerCase().trim();
       return tKey === target;
@@ -664,7 +816,7 @@ const AttendanceManager = {
       listContainer.innerHTML = `
         <div class="text-center py-8 text-gray-400">
           <i class="fa-solid fa-bowl-food text-3xl mb-2 block opacity-40"></i>
-          <p class="text-xs">Belum ada karyawan yang absen makan di depot ini pada tanggal terpilih.</p>
+          <p class="text-xs">Belum ada karyawan yang absen makan di depot ini pada periode terpilih.</p>
         </div>
       `;
       return;
@@ -672,6 +824,7 @@ const AttendanceManager = {
 
     listContainer.innerHTML = records.map((r, idx) => {
       const isLunch = r.shift && r.shift.includes('Siang');
+      const displayDate = (mode === 'range' && r.date) ? `<span class="text-[10px] text-slate-500 font-semibold block">${r.date}</span>` : '';
       return `
         <div class="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition bg-white mb-2 shadow-xs">
           <div class="flex items-center gap-3">
@@ -685,7 +838,8 @@ const AttendanceManager = {
             <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${isLunch ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-800'}">
               ${r.shift}
             </span>
-            <p class="text-[10px] text-gray-400 font-mono mt-0.5">${r.time}</p>
+            ${displayDate}
+            <p class="text-[10px] text-gray-400 font-mono mt-0.5">${r.time || ''}</p>
           </div>
         </div>
       `;
@@ -884,9 +1038,18 @@ const AttendanceManager = {
           </div>
         </div>
 
-        <div class="flex items-center gap-2">
-          <label class="text-xs font-semibold text-slate-600">Pilihan Tanggal Hari Ini:</label>
-          <input type="date" id="${tenantKey}-date-input" onchange="AttendanceManager.renderTodayList('${tenantKey}')" class="px-3 py-1.5 text-xs font-semibold border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50">
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="text-xs font-semibold text-slate-600">Tanggal Jatah Makan:</label>
+          <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 p-1 rounded-xl">
+            <button type="button" id="jatah-btn-${tenantKey}-today" onclick="AttendanceManager.setJatahMode('${tenantKey}', 'today')" class="px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer">Hari ini <span id="jatah-label-${tenantKey}-today" class="font-semibold opacity-80"></span></button>
+            <button type="button" id="jatah-btn-${tenantKey}-range" onclick="AttendanceManager.setJatahMode('${tenantKey}', 'range')" class="px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer">Rentang Tanggal</button>
+          </div>
+          <div id="${tenantKey}-range-container" class="hidden flex items-center gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl">
+            <input type="date" id="${tenantKey}-range-start" onchange="AttendanceManager.onRangeChange('${tenantKey}')" class="px-2.5 py-1 text-xs font-semibold border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white">
+            <span class="text-xs text-slate-400 font-semibold">s/d</span>
+            <input type="date" id="${tenantKey}-range-end" onchange="AttendanceManager.onRangeChange('${tenantKey}')" class="px-2.5 py-1 text-xs font-semibold border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white">
+          </div>
+          <input type="hidden" id="${tenantKey}-date-input">
         </div>
       </div>
 
@@ -942,8 +1105,8 @@ const AttendanceManager = {
             <h4 class="font-bold flex items-center gap-1.5 text-emerald-950">
               <i class="fa-solid fa-shield-halved text-emerald-600"></i> Ketentuan Absensi Kantin:
             </h4>
-            <p>&bull; Hanya dapat absen pada pukul <b>11.00 - 19.00 WIB</b>.</p>
-            <p>&bull; 1 Karyawan hanya <b>1x makan per hari</b> lintas seluruh kantin hotel.</p>
+            <p>&bull; Absen tersedia di semua shift: <b>Makan Siang 11.00-15.00</b>, <b>Makan Sore 15.01-19.00</b>, <b>Makan Malam 19.01-10.59</b> WIB.</p>
+            <p>&bull; 1 Karyawan hanya <b>1x makan per tanggal jatah</b> lintas seluruh kantin hotel, jarak minimal <b>6 jam</b> antar absen.</p>
           </div>
         </div>
 
@@ -966,6 +1129,7 @@ const AttendanceManager = {
     `;
 
     mainEl.appendChild(section);
+    this.initJatahControl(tenantKey);
   },
 
   // --- Pop-up Modal Hasil Scan Absensi Karyawan ---
@@ -1177,6 +1341,7 @@ const AttendanceManager = {
   },
 
   updateEmployeePortalCard() {
+    this.initJatahControls();
     const activeId = Auth.getActiveEmployeeId();
     const emp = Store.findEmployee(activeId);
     const cardContainer = document.getElementById('emp-portal-profile');
@@ -1484,7 +1649,9 @@ const AttendanceManager = {
     }
 
     const activeEmpId = Auth.getActiveEmployeeId();
-    const res = Store.recordAttendance(activeEmpId, tenantKey);
+    const portalDateInput = document.getElementById('emp-portal-date-input');
+    const jatahDate = (portalDateInput && portalDateInput.value) || this.getJatahDefault();
+    const res = Store.recordAttendance(activeEmpId, tenantKey, jatahDate);
 
     // Tampilkan Modal Pop-up Hasil Scan untuk Karyawan Terkait
     this.showScanModal(res, activeEmpId);
@@ -1505,7 +1672,7 @@ const AttendanceManager = {
                   Selamat Makan, <b>${res.record.employeeName}</b> (${res.record.employeeId})!
                 </p>
                 <p class="text-xs text-emerald-200 mt-1">
-                  Kantin: <b>${res.record.tenantName}</b> &bull; Shift: <b>${res.record.shift}</b> (${res.record.time} WIB)
+                  Kantin: <b>${res.record.tenantName}</b> &bull; Shift: <b>${res.record.shift}</b> (${res.record.time} WIB) &bull; Jatah: <b>${res.record.date}</b>
                 </p>
               </div>
             </div>

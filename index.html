@@ -658,11 +658,16 @@
             </div>
           </div>
 
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <label class="text-xs font-semibold text-slate-600">Tanggal Jatah Makan:</label>
             <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 p-1 rounded-xl">
-              <button type="button" id="jatah-btn-canteen-today" onclick="AttendanceManager.setJatahDate('canteen', Store.getTodayDateString())" class="px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer">Hari ini <span id="jatah-label-canteen-today" class="font-semibold opacity-80"></span></button>
-              <button type="button" id="jatah-btn-canteen-yesterday" onclick="AttendanceManager.setJatahDate('canteen', Store.getYesterdayDateString())" class="px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer">Kemarin <span id="jatah-label-canteen-yesterday" class="font-semibold opacity-80"></span></button>
+              <button type="button" id="jatah-btn-canteen-today" onclick="AttendanceManager.setJatahMode('canteen', 'today')" class="px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer">Hari ini <span id="jatah-label-canteen-today" class="font-semibold opacity-80"></span></button>
+              <button type="button" id="jatah-btn-canteen-range" onclick="AttendanceManager.setJatahMode('canteen', 'range')" class="px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer">Rentang Tanggal</button>
+            </div>
+            <div id="canteen-range-container" class="hidden flex items-center gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl">
+              <input type="date" id="canteen-range-start" onchange="AttendanceManager.onRangeChange('canteen')" class="px-2.5 py-1 text-xs font-semibold border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white">
+              <span class="text-xs text-slate-400 font-semibold">s/d</span>
+              <input type="date" id="canteen-range-end" onchange="AttendanceManager.onRangeChange('canteen')" class="px-2.5 py-1 text-xs font-semibold border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white">
             </div>
             <input type="hidden" id="canteen-date-input">
           </div>
@@ -735,7 +740,7 @@
             </h4>
             <p>• Absen makan tersedia di semua shift: <b>Makan Siang 11.00-15.00</b>, <b>Makan Sore 15.01-19.00</b>, dan <b>Makan Malam 19.01-10.59</b> WIB.</p>
             <p>• 1 Karyawan/Trainee hanya <b>1x makan per tanggal jatah</b> di salah satu kantin hotel, dengan jarak minimal <b>6 jam</b> antar absen.</p>
-            <p>• Karyawan <b>shift malam</b> yang baru makan keesokan harinya memilih <b>Tanggal Jatah: Kemarin</b> (tanggal masuknya) sebelum scan.</p>
+            <p>• Pilih <b>Hari Ini</b> untuk absensi hari berjalan atau <b>Rentang Tanggal</b> untuk melihat riwayat absensi pada periode tertentu.</p>
           </div>
         </div>
 
@@ -744,7 +749,7 @@
             <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
               <div>
                 <h3 class="font-bold text-slate-900 text-sm">Sudah Makan di Kantin Ini</h3>
-                <p class="text-[11px] text-slate-400">Data tanggal terpilih</p>
+                <p id="canteen-today-date-subtitle" class="text-[11px] text-slate-400">Data tanggal terpilih</p>
               </div>
               <span id="canteen-today-count-badge" class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
                 0 Karyawan
@@ -1902,12 +1907,18 @@
             <!-- Pilihan Tanggal Jatah (untuk karyawan shift malam) -->
             <div class="text-left bg-blue-50/70 border border-blue-200 rounded-2xl p-3 space-y-2">
               <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider">Tanggal Masuk Kerja (Tanggal Jatah)</label>
-              <div class="flex items-center gap-1 bg-white border border-slate-200 p-1 rounded-xl w-fit">
-                <button type="button" id="jatah-btn-emp-portal-today" onclick="AttendanceManager.setJatahDate('emp-portal', Store.getTodayDateString())" class="px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer">Hari ini <span id="jatah-label-emp-portal-today" class="font-semibold opacity-80"></span></button>
-                <button type="button" id="jatah-btn-emp-portal-yesterday" onclick="AttendanceManager.setJatahDate('emp-portal', Store.getYesterdayDateString())" class="px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer">Kemarin <span id="jatah-label-emp-portal-yesterday" class="font-semibold opacity-80"></span></button>
+              <div class="flex flex-wrap items-center gap-1.5">
+                <div class="flex items-center gap-1 bg-white border border-slate-200 p-1 rounded-xl w-fit">
+                  <button type="button" id="jatah-btn-emp-portal-today" onclick="AttendanceManager.setJatahMode('emp-portal', 'today')" class="px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer">Hari ini <span id="jatah-label-emp-portal-today" class="font-semibold opacity-80"></span></button>
+                  <button type="button" id="jatah-btn-emp-portal-range" onclick="AttendanceManager.setJatahMode('emp-portal', 'range')" class="px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer">Rentang Tanggal</button>
+                </div>
+                <div id="emp-portal-range-container" class="hidden flex items-center gap-1.5 bg-white border border-slate-200 p-1 rounded-xl">
+                  <input type="date" id="emp-portal-range-start" onchange="AttendanceManager.onRangeChange('emp-portal')" class="px-2 py-1 text-xs font-semibold border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                  <span class="text-xs text-slate-400 font-semibold">s/d</span>
+                  <input type="date" id="emp-portal-range-end" onchange="AttendanceManager.onRangeChange('emp-portal')" class="px-2 py-1 text-xs font-semibold border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                </div>
               </div>
               <input type="hidden" id="emp-portal-date-input">
-              <p class="text-[11px] text-slate-500">Shift malam (masuk kemarin malam, baru makan pagi ini)? Pilih <b>Kemarin</b> — tanggal Anda masuk kerja.</p>
             </div>
 
             <!-- Camera Area -->
@@ -1973,7 +1984,7 @@
             <p>&bull; Jatah makan: <b>1 kali per tanggal jatah</b> (lintas kantin depot), jarak minimal <b>6 jam</b> antar absen.</p>
             <p>&bull; <b>Shift Siang:</b> 11.00 - 15.00 WIB</p>
             <p>&bull; <b>Shift Sore:</b> 15.01 - 19.00 WIB</p>
-            <p>&bull; <b>Shift Malam:</b> 19.01 - 10.59 WIB — pilih <b>Tanggal Jatah: Kemarin</b> bila masuk malam dan baru makan keesokan harinya.</p>
+            <p>&bull; <b>Shift Malam:</b> 19.01 - 10.59 WIB</p>
           </div>
 
         </div>
@@ -2789,7 +2800,7 @@
   <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 relative z-10">
     <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
       <p>&copy; 2026 <span class="hotel-name-display font-semibold">BeSS Mansion Hotel Surabaya</span>. Sistem Absensi Makan Karyawan.</p>
-      <p class="text-[11px] text-slate-500">created by <strong class="font-bold text-blue-600" style="color: #2563eb; font-weight: 700;">Hafizh Alif Al Furqon!</strong></p>
+      <p class="text-[14px] text-slate-500">created by <strong class="font-bold text-blue-600" style="color: #2563eb; font-weight: 700;">Hafizh Alif Al Furqon!</strong></p>
     </div>
   </footer>
 
@@ -2806,7 +2817,7 @@
   <script data-cfasync="false" src="js/store.js?v=20261026_pwc"></script>
   <script data-cfasync="false" src="js/auth.js?v=20261026_pwc"></script>
   <script data-cfasync="false" src="js/dashboard.js?v=20261024_malam"></script>
-  <script data-cfasync="false" src="js/attendance.js?v=20261024_malam"></script>
+  <script data-cfasync="false" src="js/attendance.js?v=20261026_range"></script>
   <script data-cfasync="false" src="js/training.js?v=20261026_pwc"></script>
   <script data-cfasync="false" src="js/tenants.js?v=20261016_hosting"></script>
   <script data-cfasync="false" src="js/employees.js?v=20261026_pwc"></script>
