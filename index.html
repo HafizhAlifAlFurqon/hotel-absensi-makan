@@ -299,8 +299,8 @@
                     s.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800 border border-indigo-300';
                     s.innerHTML = '<span class="w-2 h-2 rounded-full bg-indigo-500 mr-1.5 animate-pulse"></span> Makan Sore (15:01 - 19:00)';
                   } else {
-                    s.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-300';
-                    s.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500 mr-1.5"></span> Kantin Tutup (11:00 - 19:00)';
+                    s.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-900 text-slate-100 border border-slate-600';
+                    s.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-300 mr-1.5 animate-pulse"></span> Makan Malam (19:01 - 10:59)';
                   }
                 }
               } catch(e) {}
@@ -537,12 +537,26 @@
                   <span class="text-[11px] font-semibold text-indigo-700 block">Orang</span>
                 </div>
               </div>
+
+              <div class="p-3.5 rounded-xl bg-slate-100/80 border border-slate-300/80 flex items-center justify-between">
+                <div>
+                  <div class="flex items-center gap-1.5">
+                    <i class="fa-solid fa-cloud-moon text-slate-600 text-xs"></i>
+                    <h4 class="font-bold text-xs text-slate-900">Makan Malam</h4>
+                  </div>
+                  <p class="text-[11px] text-slate-600 mt-0.5">Pukul 19:01 - 10:59 WIB</p>
+                </div>
+                <div class="text-right">
+                  <span id="dash-count-malam" class="text-xl font-extrabold font-mono text-slate-900">0</span>
+                  <span class="text-[11px] font-semibold text-slate-600 block">Orang</span>
+                </div>
+              </div>
             </div>
           </div>
 
           <div class="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500 flex items-center gap-2">
             <i class="fa-solid fa-circle-info text-emerald-600"></i>
-            <span>Setiap karyawan dibatasi maksimal 1x porsi per hari.</span>
+            <span>Setiap karyawan dibatasi maksimal 1x porsi per tanggal jatah.</span>
           </div>
         </div>
 
@@ -645,8 +659,12 @@
           </div>
 
           <div class="flex items-center gap-2">
-            <label class="text-xs font-semibold text-slate-600">Pilihan Tanggal:</label>
-            <input type="date" id="canteen-date-input" onchange="AttendanceManager.renderCanteenTodayList()" class="px-3 py-1.5 text-xs font-semibold border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50">
+            <label class="text-xs font-semibold text-slate-600">Tanggal Jatah Makan:</label>
+            <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 p-1 rounded-xl">
+              <button type="button" id="jatah-btn-canteen-today" onclick="AttendanceManager.setJatahDate('canteen', Store.getTodayDateString())" class="px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer">Hari ini <span id="jatah-label-canteen-today" class="font-semibold opacity-80"></span></button>
+              <button type="button" id="jatah-btn-canteen-yesterday" onclick="AttendanceManager.setJatahDate('canteen', Store.getYesterdayDateString())" class="px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer">Kemarin <span id="jatah-label-canteen-yesterday" class="font-semibold opacity-80"></span></button>
+            </div>
+            <input type="hidden" id="canteen-date-input">
           </div>
         </div>
       </div>
@@ -715,8 +733,9 @@
             <h4 class="font-bold flex items-center gap-1.5 text-emerald-950">
               <i class="fa-solid fa-shield-halved text-emerald-600"></i> Ketentuan Absensi Kantin:
             </h4>
-            <p>• Hanya dapat absen pada pukul <b>11.00 - 19.00 WIB</b> (Makan Siang: 11.00-15.00, Makan Sore: 15.01-19.00).</p>
-            <p>• 1 Karyawan/Trainee hanya <b>1x makan per hari</b> di salah satu kantin hotel.</p>
+            <p>• Absen makan tersedia di semua shift: <b>Makan Siang 11.00-15.00</b>, <b>Makan Sore 15.01-19.00</b>, dan <b>Makan Malam 19.01-10.59</b> WIB.</p>
+            <p>• 1 Karyawan/Trainee hanya <b>1x makan per tanggal jatah</b> di salah satu kantin hotel, dengan jarak minimal <b>6 jam</b> antar absen.</p>
+            <p>• Karyawan <b>shift malam</b> yang baru makan keesokan harinya memilih <b>Tanggal Jatah: Kemarin</b> (tanggal masuknya) sebelum scan.</p>
           </div>
         </div>
 
@@ -1281,7 +1300,7 @@
         <div id="report-shift-rekap-container" class="avoid-break report-rekap-container">
           <h3 id="report-shift-rekap-heading" class="font-bold text-slate-900 text-xs mb-1.5 flex items-center justify-between">
             <span class="flex items-center gap-1.5">
-              <i class="fa-solid fa-clock-rotate-left text-sky-700"></i> 1. Rekapitulasi Shift Makan (Makan Siang &amp; Makan Sore)
+              <i class="fa-solid fa-clock-rotate-left text-sky-700"></i> 1. Rekapitulasi Shift Makan (Makan Siang, Makan Sore &amp; Makan Malam)
             </span>
             <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-sky-100 text-sky-800 border border-sky-200">
               Shift Operasional
@@ -1412,6 +1431,30 @@
 
       </div>
 
+      <!-- Zona Pemulihan & Pengosongan Laporan -->
+      <div class="bg-white rounded-2xl p-5 border border-red-200 shadow-xs space-y-3 max-w-[720px] mx-auto">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation text-red-500"></i> Zona Pemulihan &amp; Pengosongan Laporan
+          </h3>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-red-100 text-red-700">Khusus Admin</span>
+        </div>
+        <p class="text-[11px] text-slate-500 leading-relaxed">
+          Mengosongkan laporan akan menghapus <b>seluruh riwayat absensi makan</b> (semua tanggal, karyawan &amp; training) dari tampilan laporan, dashboard, dan rekap.
+          Sebelum dikosongkan, sistem otomatis menyimpan <b>cadangan pengaman</b> di server — laporan dapat dipulihkan lagi dengan tombol Pulihkan selama belum ada pengosongan berikutnya.
+          Data karyawan/training <b>tidak</b> ikut terhapus.
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" onclick="ReportsManager.clearAttendanceHistory()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-extrabold transition flex items-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-trash-can"></i> Kosongkan Riwayat Laporan
+          </button>
+          <button type="button" onclick="ReportsManager.restoreAttendanceHistory()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-rotate-left"></i> Pulihkan dari Cadangan Pengaman
+          </button>
+        </div>
+        <div id="report-danger-alert"></div>
+      </div>
+
     </section>
 
     <!-- ================= HALAMAN KHUSUS ANAK TRAINING (MAGANG) ================= -->
@@ -1436,6 +1479,9 @@
           <div class="flex flex-wrap items-center gap-2">
             <button onclick="TrainingManager.openAddModal()" class="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-900 font-extrabold rounded-xl text-xs transition shadow-md flex items-center gap-2 cursor-pointer">
               <i class="fa-solid fa-user-plus"></i> Tambah Anak Training
+            </button>
+            <button onclick="TrainingManager.openImportModal()" class="px-4 py-2.5 bg-white/20 hover:bg-white/30 text-white font-bold rounded-xl text-xs transition border border-white/20 flex items-center gap-2 cursor-pointer">
+              <i class="fa-solid fa-file-csv"></i> Upload CSV
             </button>
             <button onclick="TrainingManager.printAllQRCards()" class="px-4 py-2.5 bg-white/20 hover:bg-white/30 text-white font-bold rounded-xl text-xs transition border border-white/20 flex items-center gap-2 cursor-pointer">
               <i class="fa-solid fa-print"></i> Cetak Semua QR Trainee
@@ -1705,6 +1751,54 @@
       </div>
     </div>
 
+    <!-- Modal Upload CSV Siswa Training -->
+    <div id="training-modal-import" class="fixed inset-0 bg-slate-900/75 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+      <div class="bg-white rounded-3xl p-6 sm:p-7 max-w-2xl w-full shadow-2xl border border-slate-100 space-y-4 max-h-[92vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-lg">
+              <i class="fa-solid fa-file-csv"></i>
+            </div>
+            <div>
+              <h3 class="font-extrabold text-slate-900 text-base">Upload File CSV Siswa Training</h3>
+              <p class="text-xs text-slate-500">Impor banyak siswa magang sekaligus dari file CSV.</p>
+            </div>
+          </div>
+          <button type="button" onclick="TrainingManager.closeImportModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+
+        <div class="p-3.5 bg-amber-50/70 border border-amber-200 rounded-2xl space-y-2.5">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <span class="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+              <i class="fa-solid fa-file-csv text-amber-600"></i> File CSV (Sesuai Tabel Training)
+            </span>
+            <button type="button" onclick="TrainingManager.downloadCsvTemplateTraining()" class="px-3 py-1.5 bg-white hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+              <i class="fa-solid fa-download"></i> Unduh Template CSV
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-600 leading-relaxed">
+            Kolom file: <b>ID, Nama, Penempatan, Institusi, Status, Password</b>. Isi di Excel lalu <b>Save As &rarr; CSV</b>. File Excel (.xlsx) juga bisa langsung diupload tanpa Save As.
+            Departemen otomatis <b>Training</b>. ID boleh dikosongkan (dibuatkan otomatis TRN-xxx). Password kosong untuk siswa baru = <b>training123</b>;
+            untuk siswa lama, kolom yang dikosongkan <b>tidak mengubah</b> data lama. Sebelum impor, sistem menyimpan <b>cadangan pengaman</b> otomatis di server.
+          </p>
+          <div class="flex items-center gap-2 flex-wrap">
+            <label for="trn-csv-file" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+              <i class="fa-solid fa-folder-open"></i> Pilih File CSV / Excel
+            </label>
+            <input type="file" id="trn-csv-file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" class="hidden" onchange="TrainingManager.handleTrnCsvFileSelect(this)">
+            <span id="trn-csv-filename" class="text-[11px] text-slate-500 font-semibold">Belum ada file dipilih</span>
+          </div>
+          <div id="trn-csv-preview" class="hidden"></div>
+          <button type="button" id="trn-csv-confirm-btn" onclick="TrainingManager.confirmTrnCsvImport()" class="hidden w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold transition flex items-center justify-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-file-import"></i> Impor Siswa dari CSV
+          </button>
+          <div id="trn-csv-alert"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ================= HALAMAN KHUSUS KARYAWAN ================= -->
     <section id="page-employee-portal" class="page-view hidden space-y-4 sm:space-y-6 max-w-4xl mx-auto">
       
@@ -1805,6 +1899,17 @@
               <i class="fa-solid fa-camera text-blue-600"></i> Pemindai QR Meja Kasir Kantin
             </h3>
 
+            <!-- Pilihan Tanggal Jatah (untuk karyawan shift malam) -->
+            <div class="text-left bg-blue-50/70 border border-blue-200 rounded-2xl p-3 space-y-2">
+              <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider">Tanggal Masuk Kerja (Tanggal Jatah)</label>
+              <div class="flex items-center gap-1 bg-white border border-slate-200 p-1 rounded-xl w-fit">
+                <button type="button" id="jatah-btn-emp-portal-today" onclick="AttendanceManager.setJatahDate('emp-portal', Store.getTodayDateString())" class="px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer">Hari ini <span id="jatah-label-emp-portal-today" class="font-semibold opacity-80"></span></button>
+                <button type="button" id="jatah-btn-emp-portal-yesterday" onclick="AttendanceManager.setJatahDate('emp-portal', Store.getYesterdayDateString())" class="px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer">Kemarin <span id="jatah-label-emp-portal-yesterday" class="font-semibold opacity-80"></span></button>
+              </div>
+              <input type="hidden" id="emp-portal-date-input">
+              <p class="text-[11px] text-slate-500">Shift malam (masuk kemarin malam, baru makan pagi ini)? Pilih <b>Kemarin</b> — tanggal Anda masuk kerja.</p>
+            </div>
+
             <!-- Camera Area -->
             <div id="emp-portal-qr-reader" class="hidden w-full max-w-sm mx-auto bg-black rounded-2xl overflow-hidden shadow-inner border-2 border-blue-500"></div>
 
@@ -1865,10 +1970,10 @@
             <p class="font-extrabold text-slate-900 flex items-center gap-1.5">
               <i class="fa-solid fa-shield-halved text-blue-600"></i> Ketentuan Absensi Makan:
             </p>
-            <p>&bull; Jatah makan: <b>1 kali sehari</b> (lintas kantin depot).</p>
-            <p>&bull; Jam absensi dibuka: <b>11.00 - 19.00 WIB</b>.</p>
+            <p>&bull; Jatah makan: <b>1 kali per tanggal jatah</b> (lintas kantin depot), jarak minimal <b>6 jam</b> antar absen.</p>
             <p>&bull; <b>Shift Siang:</b> 11.00 - 15.00 WIB</p>
             <p>&bull; <b>Shift Sore:</b> 15.01 - 19.00 WIB</p>
+            <p>&bull; <b>Shift Malam:</b> 19.01 - 10.59 WIB — pilih <b>Tanggal Jatah: Kemarin</b> bila masuk malam dan baru makan keesokan harinya.</p>
           </div>
 
         </div>
@@ -2036,6 +2141,34 @@
         <p class="text-[11px] text-slate-600 font-medium">
           *Departemen, Jabatan, dan Password opsional. Jika hanya menuliskan Nama (contoh: <code>Budi Santoso</code>), sistem otomatis membuatkan ID urut (contoh: <code>EMP-016</code>), departemen default, dan password <b>password123</b>.
         </p>
+      </div>
+
+      <!-- UPLOAD FILE CSV -->
+      <div class="p-3.5 bg-blue-50/70 border border-blue-200 rounded-2xl space-y-2.5">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <span class="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+            <i class="fa-solid fa-file-csv text-blue-600"></i> Upload File CSV (Sesuai Tabel Karyawan)
+          </span>
+          <button type="button" onclick="EmployeesManager.downloadCsvTemplate()" class="px-3 py-1.5 bg-white hover:bg-blue-100 text-blue-800 border border-blue-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-download"></i> Unduh Template CSV
+          </button>
+        </div>
+        <p class="text-[11px] text-slate-600 leading-relaxed">
+          Kolom file: <b>ID, Nama, Departemen, Jabatan, Institusi, Trainee, Status, Password</b>. Isi di Excel lalu <b>Save As &rarr; CSV</b>. File Excel (.xlsx) juga bisa langsung diupload tanpa Save As.
+          ID boleh dikosongkan (dibuatkan otomatis: EMP-xxx, atau TRN-xxx untuk trainee). ID yang sudah terdaftar akan <b>diperbarui</b>, bukan diduplikat.
+          Sebelum impor, sistem menyimpan <b>cadangan pengaman</b> otomatis di server.
+        </p>
+        <div class="flex items-center gap-2 flex-wrap">
+          <label for="csv-emp-file" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-folder-open"></i> Pilih File CSV / Excel
+          </label>
+          <input type="file" id="csv-emp-file" accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" class="hidden" onchange="EmployeesManager.handleCsvFileSelect(this)">
+          <span id="csv-emp-filename" class="text-[11px] text-slate-500 font-semibold">Belum ada file dipilih</span>
+        </div>
+        <div id="csv-import-preview" class="hidden"></div>
+        <button type="button" id="csv-import-confirm-btn" onclick="EmployeesManager.confirmCsvImport()" class="hidden w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold transition flex items-center justify-center gap-2 cursor-pointer">
+          <i class="fa-solid fa-file-import"></i> Impor Karyawan dari CSV
+        </button>
       </div>
 
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -2656,7 +2789,7 @@
   <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 relative z-10">
     <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
       <p>&copy; 2026 <span class="hotel-name-display font-semibold">BeSS Mansion Hotel Surabaya</span>. Sistem Absensi Makan Karyawan.</p>
-      <p class="text-[11px] text-slate-400">created by Hafizh Alif Al Furqon</p>
+      <p class="text-[11px] text-slate-500">created by <strong class="font-bold text-blue-600" style="color: #2563eb; font-weight: 700;">Hafizh Alif Al Furqon!</strong></p>
     </div>
   </footer>
 
@@ -2668,17 +2801,78 @@
   <script data-cfasync="false" src="js/libs/html5-qrcode.min.js"></script>
   <script data-cfasync="false" src="js/libs/chart.min.js"></script>
   <script data-cfasync="false" src="js/libs/html2pdf.bundle.min.js"></script>
+  <script data-cfasync="false" src="js/libs/xlsx.full.min.js"></script>
 
-  <script data-cfasync="false" src="js/store.js?v=20261016_hosting"></script>
-  <script data-cfasync="false" src="js/auth.js?v=20261016_hosting"></script>
-  <script data-cfasync="false" src="js/dashboard.js?v=20261017_today"></script>
-  <script data-cfasync="false" src="js/attendance.js?v=20261017_no_input_id"></script>
-  <script data-cfasync="false" src="js/training.js?v=20261016_hosting"></script>
+  <script data-cfasync="false" src="js/store.js?v=20261026_pwc"></script>
+  <script data-cfasync="false" src="js/auth.js?v=20261026_pwc"></script>
+  <script data-cfasync="false" src="js/dashboard.js?v=20261024_malam"></script>
+  <script data-cfasync="false" src="js/attendance.js?v=20261024_malam"></script>
+  <script data-cfasync="false" src="js/training.js?v=20261026_pwc"></script>
   <script data-cfasync="false" src="js/tenants.js?v=20261016_hosting"></script>
-  <script data-cfasync="false" src="js/employees.js?v=20261016_hosting"></script>
+  <script data-cfasync="false" src="js/employees.js?v=20261026_pwc"></script>
   <script data-cfasync="false" src="js/qr_cards.js?v=20261016_hosting"></script>
-  <script data-cfasync="false" src="js/reports.js?v=20261016_hosting"></script>
-  <script data-cfasync="false" src="js/app.js?v=20261017_today"></script>
+  <script src="js/reports.js?v=20261026_konf2"></script>
+  <script data-cfasync="false" src="js/app.js?v=20261024_malam"></script>
+
+  <!-- MODAL WAJIB GANTI PASSWORD (LOGIN PERTAMA) -->
+  <div id="force-password-modal" class="hidden fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" style="transform: translateZ(0);">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden border border-rose-100 animate-[fadeIn_.25s_ease]">
+      <!-- Header -->
+      <div class="p-5 bg-gradient-to-br from-rose-800 to-rose-950 text-white relative">
+        <div class="absolute -top-6 -right-6 w-28 h-28 bg-white/5 rounded-full"></div>
+        <div class="absolute -bottom-8 -left-4 w-24 h-24 bg-white/5 rounded-full"></div>
+        <div class="relative flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center shadow-inner">
+            <i class="fa-solid fa-key text-lg"></i>
+          </div>
+          <div>
+            <h2 class="font-bold text-base leading-tight">Wajib Ganti Password</h2>
+            <p class="text-[11px] text-rose-200/90 mt-0.5">Kebijakan keamanan sistem</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="p-5">
+        <div class="flex items-start gap-2.5 rounded-xl bg-amber-50 border border-amber-200 p-3 mb-4">
+          <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
+          <div>
+            <p class="text-xs font-semibold text-amber-800">Halo, <span id="force-pass-employee-name" class="font-bold">-</span></p>
+            <p class="text-[11px] text-amber-700/90 mt-0.5 leading-snug">
+              Akun Anda masih menggunakan <b>password default</b> dari template. Untuk keamanan, silakan buat password baru sebelum dapat mengakses menu absensi.
+            </p>
+          </div>
+        </div>
+
+        <div id="force-pass-alert" class="mb-3"></div>
+
+        <div class="space-y-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Password Baru</label>
+            <div class="relative">
+              <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+              <input id="force-pass-new" type="password" placeholder="Minimal 4 karakter" autocomplete="new-password" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-400">
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Konfirmasi Password Baru</label>
+            <div class="relative">
+              <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+              <input id="force-pass-confirm" type="password" placeholder="Ulangi password baru" autocomplete="new-password" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/40 focus:border-rose-400">
+            </div>
+          </div>
+        </div>
+
+        <button onclick="Auth.submitForcePasswordChange()" style="background: linear-gradient(135deg, #8b1e33, #5d1222);" class="w-full mt-4 py-3 rounded-xl font-bold text-white text-sm shadow-lg shadow-rose-900/20 hover:opacity-90 active:scale-[.98] transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-floppy-disk"></i> Simpan Password Baru
+        </button>
+
+        <button onclick="Auth.logoutFromForce()" class="w-full mt-2 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition">
+          Logout (Keluar)
+        </button>
+      </div>
+    </div>
+  </div>
 
 </body>
 </html>
