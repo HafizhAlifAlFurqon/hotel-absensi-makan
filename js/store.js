@@ -380,6 +380,15 @@ const Store = {
     return `${year}-${month}-${day}`;
   },
 
+  getYesterdayDateString() {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  },
+
   // --- Karyawan Management ---
   getEmployees() {
     try {
@@ -503,15 +512,18 @@ const Store = {
     return { success: true, message: `Data karyawan "${newName}" (${newId}) berhasil diperbarui!`, employee: employees[idx] };
   },
 
-  updateEmployeePassword(employeeId, newPassword) {
+  updateEmployeePassword(employeeId, newPassword, forceDefault) {
     if (!employeeId || !newPassword) return { success: false, message: 'Password tidak boleh kosong.' };
     const employees = Store.getEmployees();
     const emp = employees.find(e => e.id.toLowerCase() === employeeId.toLowerCase());
     if (emp) {
       emp.password = newPassword.trim();
+      // true  = admin mereset ke password default (karyawan wajib ganti lagi)
+      // false = karyawan sudah ganti sendiri / admin set password non-default
+      emp.passwordChanged = forceDefault ? 0 : 1;
       localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
-      // Sinkronkan ke database MySQL
-      Store.apiPost('save_employee', emp);
+      // Sinkronkan ke database MySQL (sekaligus tandai status pergantian password)
+      Store.apiPost('save_employee', { ...emp, oldId: emp.id, passwordChanged: emp.passwordChanged });
       return { success: true, message: `Password untuk karyawan "${emp.name}" berhasil diperbarui!` };
     }
     return { success: false, message: 'Karyawan tidak ditemukan.' };
@@ -655,7 +667,8 @@ const Store = {
             department: matchedEmp.department,
             position: matchedEmp.position || 'Staff',
             picture: Auth.getAvatar(matchedEmp.name, '059669'),
-            badge: 'Karyawan'
+            badge: 'Karyawan',
+            mustChangePassword: matchedEmp.passwordChanged === 0
           }
         };
       } else {
@@ -896,29 +909,35 @@ const Store = {
     const minutes = dateObj.getMinutes();
     const timeInMinutes = hours * 60 + minutes;
 
-    // 11.00 = 660 menit, 15.00 = 900 menit, 19.00 = 1140 menit
-    const START_WINDOW = 11 * 60; // 11:00
-    const SHIFT_LUNCH_END = 15 * 60; // 15:00
-    const END_WINDOW = 19 * 60; // 19:00
+    // 11.00 = 660 menit, 15.00 = 900 menit, 19.00 = 1140 menit, 10.00 = 600 menit
+    const START_LUNCH = 11 * 60;   // 11:00
+    const END_LUNCH = 15 * 60;     // 15:00
+    const START_DINNER = 19 * 60;  // 19:00 (7 malam)
+    const END_DINNER = 10 * 60;    // 10:00 (10 pagi)
 
     let shift = null;
     let isAllowed = false;
 
-    if (timeInMinutes >= START_WINDOW && timeInMinutes <= SHIFT_LUNCH_END) {
+    if (timeInMinutes >= START_LUNCH && timeInMinutes <= END_LUNCH) {
       shift = 'Makan Siang';
       isAllowed = true;
-    } else if (timeInMinutes > SHIFT_LUNCH_END && timeInMinutes <= END_WINDOW) {
+    } else if (timeInMinutes > END_LUNCH && timeInMinutes < START_DINNER) {
       shift = 'Makan Sore';
       isAllowed = true;
+    } else if (timeInMinutes >= START_DINNER || timeInMinutes <= END_DINNER) {
+      // Makan Malam: cuman bisa absen dari jam 7 malam (19:00) sampai jam 10 pagi (10:00)
+      shift = 'Makan Malam';
+      isAllowed = true;
     } else {
+      // 10:01 - 10:59: Kantin Tutup (persiapan pergantian shift siang)
+      shift = 'Kantin Tutup';
       isAllowed = false;
     }
 
-    // Jika mode simulasi diaktifkan oleh admin untuk pengujian di luar jam operasional
-    if (settings.bypassTimeForTesting) {
+    if (settings && (settings.bypassTimeForTesting === true || settings.bypassTimeForTesting === '1')) {
       isAllowed = true;
-      if (!shift) {
-        shift = hours < 15 ? 'Makan Siang (Simulasi)' : 'Makan Sore (Simulasi)';
+      if (!shift || shift === 'Kantin Tutup') {
+        shift = 'Makan Siang (Simulasi)';
       }
     }
 
@@ -956,7 +975,20 @@ const Store = {
       };
     }
 
-    // 3. Cek Jam Absensi (11:00 - 19:00)
+    // 2b. Cek Tanggal Jatah: hanya boleh hari ini atau kemarin (backdate maks. 1 hari untuk shift malam)
+    const todayStr = Store.getTodayDateString();
+    const yesterdayStr = Store.getYesterdayDateString();
+    if (targetDate !== todayStr && targetDate !== yesterdayStr) {
+      return {
+        success: false,
+        valid: false,
+        code: 'INVALID_DATE',
+        employee,
+        message: `Tanggal jatah makan hanya boleh hari ini (${todayStr}) atau kemarin (${yesterdayStr}) untuk keperluan shift malam.`
+      };
+    }
+
+    // 3. Cek Jam Absensi
     const timeCheck = Store.evaluateShiftAndTime();
     if (!timeCheck.isAllowed) {
       return {
@@ -964,7 +996,7 @@ const Store = {
         valid: false,
         code: 'OUTSIDE_HOURS',
         employee,
-        message: `Absensi hanya dapat dilakukan pada pukul 11.00 - 19.00 WIB. (Waktu saat ini: ${timeCheck.timeString})`
+        message: `Kantin saat ini sedang TUTUP (${timeCheck.timeString} WIB). Absensi hanya dapat dilakukan pada jam operasional: Makan Siang (11.00 - 15.00 WIB), Makan Sore (15.01 - 19.00 WIB), dan Makan Malam (19.00 - 10.00 WIB).`
       };
     }
 
@@ -983,8 +1015,31 @@ const Store = {
         code: 'ALREADY_EATEN',
         employee,
         existingAttendance: existing,
-        message: `Karyawan ${employee.name} (${employee.id}) SUDAH MAKAN hari ini di "${existing.tenantName}" pada pukul ${existing.time} (${existing.shift}).`
+        message: `Karyawan ${employee.name} (${employee.id}) SUDAH MAKAN untuk jatah tanggal ${targetDate} di "${existing.tenantName}" pada pukul ${existing.time} (${existing.shift}).`
       };
+    }
+
+    // 5. Cek Jarak Minimal 6 Jam dari Absen Terakhir (berdasarkan waktu scan sebenarnya)
+    let lastScan = null;
+    attendances.forEach(a => {
+      if (a.employeeId && employee.id && a.employeeId.toLowerCase() === employee.id.toLowerCase()) {
+        const dtStr = a.scannedAt || `${a.date} ${a.time}`;
+        const t = new Date(String(dtStr).replace(' ', 'T'));
+        if (!isNaN(t) && (!lastScan || t > lastScan)) lastScan = t;
+      }
+    });
+    if (lastScan) {
+      const diffMs = Date.now() - lastScan.getTime();
+      if (diffMs >= 0 && diffMs < 6 * 3600 * 1000) {
+        const nextT = new Date(lastScan.getTime() + 6 * 3600 * 1000);
+        return {
+          success: false,
+          valid: false,
+          code: 'TOO_SOON',
+          employee,
+          message: `Karyawan ${employee.name} baru absen makan pukul ${lastScan.toLocaleTimeString('id-ID', { hour12: false })} WIB. Jarak minimal antar absen adalah 6 jam — dapat absen lagi setelah pukul ${nextT.toLocaleTimeString('id-ID', { hour12: false })} WIB.`
+        };
+      }
     }
 
     return {
@@ -1007,6 +1062,8 @@ const Store = {
     const now = new Date();
     const targetDate = dateStr || Store.getTodayDateString();
     const timeStr = now.toLocaleTimeString('id-ID', { hour12: false });
+    const pad2 = n => String(n).padStart(2, '0');
+    const scannedAt = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())} ${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
     const settings = Store.getSettings();
     const tenantName = Store.getTenantName(tenantKey);
 
@@ -1020,6 +1077,7 @@ const Store = {
       id: 'ATT-' + Date.now().toString(36).toUpperCase(),
       date: targetDate,
       time: timeStr,
+      scannedAt: scannedAt,
       employeeId: validation.employee.id,
       employeeName: validation.employee.name,
       department: validation.employee.department,
@@ -1060,6 +1118,8 @@ const Store = {
       list.forEach(item => {
         if (!item.tenantKey && item.tenantId) item.tenantKey = item.tenantId;
         if (!item.tenantId && item.tenantKey) item.tenantId = item.tenantKey;
+        // scannedAt = waktu scan sebenarnya; data lama (pra-revisi) tanggal jatah == tanggal scan
+        if (!item.scannedAt && item.date && item.time) item.scannedAt = item.date + ' ' + item.time;
       });
 
       if (startDate && endDate) {

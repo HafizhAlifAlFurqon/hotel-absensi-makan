@@ -78,7 +78,11 @@ const App = {
       try {
         const evaluation = (window.Store && typeof Store.evaluateShiftAndTime === 'function')
           ? Store.evaluateShiftAndTime(now)
-          : { isAllowed: (now.getHours() >= 11 && now.getHours() <= 19), shift: (now.getHours() < 15 ? 'Makan Siang' : 'Makan Sore') };
+          : (() => { 
+              const m = now.getHours() * 60 + now.getMinutes(); 
+              const shift = (m >= 660 && m <= 900) ? 'Makan Siang' : (m > 900 && m < 1140) ? 'Makan Sore' : (m >= 1140 || m <= 600) ? 'Makan Malam' : 'Kantin Tutup';
+              return { isAllowed: shift !== 'Kantin Tutup', shift }; 
+            })();
         const settings = (window.Store && typeof Store.getSettings === 'function') ? Store.getSettings() : {};
 
         shiftBadgeEls.forEach(badge => {
@@ -86,13 +90,16 @@ const App = {
             if (evaluation.shift && evaluation.shift.includes('Siang')) {
               badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-300 shadow-xs';
               badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 mr-1.5 animate-pulse"></span> Makan Siang (11:00 - 15:00)`;
-            } else {
+            } else if (evaluation.shift && evaluation.shift.includes('Sore')) {
               badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-900 border border-indigo-300 shadow-xs';
               badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-indigo-500 mr-1.5 animate-pulse"></span> Makan Sore (15:01 - 19:00)`;
+            } else {
+              badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-900 text-slate-100 border border-slate-600 shadow-xs';
+              badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-300 mr-1.5 animate-pulse"></span> Makan Malam (19:00 - 10:00)`;
             }
           } else {
-            badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-900 border border-rose-300 shadow-xs';
-            badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500 mr-1.5"></span> Kantin Tutup (Buka 11:00 - 19:00)`;
+            badge.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-300 shadow-xs';
+            badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500 mr-1.5"></span> Kantin Tutup (Buka 11:00)`;
           }
 
           if (settings.bypassTimeForTesting) {

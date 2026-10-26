@@ -292,15 +292,20 @@
                 var s = document.getElementById('header-shift-badge');
                 if (s) {
                   var h = d.getHours();
-                  if (h >= 11 && h < 15) {
+                  var m = d.getMinutes();
+                  var totalMins = h * 60 + m;
+                  if (totalMins >= 660 && totalMins <= 900) {
                     s.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300';
                     s.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500 mr-1.5 animate-pulse"></span> Makan Siang (11:00 - 15:00)';
-                  } else if (h >= 15 && h <= 19) {
+                  } else if (totalMins > 900 && totalMins < 1140) {
                     s.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800 border border-indigo-300';
                     s.innerHTML = '<span class="w-2 h-2 rounded-full bg-indigo-500 mr-1.5 animate-pulse"></span> Makan Sore (15:01 - 19:00)';
-                  } else {
+                  } else if (totalMins >= 1140 || totalMins <= 600) {
                     s.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-900 text-slate-100 border border-slate-600';
-                    s.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-300 mr-1.5 animate-pulse"></span> Makan Malam (19:01 - 10:59)';
+                    s.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-300 mr-1.5 animate-pulse"></span> Makan Malam (19:00 - 10:00)';
+                  } else {
+                    s.className = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-300';
+                    s.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500 mr-1.5"></span> Kantin Tutup (Buka 11:00)';
                   }
                 }
               } catch(e) {}
@@ -544,7 +549,7 @@
                     <i class="fa-solid fa-cloud-moon text-slate-600 text-xs"></i>
                     <h4 class="font-bold text-xs text-slate-900">Makan Malam</h4>
                   </div>
-                  <p class="text-[11px] text-slate-600 mt-0.5">Pukul 19:01 - 10:59 WIB</p>
+                  <p class="text-[11px] text-slate-600 mt-0.5">Pukul 19:00 - 10:00 WIB</p>
                 </div>
                 <div class="text-right">
                   <span id="dash-count-malam" class="text-xl font-extrabold font-mono text-slate-900">0</span>
@@ -738,7 +743,7 @@
             <h4 class="font-bold flex items-center gap-1.5 text-emerald-950">
               <i class="fa-solid fa-shield-halved text-emerald-600"></i> Ketentuan Absensi Kantin:
             </h4>
-            <p>• Absen makan tersedia di semua shift: <b>Makan Siang 11.00-15.00</b>, <b>Makan Sore 15.01-19.00</b>, dan <b>Makan Malam 19.01-10.59</b> WIB.</p>
+            <p>• Absen makan tersedia di semua shift: <b>Makan Siang 11.00-15.00</b>, <b>Makan Sore 15.01-19.00</b>, dan <b>Makan Malam 19.00-10.00</b> WIB.</p>
             <p>• 1 Karyawan/Trainee hanya <b>1x makan per tanggal jatah</b> di salah satu kantin hotel, dengan jarak minimal <b>6 jam</b> antar absen.</p>
             <p>• Pilih <b>Hari Ini</b> untuk absensi hari berjalan atau <b>Rentang Tanggal</b> untuk melihat riwayat absensi pada periode tertentu.</p>
           </div>
@@ -1984,7 +1989,7 @@
             <p>&bull; Jatah makan: <b>1 kali per tanggal jatah</b> (lintas kantin depot), jarak minimal <b>6 jam</b> antar absen.</p>
             <p>&bull; <b>Shift Siang:</b> 11.00 - 15.00 WIB</p>
             <p>&bull; <b>Shift Sore:</b> 15.01 - 19.00 WIB</p>
-            <p>&bull; <b>Shift Malam:</b> 19.01 - 10.59 WIB</p>
+            <p>&bull; <b>Shift Malam:</b> 19.00 - 10.00 WIB</p>
           </div>
 
         </div>
@@ -2814,7 +2819,7 @@
   <script data-cfasync="false" src="js/libs/html2pdf.bundle.min.js"></script>
   <script data-cfasync="false" src="js/libs/xlsx.full.min.js"></script>
 
-  <script data-cfasync="false" src="js/store.js?v=20261026_pwc"></script>
+  <script data-cfasync="false" src="js/store.js?v=20261026_malam19_10"></script>
   <script data-cfasync="false" src="js/auth.js?v=20261026_pwc"></script>
   <script data-cfasync="false" src="js/dashboard.js?v=20261024_malam"></script>
   <script data-cfasync="false" src="js/attendance.js?v=20261026_range"></script>
@@ -2823,7 +2828,7 @@
   <script data-cfasync="false" src="js/employees.js?v=20261026_pwc"></script>
   <script data-cfasync="false" src="js/qr_cards.js?v=20261016_hosting"></script>
   <script src="js/reports.js?v=20261026_konf2"></script>
-  <script data-cfasync="false" src="js/app.js?v=20261024_malam"></script>
+  <script data-cfasync="false" src="js/app.js?v=20261026_malam19_10"></script>
 
   <!-- MODAL WAJIB GANTI PASSWORD (LOGIN PERTAMA) -->
   <div id="force-password-modal" class="hidden fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" style="transform: translateZ(0);">

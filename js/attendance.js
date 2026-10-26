@@ -1105,7 +1105,7 @@ const AttendanceManager = {
             <h4 class="font-bold flex items-center gap-1.5 text-emerald-950">
               <i class="fa-solid fa-shield-halved text-emerald-600"></i> Ketentuan Absensi Kantin:
             </h4>
-            <p>&bull; Absen tersedia di semua shift: <b>Makan Siang 11.00-15.00</b>, <b>Makan Sore 15.01-19.00</b>, <b>Makan Malam 19.01-10.59</b> WIB.</p>
+            <p>&bull; Absen tersedia di semua shift: <b>Makan Siang 11.00-15.00</b>, <b>Makan Sore 15.01-19.00</b>, dan <b>Makan Malam 19.00-10.00</b> WIB.</p>
             <p>&bull; 1 Karyawan hanya <b>1x makan per tanggal jatah</b> lintas seluruh kantin hotel, jarak minimal <b>6 jam</b> antar absen.</p>
           </div>
         </div>
