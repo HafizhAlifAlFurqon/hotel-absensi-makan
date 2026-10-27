@@ -902,7 +902,7 @@ const Store = {
     return true;
   },
 
-  // --- Validasi Aturan Bisnis (Core Rules) ---
+  // Core Rules
   evaluateShiftAndTime(dateObj = new Date()) {
     const settings = Store.getSettings();
     const hours = dateObj.getHours();
@@ -912,8 +912,8 @@ const Store = {
     // 11.00 = 660 menit, 15.00 = 900 menit, 19.00 = 1140 menit, 10.00 = 600 menit
     const START_LUNCH = 11 * 60;   // 11:00
     const END_LUNCH = 15 * 60;     // 15:00
-    const START_DINNER = 19 * 60;  // 19:00 (7 malam)
-    const END_DINNER = 10 * 60;    // 10:00 (10 pagi)
+    const START_DINNER = 19 * 60;  // 19:00 
+    const END_DINNER = 10 * 60;    // 10:00
 
     let shift = null;
     let isAllowed = false;
@@ -925,7 +925,6 @@ const Store = {
       shift = 'Makan Sore';
       isAllowed = true;
     } else if (timeInMinutes >= START_DINNER || timeInMinutes <= END_DINNER) {
-      // Makan Malam: cuman bisa absen dari jam 7 malam (19:00) sampai jam 10 pagi (10:00)
       shift = 'Makan Malam';
       isAllowed = true;
     } else {

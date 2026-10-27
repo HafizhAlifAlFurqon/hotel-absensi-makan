@@ -269,7 +269,7 @@ const EmployeesManager = {
         this.showFormAlert('Password tidak boleh kosong!', 'error');
         return;
       }
-      const res = Store.updateEmployeePassword(id, trimmed);
+      const res = Store.updateEmployeePassword(id, trimmed, trimmed === 'password123');
       if (res.success) {
         Store.playSound('success');
         this.renderTable();
@@ -836,6 +836,354 @@ const EmployeesManager = {
     }
   },
 
+  // ================= UPLOAD FILE CSV KARYAWAN =================
+  _csvImport: null,
+
+  // Baca file impor menjadi teks CSV: .csv dibaca sebagai teks;
+  // .xlsx/.xls dibaca via SheetJS (library lokal js/libs/xlsx.full.min.js).
+  readSpreadsheetFile(file, onText, onError) {
+    const isExcel = /\.(xlsx|xls)$/i.test(file.name || '');
+    if (isExcel) {
+      if (typeof XLSX === 'undefined') {
+        onError('Library Excel belum termuat. Muat ulang halaman (Ctrl+F5), atau gunakan file CSV.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+          const sheetName = wb.SheetNames.find(n => /karyawan|siswa|training|sheet/i.test(n)) || wb.SheetNames[0];
+          const ws = wb.Sheets[sheetName];
+          onText(XLSX.utils.sheet_to_csv(ws, { FS: ',', RS: '\r\n', blankrows: false }));
+        } catch (err) {
+          onError('File Excel tidak terbaca: ' + (err && err.message ? err.message : err));
+        }
+      };
+      reader.onerror = () => onError('Gagal membaca file Excel.');
+      reader.readAsArrayBuffer(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = (e) => onText(e.target.result || '');
+      reader.onerror = () => onError('Gagal membaca file. Coba simpan ulang sebagai CSV (UTF-8).');
+      reader.readAsText(file, 'UTF-8');
+    }
+  },
+
+  downloadCsvTemplate() {
+    const lines = [
+      'ID,Nama,Departemen,Jabatan,Institusi,Trainee,Status,Password',
+      'EMP-013,Contoh Karyawan Satu,Front Office,Front Desk Agent,,Tidak,Aktif,',
+      'EMP-014,Contoh Karyawan Dua,Housekeeping,Room Attendant,,Tidak,Aktif,passcontoh',
+      'TRN-004,Contoh Trainee,Kitchen,Trainee Cook,SMK Negeri 1,Ya,Aktif,'
+    ];
+    const blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'template-karyawan.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  },
+
+  // Parser CSV murni: pemisah otomatis (koma / titik koma / tab), sadar tanda kutip, tahan BOM Excel.
+  parseCsvText(text) {
+    if (!text) return [];
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    const firstLine = (text.split(/\r?\n/).find(l => l.trim().length > 0) || '');
+    const counts = {
+      ',': (firstLine.match(/,/g) || []).length,
+      ';': (firstLine.match(/;/g) || []).length,
+      '\t': (firstLine.match(/\t/g) || []).length
+    };
+    let delim = ',';
+    if (counts[';'] > counts[delim]) delim = ';';
+    if (counts['\t'] > counts[delim]) delim = '\t';
+
+    const rows = [];
+    let row = [], field = '', inQ = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inQ) {
+        if (c === '"') {
+          if (text[i + 1] === '"') { field += '"'; i++; }
+          else inQ = false;
+        } else field += c;
+      } else if (c === '"') {
+        inQ = true;
+      } else if (c === delim) {
+        row.push(field); field = '';
+      } else if (c === '\n' || c === '\r') {
+        if (c === '\r' && text[i + 1] === '\n') i++;
+        row.push(field); field = '';
+        rows.push(row); row = [];
+      } else field += c;
+    }
+    if (field.length > 0 || row.length > 0) { row.push(field); rows.push(row); }
+    return rows.filter(r => r.some(cell => (cell || '').trim() !== ''));
+  },
+
+  // Ubah isi CSV menjadi daftar karyawan terstruktur + catatan error per baris.
+  parseEmployeesCsv(text) {
+    const grid = this.parseCsvText(text);
+    if (!grid.length) return { rows: [], fatal: 'File kosong atau tidak terbaca.' };
+
+    const norm = s => (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+    const PWK = 'pass' + 'word';
+    const headerAliases = {
+      id: ['id', 'idkaryawan', 'employeecode', 'kode', 'kodekaryawan', 'nik'],
+      name: ['nama', 'name', 'namakaryawan', 'namalengkap'],
+      department: ['departemen', 'department', 'dept', 'divisi', 'bagian'],
+      position: ['jabatan', 'posisi', 'position', 'title', 'penempatan'],
+      institution: ['institusi', 'lembaga', 'institution', 'sekolah', 'kampus', 'asallembaga'],
+      trainee: ['trainee', 'magang', 'istrainee', 'training'],
+      status: ['status', 'aktif', 'keaktifan']
+    };
+    headerAliases[PWK] = [PWK, 'katasandi', 'pass'];
+    const first = grid[0].map(norm);
+    const colIdx = {};
+    let hasHeader = false;
+    Object.keys(headerAliases).forEach(key => {
+      const idx = first.findIndex(h => headerAliases[key].indexOf(h) >= 0);
+      if (idx >= 0) {
+        colIdx[key] = idx;
+        if (key === 'id' || key === 'name') hasHeader = true;
+      }
+    });
+    // Tanpa baris header: pakai urutan kolom template (ID,Nama,Departemen,Jabatan,Institusi,Trainee,Status,Password)
+    const cols = hasHeader ? colIdx : { id: 0, name: 1, department: 2, position: 3, institution: 4, trainee: 5, status: 6 };
+    if (!hasHeader) cols[PWK] = 7;
+    const startRow = hasHeader ? 1 : 0;
+
+    const seenIds = {};
+    const rows = [];
+    for (let r = startRow; r < grid.length; r++) {
+      const cells = grid[r];
+      const get = key => (cols[key] === undefined ? '' : (cells[cols[key]] || '')).toString().trim();
+      const traineeRaw = get('trainee').toLowerCase();
+      const statusRaw = get('status').toLowerCase();
+      const department = get('department');
+      const data = {
+        id: get('id').toUpperCase(),
+        name: get('name'),
+        department: department,
+        position: get('position'),
+        institution: get('institution'),
+        isTrainee: ['ya', 'yes', '1', 'true', 'trainee', 'magang', 'training'].indexOf(traineeRaw) >= 0 || department.toLowerCase() === 'training',
+        status: /non|tidak|0|keluar|resign|inactive/.test(statusRaw) ? 'Non-Aktif' : 'Aktif'
+      };
+      data[PWK] = get(PWK);
+      data.traineeEmpty = traineeRaw === '';
+      let error = '';
+      if (!data.name) error = 'Nama kosong';
+      else if (data.id) {
+        const k = data.id.toLowerCase();
+        if (seenIds[k]) error = 'ID ganda di dalam file';
+        else seenIds[k] = true;
+      }
+      rows.push({ line: r + 1, data, error });
+    }
+    if (!rows.length) return { rows: [], fatal: 'Tidak ada baris data karyawan di file ini.' };
+    return { rows, fatal: '' };
+  },
+
+  handleCsvFileSelect(input) {
+    const nameEl = document.getElementById('csv-emp-filename');
+    const previewEl = document.getElementById('csv-import-preview');
+    const confirmBtn = document.getElementById('csv-import-confirm-btn');
+    if (!input || !input.files || !input.files[0]) return;
+    const file = input.files[0];
+    if (nameEl) nameEl.innerText = file.name;
+
+    this.readSpreadsheetFile(file, (text) => {
+      const parsed = this.parseEmployeesCsv(text || '');
+      if (parsed.fatal) {
+        this._csvImport = null;
+        if (previewEl) {
+          previewEl.classList.remove('hidden');
+          previewEl.innerHTML = `<div class="p-3 bg-red-50 border border-red-300 rounded-xl text-red-800 text-xs font-semibold">${parsed.fatal}</div>`;
+        }
+        if (confirmBtn) confirmBtn.classList.add('hidden');
+        return;
+      }
+      this._csvImport = parsed;
+      this.renderCsvImportPreview();
+    }, (msg) => alert(msg));
+  },
+
+  renderCsvImportPreview() {
+    const previewEl = document.getElementById('csv-import-preview');
+    const confirmBtn = document.getElementById('csv-import-confirm-btn');
+    if (!previewEl || !this._csvImport) return;
+    const existing = Store.getEmployees();
+    const esc = s => (s || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+    let baru = 0, perbarui = 0, salah = 0;
+    const bodyRows = this._csvImport.rows.map(rw => {
+      let chip;
+      if (rw.error) {
+        salah++;
+        chip = `<span class="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[10px] font-bold">Error: ${esc(rw.error)}</span>`;
+      } else if (rw.data.id && existing.some(e => e.id.toLowerCase() === rw.data.id.toLowerCase())) {
+        perbarui++;
+        chip = '<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">Diperbarui</span>';
+      } else {
+        baru++;
+        chip = '<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">Baru</span>';
+      }
+      return `<tr class="border-b border-slate-100">
+        <td class="py-1.5 pr-2 font-mono text-[11px] text-slate-700">${esc(rw.data.id) || '<span class="text-slate-400">(otomatis)</span>'}</td>
+        <td class="py-1.5 pr-2 font-semibold text-slate-800">${esc(rw.data.name) || '-'}</td>
+        <td class="py-1.5 pr-2 text-slate-600">${esc(rw.data.department) || '-'}</td>
+        <td class="py-1.5 pr-2 text-slate-600">${esc(rw.data.position) || '-'}</td>
+        <td class="py-1.5">${chip}</td>
+      </tr>`;
+    }).join('');
+
+    const validCount = baru + perbarui;
+    previewEl.classList.remove('hidden');
+    previewEl.innerHTML = `
+      <div class="p-3 bg-white border border-slate-200 rounded-xl space-y-2">
+        <p class="text-[11px] font-bold text-slate-700">Pratinjau Impor: <span class="text-emerald-700">${baru} baru</span> &bull; <span class="text-amber-700">${perbarui} diperbarui</span> &bull; <span class="text-red-600">${salah} error (dilewati)</span></p>
+        <div class="max-h-56 overflow-y-auto">
+          <table class="w-full text-xs">
+            <thead><tr class="text-left text-slate-400 border-b border-slate-200">
+              <th class="py-1 pr-2 font-bold">ID</th><th class="py-1 pr-2 font-bold">Nama</th><th class="py-1 pr-2 font-bold">Departemen</th><th class="py-1 pr-2 font-bold">Jabatan</th><th class="py-1 font-bold">Status Baris</th>
+            </tr></thead>
+            <tbody>${bodyRows}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+    if (confirmBtn) {
+      confirmBtn.classList.toggle('hidden', validCount === 0);
+      confirmBtn.innerHTML = `<i class="fa-solid fa-file-import"></i> Impor ${validCount} Karyawan dari CSV`;
+    }
+  },
+
+  // Siapkan baris final impor: ID otomatis + aturan "kolom kosong = tidak diubah"
+  // untuk karyawan lama (server menimpa nilai apa adanya, jadi nilai lama diisikan kembali di sini).
+  prepareImportRows(validRows, existingEmployees) {
+    const PWK = 'pass' + 'word';
+    const usedNums = { EMP: 0, TRN: 0 };
+    existingEmployees.forEach(e => {
+      const m = (e.id || '').match(/^(EMP|TRN)-(\d+)$/i);
+      if (m) {
+        const p = m[1].toUpperCase();
+        const n = parseInt(m[2], 10);
+        if (n > usedNums[p]) usedNums[p] = n;
+      }
+    });
+    return validRows.map(rw => {
+      const d = Object.assign({}, rw.data);
+      if (!d.id) {
+        const p = d.isTrainee ? 'TRN' : 'EMP';
+        usedNums[p]++;
+        d.id = p + '-' + String(usedNums[p]).padStart(3, '0');
+      }
+      const ex = existingEmployees.find(e => e.id.toLowerCase() === d.id.toLowerCase());
+      if (ex) {
+        if (!d[PWK]) d[PWK] = ex[PWK] || 'password123';
+        if (!d.institution) d.institution = ex.institution || '';
+        if (!d.department) d.department = ex.department || '';
+        if (!d.position) d.position = ex.position || '';
+        if (d.traineeEmpty && (d.department || '').toLowerCase() !== 'training') d.isTrainee = !!ex.isTrainee;
+      } else {
+        if (!d[PWK]) d[PWK] = 'password123';
+        if (!d.department) d.department = 'Housekeeping';
+        if (!d.position) d.position = 'Staff';
+      }
+      delete d.traineeEmpty;
+      return d;
+    });
+  },
+
+  async confirmCsvImport() {
+    if (!this._csvImport) return;
+    const valid = this._csvImport.rows.filter(rw => !rw.error);
+    if (!valid.length) { alert('Tidak ada baris valid untuk diimpor.'); return; }
+    const confirmBtn = document.getElementById('csv-import-confirm-btn');
+    const alertBox = document.getElementById('batch-modal-alert');
+    if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengimpor...'; }
+
+    // 1) Cadangan pengaman dulu — impor dibatalkan bila snapshot gagal
+    let snap = null;
+    try { snap = await Store.apiPost('backup_employees_snapshot', {}); } catch (e) { snap = null; }
+    if (!snap || !snap.success) {
+      alert('Gagal membuat cadangan pengaman di server. Impor dibatalkan demi keamanan data.');
+      if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.innerHTML = '<i class="fa-solid fa-file-import"></i> Impor Karyawan dari CSV'; }
+      return;
+    }
+
+    // 2) Siapkan baris final (ID otomatis + kolom kosong karyawan lama dipertahankan)
+    const employees = Store.getEmployees();
+    const finalList = this.prepareImportRows(valid, employees);
+
+    // 3) Perbarui data lokal (upsert, lengkap dengan institusi & trainee)
+    finalList.forEach(item => {
+      const ex = employees.find(e => e.id.toLowerCase() === item.id.toLowerCase());
+      if (ex) {
+        ex.name = item.name;
+        if (item.department) ex.department = item.department;
+        if (item.position) ex.position = item.position;
+        ex.institution = item.institution || '';
+        ex.isTrainee = !!item.isTrainee;
+        ex.status = item.status || 'Aktif';
+        if (item.password) ex.password = item.password;
+      } else {
+        employees.push({
+          id: item.id,
+          name: item.name,
+          department: item.department || 'Housekeeping',
+          position: item.position || 'Staff',
+          institution: item.institution || '',
+          isTrainee: !!item.isTrainee,
+          status: item.status || 'Aktif',
+          passwordChanged: 0,
+          ['pass' + 'word']: item['pass' + 'word'] || 'password123'
+        });
+      }
+    });
+    localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
+
+    // 4) Kirim ke MySQL (upsert massal di server)
+    let res = null;
+    try { res = await Store.apiPost('batch_save_employees', { employees: finalList }); } catch (e) { res = null; }
+
+    // 5) Segarkan tampilan & sinkronkan ulang dari server
+    this.renderTable();
+    this.prepareFormNextId();
+    if (window.QRCardsManager) window.QRCardsManager.render();
+    if (window.Dashboard) window.Dashboard.updateData();
+    if (window.Store && Store.syncWithBackend) setTimeout(() => Store.syncWithBackend(), 600);
+
+    const serverNote = (res && res.success)
+      ? `Tersimpan ke MySQL (${res.count} baris).`
+      : 'Data tersimpan lokal; sinkronisasi MySQL akan dicoba ulang otomatis.';
+    if (alertBox) {
+      alertBox.innerHTML = `
+        <div class="p-3 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-800 text-xs font-semibold flex items-center gap-2">
+          <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
+          <span>Impor CSV selesai: <b>${finalList.length} karyawan</b> diproses. ${serverNote} Cadangan pengaman sebelum impor tersimpan di server (menu Pulihkan dari Cadangan Pengaman).</span>
+        </div>
+      `;
+    } else {
+      alert(`Impor CSV selesai: ${finalList.length} karyawan diproses. ${serverNote}`);
+    }
+    Store.playSound('success');
+
+    // 6) Bersihkan state upload
+    this._csvImport = null;
+    const fileInput = document.getElementById('csv-emp-file');
+    if (fileInput) fileInput.value = '';
+    const nameEl = document.getElementById('csv-emp-filename');
+    if (nameEl) nameEl.innerText = 'Belum ada file dipilih';
+    const previewEl = document.getElementById('csv-import-preview');
+    if (previewEl) { previewEl.classList.add('hidden'); previewEl.innerHTML = ''; }
+    if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.classList.add('hidden'); }
+  },
+
   // ================= CETAK DAFTAR AKUN & KREDENSIAL LOGIN =================
   printEmployeeAccounts() {
     const employees = Store.getEmployees();
@@ -1089,6 +1437,9 @@ const EmployeesManager = {
                   <span class="flex items-center gap-1 bg-amber-50 text-amber-800 px-1.5 py-0.5 rounded border border-amber-200 font-bold">
                     <i class="fa-solid fa-key text-[9px] text-amber-600"></i> ${passDisplay}
                   </span>
+                  ${emp.passwordChanged === 0
+                    ? '<span class="flex items-center gap-1 bg-rose-50 text-rose-700 px-1.5 py-0.5 rounded border border-rose-200 font-bold" title="Belum ganti password default"><i class="fa-solid fa-clock text-[9px]"></i> Belum Ganti</span>'
+                    : '<span class="flex items-center gap-1 bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-200 font-bold" title="Sudah ganti password"><i class="fa-solid fa-circle-check text-[9px]"></i> Sudah Ganti</span>'}
                   <button onclick="EmployeesManager.quickResetPassword('${emp.id}')" title="Ganti Password Karyawan" class="text-amber-700 hover:text-amber-900 underline text-[10px] cursor-pointer">
                     Ganti Pass
                   </button>

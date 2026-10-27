@@ -177,6 +177,12 @@ const Auth = {
     Auth.setCurrentUser(user);
     Auth.hideLoginPage();
 
+    // Wajib ganti password pada login pertama (flag password_changed = 0)
+    if (user.role === 'karyawan' && user.mustChangePassword) {
+      Auth.forcePasswordChange();
+      return res;
+    }
+
     // Otomatis navigasi: Admin langsung masuk ke DASHBOARD!
     if (window.App) {
       if (user.role === 'karyawan') {
@@ -289,6 +295,70 @@ const Auth = {
       const navCanteenLabel = document.getElementById('nav-canteen-label');
       if (navCanteenLabel) navCanteenLabel.innerText = 'Kantin';
     }
+  },
+
+  // ===== Wajib Ganti Password pada Login Pertama =====
+  forcePasswordChange() {
+    const modal = document.getElementById('force-password-modal');
+    if (!modal) return;
+    const user = Auth.getCurrentUser();
+    const nameEl = document.getElementById('force-pass-employee-name');
+    if (nameEl && user) {
+      nameEl.textContent = user.name + ' (' + (user.employeeId || '') + ')';
+    }
+    const alertEl = document.getElementById('force-pass-alert');
+    if (alertEl) alertEl.innerHTML = '';
+    const newEl = document.getElementById('force-pass-new');
+    const cnfEl = document.getElementById('force-pass-confirm');
+    if (newEl) newEl.value = '';
+    if (cnfEl) cnfEl.value = '';
+    modal.classList.remove('hidden');
+    setTimeout(() => { if (newEl) { newEl.disabled = false; newEl.focus(); } }, 80);
+  },
+
+  submitForcePasswordChange() {
+    const alertEl = document.getElementById('force-pass-alert');
+    const newEl = document.getElementById('force-pass-new');
+    const cnfEl = document.getElementById('force-pass-confirm');
+    const newPass = newEl ? newEl.value.trim() : '';
+    const confirmPass = cnfEl ? cnfEl.value.trim() : '';
+    const showErr = (msg) => {
+      if (alertEl) {
+        alertEl.innerHTML = `<div class="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-medium flex items-center gap-1.5"><i class="fa-solid fa-circle-exclamation text-rose-500"></i> ${msg}</div>`;
+      }
+    };
+    if (!newPass) return showErr('Password baru tidak boleh kosong.');
+    if (newPass.length < 4) return showErr('Password minimal 4 karakter.');
+    if (newPass !== confirmPass) return showErr('Konfirmasi password tidak cocok!');
+    const currentEmpId = Auth.getActiveEmployeeId();
+    const res = Store.updateEmployeePassword(currentEmpId, newPass);
+    if (res.success) {
+      // Tandai user saat ini sudah ganti password
+      const user = Auth.getCurrentUser();
+      if (user) {
+        user.mustChangePassword = false;
+        Auth.setCurrentUser(user);
+      }
+      const modal = document.getElementById('force-password-modal');
+      if (modal) modal.classList.add('hidden');
+      if (window.AttendanceManager && typeof AttendanceManager.updateEmployeePortalCard === 'function') {
+        AttendanceManager.updateEmployeePortalCard();
+      }
+      if (window.EmployeesManager) window.EmployeesManager.renderTable();
+      if (window.TrainingManager) window.TrainingManager.renderTraineesTable();
+      if (window.Store && typeof Store.playSound === 'function') Store.playSound('success');
+      if (alertEl) alertEl.innerHTML = '';
+      // Lanjutkan navigasi normal setelah password berhasil diganti
+      if (window.App && typeof App.enforceRBAC === 'function') {
+        setTimeout(() => App.enforceRBAC(), 150);
+      }
+    } else {
+      showErr(res.message || 'Gagal menyimpan password baru.');
+    }
+  },
+
+  logoutFromForce() {
+    Auth.logout();
   },
 
   openLoginModal() {

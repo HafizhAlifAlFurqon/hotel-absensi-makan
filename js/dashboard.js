@@ -221,6 +221,7 @@ const Dashboard = {
     // Hitung per shift
     const siangCount = records.filter(r => r.shift && r.shift.includes('Siang')).length;
     const soreCount = records.filter(r => r.shift && r.shift.includes('Sore')).length;
+    const malamCount = records.filter(r => r.shift && r.shift.includes('Malam')).length;
 
     // Update UI Cards
     const elSudahMakan = document.getElementById('dash-total-eaten');
@@ -230,6 +231,7 @@ const Dashboard = {
     const elDepot2 = document.getElementById('dash-count-depot2');
     const elSiang = document.getElementById('dash-count-siang');
     const elSore = document.getElementById('dash-count-sore');
+    const elMalam = document.getElementById('dash-count-malam');
 
     if (elSudahMakan) elSudahMakan.innerText = totalMakan;
     if (elBelumMakan) elBelumMakan.innerText = totalBelumMakan;
@@ -238,6 +240,7 @@ const Dashboard = {
     if (elDepot2) elDepot2.innerText = depot2Count;
     if (elSiang) elSiang.innerText = siangCount;
     if (elSore) elSore.innerText = soreCount;
+    if (elMalam) elMalam.innerText = malamCount;
 
     // Update Info Periode Terpilih
     const elPeriodInfo = document.getElementById('dash-selected-period-text');
@@ -287,9 +290,12 @@ const Dashboard = {
 
     tbody.innerHTML = records.slice(0, 15).map((r, idx) => {
       const isLunch = r.shift && r.shift.includes('Siang');
+      const isMalam = r.shift && r.shift.includes('Malam');
       const badgeShift = isLunch
         ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800"><i class="fa-solid fa-sun mr-1 text-[10px]"></i> ${r.shift}</span>`
-        : `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800"><i class="fa-solid fa-moon mr-1 text-[10px]"></i> ${r.shift}</span>`;
+        : isMalam
+          ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-800 text-slate-100"><i class="fa-solid fa-cloud-moon mr-1 text-[10px]"></i> ${r.shift}</span>`
+          : `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800"><i class="fa-solid fa-moon mr-1 text-[10px]"></i> ${r.shift}</span>`;
 
       const badgeDepot = r.tenantKey === 'tenant1'
         ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"><i class="fa-solid fa-store mr-1 text-[10px]"></i> ${r.tenantName}</span>`

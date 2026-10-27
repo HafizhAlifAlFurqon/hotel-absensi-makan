@@ -366,14 +366,18 @@ const ReportsManager = {
     // 2. Hitung Total Biaya Keseluruhan & Shift Data
     const siangRecords = records.filter(r => r.shift && r.shift.includes('Siang'));
     const soreRecords = records.filter(r => r.shift && r.shift.includes('Sore'));
+    const malamRecords = records.filter(r => r.shift && r.shift.includes('Malam'));
     const countSiang = siangRecords.length;
     const countSore = soreRecords.length;
+    const countMalam = malamRecords.length;
     const biayaSiang = siangRecords.reduce((sum, r) => sum + (Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey)), 0);
     const biayaSore = soreRecords.reduce((sum, r) => sum + (Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey)), 0);
+    const biayaMalam = malamRecords.reduce((sum, r) => sum + (Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey)), 0);
     const totalBiaya = records.reduce((sum, r) => sum + (Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey)), 0);
 
     const pctSiang = totalPorsi > 0 ? ((countSiang / totalPorsi) * 100).toFixed(1) + '%' : '0%';
     const pctSore = totalPorsi > 0 ? ((countSore / totalPorsi) * 100).toFixed(1) + '%' : '0%';
+    const pctMalam = totalPorsi > 0 ? ((countMalam / totalPorsi) * 100).toFixed(1) + '%' : '0%';
 
     // 3. Hitung Per Departemen
     const deptStats = {};
@@ -485,7 +489,7 @@ const ReportsManager = {
           ${colgroupHtml}
           <tr>
             <td colspan="7" class="section-header sec-shift" style="border: 1px solid #000000;">
-              1. REKAPITULASI SHIFT MAKAN (MAKAN SIANG &amp; MAKAN SORE)
+              1. REKAPITULASI SHIFT MAKAN (MAKAN SIANG, MAKAN SORE &amp; MAKAN MALAM)
             </td>
           </tr>
           <tr>
@@ -514,6 +518,15 @@ const ReportsManager = {
             <td class="text-right" style="border: 1px solid #000000;">${uniquePrices.length === 1 ? fmtRp(uniquePrices[0]) : 'Sesuai Depot'}</td>
             <td class="text-right bold" style="border: 1px solid #000000;">${fmtRp(biayaSore)}</td>
             <td class="text-center bold" style="border: 1px solid #000000;">${pctSore}</td>
+          </tr>
+          <tr>
+            <td class="text-center" style="border: 1px solid #000000;">3</td>
+            <td class="bold" style="border: 1px solid #000000;">Makan Malam</td>
+            <td class="text-center" style="border: 1px solid #000000;">19:01 - 10:59 WIB</td>
+            <td class="text-right bold" style="border: 1px solid #000000;">${countMalam} Porsi</td>
+            <td class="text-right" style="border: 1px solid #000000;">${uniquePrices.length === 1 ? fmtRp(uniquePrices[0]) : 'Sesuai Depot'}</td>
+            <td class="text-right bold" style="border: 1px solid #000000;">${fmtRp(biayaMalam)}</td>
+            <td class="text-center bold" style="border: 1px solid #000000;">${pctMalam}</td>
           </tr>
           <tr class="total-row">
             <td colspan="3" class="text-right bold" style="border: 1px solid #000000; border-top: 2px solid #000000; border-bottom: 2px solid #000000;">TOTAL KESELURUHAN SHIFT</td>
@@ -647,7 +660,7 @@ const ReportsManager = {
       const dept = r.department || '-';
       const pos = isTrn ? (r.institution || 'Siswa Magang') : (r.position || '-');
       const tenant = r.tenantName || Store.getTenantName(r.tenantId || r.tenantKey) || 'Kantin';
-      const shift = r.shift || (r.time && r.time < '15:01:00' ? 'Makan Siang' : 'Makan Sore');
+      const shift = r.shift || (r.time && r.time >= '11:00:00' && r.time <= '15:00:00' ? 'Makan Siang' : (r.time && r.time > '15:00:00' && r.time <= '19:00:00' ? 'Makan Sore' : 'Makan Malam'));
       const pr = Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey);
       const timeStr = r.time ? r.time.substring(0, 5) : '';
 
@@ -861,7 +874,7 @@ const ReportsManager = {
     this.renderSignatures(records, s);
   },
 
-  // 1. Render Rekapitulasi Shift Makan (Makan Siang & Makan Sore)
+  // 1. Render Rekapitulasi Shift Makan (Makan Siang, Makan Sore & Makan Malam)
   renderShiftRekapTable(records, s) {
     const tbody = document.getElementById('report-shift-table-body');
     const tfoot = document.getElementById('report-shift-table-footer');
@@ -870,10 +883,13 @@ const ReportsManager = {
     const totalPorsi = records.length;
     const siangRecords = records.filter(r => r.shift && r.shift.includes('Siang'));
     const soreRecords = records.filter(r => r.shift && r.shift.includes('Sore'));
+    const malamRecords = records.filter(r => r.shift && r.shift.includes('Malam'));
     const countSiang = siangRecords.length;
     const countSore = soreRecords.length;
+    const countMalam = malamRecords.length;
     const biayaSiang = siangRecords.reduce((sum, r) => sum + (Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey)), 0);
     const biayaSore = soreRecords.reduce((sum, r) => sum + (Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey)), 0);
+    const biayaMalam = malamRecords.reduce((sum, r) => sum + (Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey)), 0);
     const totalBiaya = records.reduce((sum, r) => sum + (Number(r.price || r.cost) || Store.getTenantPrice(r.tenantId || r.tenantKey)), 0);
 
     const tenants = Store.getTenants();
@@ -882,6 +898,7 @@ const ReportsManager = {
 
     const pctSiang = totalPorsi > 0 ? ((countSiang / totalPorsi) * 100).toFixed(1) : '0.0';
     const pctSore = totalPorsi > 0 ? ((countSore / totalPorsi) * 100).toFixed(1) : '0.0';
+    const pctMalam = totalPorsi > 0 ? ((countMalam / totalPorsi) * 100).toFixed(1) : '0.0';
 
     tbody.innerHTML = `
       <tr class="hover:bg-slate-50 border-b border-slate-100 transition avoid-break">
@@ -917,6 +934,24 @@ const ReportsManager = {
         <td class="py-1.5 px-3 text-xs font-semibold text-center text-slate-700">
           <span class="inline-flex items-center px-1.5 py-0.5 rounded ${Number(pctSore) > 0 ? 'bg-indigo-50 text-indigo-800 font-bold border border-indigo-200' : 'bg-slate-100 text-slate-400'} text-[10px]">
             ${pctSore}%
+          </span>
+        </td>
+      </tr>
+      <tr class="hover:bg-slate-50 border-b border-slate-100 transition avoid-break">
+        <td class="py-1.5 px-3 text-xs text-slate-400 font-mono">3</td>
+        <td class="py-1.5 px-3 text-xs font-bold text-slate-800">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-slate-800 inline-block shadow-xs"></span>
+            <span>Makan Malam</span>
+          </div>
+        </td>
+        <td class="py-1.5 px-3 text-xs text-slate-600 text-center font-mono">19:01 - 10:59 WIB</td>
+        <td class="py-1.5 px-3 text-xs font-extrabold text-center text-slate-900">${countMalam} Porsi</td>
+        <td class="py-1.5 px-3 text-xs font-semibold text-right font-mono text-slate-600">${priceText}</td>
+        <td class="py-1.5 px-3 text-xs font-bold text-right font-mono text-emerald-700">Rp ${biayaMalam.toLocaleString('id-ID')}</td>
+        <td class="py-1.5 px-3 text-xs font-semibold text-center text-slate-700">
+          <span class="inline-flex items-center px-1.5 py-0.5 rounded ${Number(pctMalam) > 0 ? 'bg-slate-200 text-slate-800 font-bold border border-slate-400' : 'bg-slate-100 text-slate-400'} text-[10px]">
+            ${pctMalam}%
           </span>
         </td>
       </tr>
@@ -1515,6 +1550,20 @@ const ReportsManager = {
       PDFPreview.open('printable-report-area', filename, 'portrait', this.format);
       PDFPreview.downloadCurrentPDF();
     }
+  },
+
+  // Delegasi ke PDFPreview (Zona Pemulihan & Pengosongan — fungsi asli didefinisikan di PDFPreview)
+  clearAttendanceHistory() {
+    if (window.PDFPreview && typeof PDFPreview.clearAttendanceHistory === 'function') {
+      return PDFPreview.clearAttendanceHistory();
+    }
+    alert('Fitur kosongkan riwayat belum siap.');
+  },
+  restoreAttendanceHistory() {
+    if (window.PDFPreview && typeof PDFPreview.restoreAttendanceHistory === 'function') {
+      return PDFPreview.restoreAttendanceHistory();
+    }
+    alert('Fitur pulihkan cadangan belum siap.');
   }
 };
 
@@ -1663,6 +1712,45 @@ const PDFPreview = {
   close() {
     const modalEl = document.getElementById('pdf-preview-modal');
     if (modalEl) modalEl.classList.add('hidden');
+  },
+
+  // ================= ZONA PEMULIHAN & PENGOSONGAN LAPORAN =================
+  async clearAttendanceHistory() {
+    const total = window.Store ? Store.getAttendances().length : 0;
+    if (total === 0) { alert('Riwayat laporan sudah kosong.'); return; }
+    const ok1 = confirm(`KOSONGKAN RIWAYAT LAPORAN?\n\n${total} catatan absensi makan akan dihapus dari laporan (semua tanggal, karyawan & training).\n\nSebelum dikosongkan, sistem otomatis menyimpan CADANGAN PENGAMAN di server, dan laporan bisa dipulihkan lagi dari cadangan tersebut (tombol Pulihkan di Zona Pemulihan).\n\nData karyawan & siswa training TIDAK ikut terhapus.`);
+    if (!ok1) return;
+    const typed = prompt('Konfirmasi terakhir: ketik HAPUS (huruf besar) untuk mengosongkan riwayat laporan:');
+    if ((typed || '').trim() !== 'HAPUS') { alert('Pengosongan dibatalkan (konfirmasi tidak cocok).'); return; }
+    let res = null;
+    try { res = await Store.apiPost('clear_attendances', {}); } catch (e) { res = null; }
+    if (!res || !res.success) {
+      alert('Gagal mengosongkan laporan di server. ' + ((res && res.message) ? res.message : 'Tidak ada data yang diubah.'));
+      return;
+    }
+    try { localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify([])); } catch (e) {}
+    if (window.Dashboard) window.Dashboard.updateData();
+    this.render();
+    const box = document.getElementById('report-danger-alert');
+    if (box) box.innerHTML = `<div class="p-3 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-800 text-xs font-semibold">Riwayat laporan berhasil dikosongkan. ${res.message || ''} Gunakan tombol Pulihkan di atas bila perlu mengembalikan laporan dari cadangan pengaman.</div>`;
+    alert('Riwayat laporan berhasil dikosongkan (cadangan pengaman tersimpan di server).');
+  },
+
+  async restoreAttendanceHistory() {
+    const ok = confirm('PULIHKAN LAPORAN DARI CADANGAN PENGAMAN?\n\nRiwayat laporan saat ini akan DIGANTI dengan isi cadangan pengaman terakhir (yang dibuat saat pengosongan terakhir).\n\nLanjutkan?');
+    if (!ok) return;
+    let res = null;
+    try { res = await Store.apiPost('restore_attendances_safety', {}); } catch (e) { res = null; }
+    if (!res || !res.success) {
+      alert((res && res.message) ? res.message : 'Gagal memulihkan laporan dari cadangan pengaman.');
+      return;
+    }
+    if (window.Store && Store.syncWithBackend) await Store.syncWithBackend();
+    if (window.Dashboard) window.Dashboard.updateData();
+    this.render();
+    const box = document.getElementById('report-danger-alert');
+    if (box) box.innerHTML = `<div class="p-3 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-800 text-xs font-semibold">${res.message || 'Laporan berhasil dipulihkan dari cadangan pengaman.'}</div>`;
+    alert(res.message || 'Laporan berhasil dipulihkan.');
   },
 
   downloadCurrentPDF() {

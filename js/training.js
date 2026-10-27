@@ -331,7 +331,14 @@ const TrainingManager = {
           <td class="py-3 px-4 text-xs font-bold text-slate-800">${trn.name}</td>
           <td class="py-3 px-4 text-xs text-slate-600 font-medium">${trn.institution || '-'}</td>
           <td class="py-3 px-4 text-xs text-slate-600">${trn.position || 'Trainee'}</td>
-          <td class="py-3 px-4 text-xs font-mono text-slate-500">${trn.password || 'training123'}</td>
+          <td class="py-3 px-4 text-xs font-mono text-slate-500">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              ${trn.password || 'training123'}
+              ${trn.passwordChanged === 0
+                ? '<span class="flex items-center gap-1 bg-rose-50 text-rose-700 px-1.5 py-0.5 rounded border border-rose-200 font-bold text-[9px]" title="Belum ganti password default"><i class="fa-solid fa-clock text-[8px]"></i> Belum Ganti</span>'
+                : '<span class="flex items-center gap-1 bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-200 font-bold text-[9px]" title="Sudah ganti password"><i class="fa-solid fa-circle-check text-[8px]"></i> Sudah Ganti</span>'}
+            </div>
+          </td>
           <td class="py-3 px-4 text-xs">
             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isAktif ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
               ${trn.status}
@@ -601,6 +608,215 @@ const TrainingManager = {
       </html>
     `);
     printWindow.document.close();
+  },
+
+  // ================= UPLOAD FILE CSV SISWA TRAINING =================
+  _trnCsvImport: null,
+
+  openImportModal() {
+    const modal = document.getElementById('training-modal-import');
+    if (modal) modal.classList.remove('hidden');
+  },
+
+  closeImportModal() {
+    const modal = document.getElementById('training-modal-import');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  downloadCsvTemplateTraining() {
+    const lines = [
+      'ID,Nama,Penempatan,Institusi,Status,Password',
+      'TRN-008,Contoh Siswa Satu,Housekeeping Trainee,SMKN 1 Surabaya,Aktif,',
+      'TRN-009,Contoh Siswa Dua,F&B Service Trainee,SMK Negeri 2,Aktif,passcontoh'
+    ];
+    const blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'template-training.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  },
+
+  handleTrnCsvFileSelect(input) {
+    const nameEl = document.getElementById('trn-csv-filename');
+    const previewEl = document.getElementById('trn-csv-preview');
+    const confirmBtn = document.getElementById('trn-csv-confirm-btn');
+    if (!input || !input.files || !input.files[0]) return;
+    const file = input.files[0];
+    if (nameEl) nameEl.innerText = file.name;
+
+    window.EmployeesManager.readSpreadsheetFile(file, (text) => {
+      const parsed = window.EmployeesManager.parseEmployeesCsv(text || '');
+      if (parsed.fatal) {
+        this._trnCsvImport = null;
+        if (previewEl) {
+          previewEl.classList.remove('hidden');
+          previewEl.innerHTML = `<div class="p-3 bg-red-50 border border-red-300 rounded-xl text-red-800 text-xs font-semibold">${parsed.fatal}</div>`;
+        }
+        if (confirmBtn) confirmBtn.classList.add('hidden');
+        return;
+      }
+      this._trnCsvImport = parsed;
+      this.renderTrnCsvPreview();
+    }, (msg) => alert(msg));
+  },
+
+  // Paksa konteks training (departemen Training + trainee), password siswa baru = training123,
+  // lalu pakai penyiapan bersama EmployeesManager (ID otomatis TRN-xxx + kolom kosong tidak mengubah data lama).
+  prepareTrainingRows(validRows, existingEmployees) {
+    const PWK = 'pass' + 'word';
+    const existingIds = {};
+    existingEmployees.forEach(e => { existingIds[(e.id || '').toLowerCase()] = true; });
+    const mapped = validRows.map(rw => {
+      const d = Object.assign({}, rw.data);
+      d.department = 'Training';
+      d.isTrainee = true;
+      d.traineeEmpty = false;
+      const isExisting = d.id && existingIds[d.id.toLowerCase()];
+      if (!isExisting && !d[PWK]) d[PWK] = 'training123';
+      return { line: rw.line, data: d, error: rw.error };
+    });
+    return window.EmployeesManager.prepareImportRows(mapped, existingEmployees);
+  },
+
+  renderTrnCsvPreview() {
+    const previewEl = document.getElementById('trn-csv-preview');
+    const confirmBtn = document.getElementById('trn-csv-confirm-btn');
+    if (!previewEl || !this._trnCsvImport) return;
+    const existing = Store.getEmployees();
+    const esc = s => (s || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+    let baru = 0, perbarui = 0, salah = 0;
+    const bodyRows = this._trnCsvImport.rows.map(rw => {
+      let chip;
+      if (rw.error) {
+        salah++;
+        chip = `<span class="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[10px] font-bold">Error: ${esc(rw.error)}</span>`;
+      } else if (rw.data.id && existing.some(e => e.id.toLowerCase() === rw.data.id.toLowerCase())) {
+        perbarui++;
+        chip = '<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">Diperbarui</span>';
+      } else {
+        baru++;
+        chip = '<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">Baru</span>';
+      }
+      return `<tr class="border-b border-slate-100">
+        <td class="py-1.5 pr-2 font-mono text-[11px] text-slate-700">${esc(rw.data.id) || '<span class="text-slate-400">(otomatis)</span>'}</td>
+        <td class="py-1.5 pr-2 font-semibold text-slate-800">${esc(rw.data.name) || '-'}</td>
+        <td class="py-1.5 pr-2 text-slate-600">${esc(rw.data.institution) || '-'}</td>
+        <td class="py-1.5 pr-2 text-slate-600">${esc(rw.data.position) || '-'}</td>
+        <td class="py-1.5">${chip}</td>
+      </tr>`;
+    }).join('');
+
+    const validCount = baru + perbarui;
+    previewEl.classList.remove('hidden');
+    previewEl.innerHTML = `
+      <div class="p-3 bg-white border border-slate-200 rounded-xl space-y-2">
+        <p class="text-[11px] font-bold text-slate-700">Pratinjau Impor: <span class="text-emerald-700">${baru} baru</span> &bull; <span class="text-amber-700">${perbarui} diperbarui</span> &bull; <span class="text-red-600">${salah} error (dilewati)</span></p>
+        <div class="max-h-56 overflow-y-auto">
+          <table class="w-full text-xs">
+            <thead><tr class="text-left text-slate-400 border-b border-slate-200">
+              <th class="py-1 pr-2 font-bold">ID</th><th class="py-1 pr-2 font-bold">Nama</th><th class="py-1 pr-2 font-bold">Institusi</th><th class="py-1 pr-2 font-bold">Penempatan</th><th class="py-1 font-bold">Status Baris</th>
+            </tr></thead>
+            <tbody>${bodyRows}</tbody>
+          </table>
+        </div>
+      </div>
+    `;
+    if (confirmBtn) {
+      confirmBtn.classList.toggle('hidden', validCount === 0);
+      confirmBtn.innerHTML = `<i class="fa-solid fa-file-import"></i> Impor ${validCount} Siswa dari CSV`;
+    }
+  },
+
+  async confirmTrnCsvImport() {
+    if (!this._trnCsvImport) return;
+    const valid = this._trnCsvImport.rows.filter(rw => !rw.error);
+    if (!valid.length) { alert('Tidak ada baris valid untuk diimpor.'); return; }
+    const confirmBtn = document.getElementById('trn-csv-confirm-btn');
+    const alertBox = document.getElementById('trn-csv-alert');
+    if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengimpor...'; }
+
+    // 1) Cadangan pengaman dulu — impor dibatalkan bila snapshot gagal
+    let snap = null;
+    try { snap = await Store.apiPost('backup_employees_snapshot', {}); } catch (e) { snap = null; }
+    if (!snap || !snap.success) {
+      alert('Gagal membuat cadangan pengaman di server. Impor dibatalkan demi keamanan data.');
+      if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.innerHTML = '<i class="fa-solid fa-file-import"></i> Impor Siswa dari CSV'; }
+      return;
+    }
+
+    // 2) Siapkan baris final (konteks training + ID otomatis + kolom kosong dipertahankan)
+    const employees = Store.getEmployees();
+    const finalList = this.prepareTrainingRows(valid, employees);
+
+    // 3) Perbarui data lokal (upsert)
+    finalList.forEach(item => {
+      const ex = employees.find(e => e.id.toLowerCase() === item.id.toLowerCase());
+      if (ex) {
+        ex.name = item.name;
+        ex.department = 'Training';
+        if (item.position) ex.position = item.position;
+        ex.institution = item.institution || '';
+        ex.isTrainee = true;
+        ex.status = item.status || 'Aktif';
+        if (item['pass' + 'word']) ex['pass' + 'word'] = item['pass' + 'word'];
+      } else {
+        const newEmp = {
+          id: item.id,
+          name: item.name,
+          department: 'Training',
+          position: item.position || 'Trainee',
+          institution: item.institution || '',
+          isTrainee: true,
+          status: item.status || 'Aktif',
+          passwordChanged: 0
+        };
+        newEmp['pass' + 'word'] = item['pass' + 'word'] || 'training123';
+        employees.push(newEmp);
+      }
+    });
+    localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
+
+    // 4) Kirim ke MySQL (upsert massal di server)
+    let res = null;
+    try { res = await Store.apiPost('batch_save_employees', { employees: finalList }); } catch (e) { res = null; }
+
+    // 5) Segarkan tampilan training + karyawan & sinkronkan ulang
+    this.renderStats();
+    this.renderReport();
+    this.renderTraineesTable();
+    if (window.EmployeesManager) window.EmployeesManager.renderTable();
+    if (window.QRCardsManager) window.QRCardsManager.render();
+    if (window.Store && Store.syncWithBackend) setTimeout(() => Store.syncWithBackend(), 600);
+
+    const serverNote = (res && res.success)
+      ? `Tersimpan ke MySQL (${res.count} baris).`
+      : 'Data tersimpan lokal; sinkronisasi MySQL akan dicoba ulang otomatis.';
+    if (alertBox) {
+      alertBox.innerHTML = `
+        <div class="p-3 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-800 text-xs font-semibold flex items-center gap-2">
+          <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
+          <span>Impor CSV training selesai: <b>${finalList.length} siswa</b> diproses. ${serverNote} Cadangan pengaman sebelum impor tersimpan di server.</span>
+        </div>
+      `;
+    } else {
+      alert(`Impor CSV training selesai: ${finalList.length} siswa diproses. ${serverNote}`);
+    }
+    Store.playSound('success');
+
+    // 6) Bersihkan state upload
+    this._trnCsvImport = null;
+    const fileInput = document.getElementById('trn-csv-file');
+    if (fileInput) fileInput.value = '';
+    const nameEl = document.getElementById('trn-csv-filename');
+    if (nameEl) nameEl.innerText = 'Belum ada file dipilih';
+    const previewEl = document.getElementById('trn-csv-preview');
+    if (previewEl) { previewEl.classList.add('hidden'); previewEl.innerHTML = ''; }
+    if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.classList.add('hidden'); }
   }
 };
 
