@@ -1912,18 +1912,12 @@
             <!-- Pilihan Tanggal Jatah (untuk karyawan shift malam) -->
             <div class="text-left bg-blue-50/70 border border-blue-200 rounded-2xl p-3 space-y-2">
               <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider">Tanggal Masuk Kerja (Tanggal Jatah)</label>
-              <div class="flex flex-wrap items-center gap-1.5">
-                <div class="flex items-center gap-1 bg-white border border-slate-200 p-1 rounded-xl w-fit">
-                  <button type="button" id="jatah-btn-emp-portal-today" onclick="AttendanceManager.setJatahMode('emp-portal', 'today')" class="px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer">Hari ini <span id="jatah-label-emp-portal-today" class="font-semibold opacity-80"></span></button>
-                  <button type="button" id="jatah-btn-emp-portal-range" onclick="AttendanceManager.setJatahMode('emp-portal', 'range')" class="px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer">Rentang Tanggal</button>
-                </div>
-                <div id="emp-portal-range-container" class="hidden flex items-center gap-1.5 bg-white border border-slate-200 p-1 rounded-xl">
-                  <input type="date" id="emp-portal-range-start" onchange="AttendanceManager.onRangeChange('emp-portal')" class="px-2 py-1 text-xs font-semibold border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
-                  <span class="text-xs text-slate-400 font-semibold">s/d</span>
-                  <input type="date" id="emp-portal-range-end" onchange="AttendanceManager.onRangeChange('emp-portal')" class="px-2 py-1 text-xs font-semibold border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
-                </div>
+              <div class="flex items-center gap-1 bg-white border border-slate-200 p-1 rounded-xl w-fit">
+                <button type="button" id="jatah-btn-emp-portal-today" onclick="AttendanceManager.setJatahDate('emp-portal', Store.getTodayDateString())" class="px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer">Hari ini <span id="jatah-label-emp-portal-today" class="font-semibold opacity-80"></span></button>
+                <button type="button" id="jatah-btn-emp-portal-yesterday" onclick="AttendanceManager.setJatahDate('emp-portal', Store.getYesterdayDateString())" class="px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer">Kemarin <span id="jatah-label-emp-portal-yesterday" class="font-semibold opacity-80"></span></button>
               </div>
               <input type="hidden" id="emp-portal-date-input">
+              <p class="text-[11px] text-slate-500">Shift malam (masuk kemarin malam, baru makan pagi ini)? Pilih <b>Kemarin</b> — tanggal Anda masuk kerja.</p>
             </div>
 
             <!-- Camera Area -->
@@ -1989,7 +1983,7 @@
             <p>&bull; Jatah makan: <b>1 kali per tanggal jatah</b> (lintas kantin depot), jarak minimal <b>6 jam</b> antar absen.</p>
             <p>&bull; <b>Shift Siang:</b> 11.00 - 15.00 WIB</p>
             <p>&bull; <b>Shift Sore:</b> 15.01 - 19.00 WIB</p>
-            <p>&bull; <b>Shift Malam:</b> 19.00 - 10.00 WIB</p>
+            <p>&bull; <b>Shift Malam:</b> 19.00 - 10.00 WIB — pilih <b>Tanggal Jatah: Kemarin</b> bila masuk kemarin malam dan baru makan keesokan paginya.</p>
           </div>
 
         </div>
@@ -2822,7 +2816,7 @@
   <script data-cfasync="false" src="js/store.js?v=20261026_malam19_10"></script>
   <script data-cfasync="false" src="js/auth.js?v=20261026_pwc"></script>
   <script data-cfasync="false" src="js/dashboard.js?v=20261024_malam"></script>
-  <script data-cfasync="false" src="js/attendance.js?v=20261026_range"></script>
+  <script data-cfasync="false" src="js/attendance.js?v=20261028_portal_yesterday"></script>
   <script data-cfasync="false" src="js/training.js?v=20261026_pwc"></script>
   <script data-cfasync="false" src="js/tenants.js?v=20261016_hosting"></script>
   <script data-cfasync="false" src="js/employees.js?v=20261026_pwc"></script>

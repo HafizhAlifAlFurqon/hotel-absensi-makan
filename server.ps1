@@ -1,5 +1,8 @@
 # server.ps1 - Server Lokal Mandiri Berbasis PHP CLI & MySQL (dengan Fallback HttpListener)
-param([int]$Port = 8080)
+param(
+    [int]$Port = 8080,
+    [switch]$OpenBrowser
+)
 
 $ipAddresses = Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike "127.*" -and $_.IPAddress -notlike "169.254.*" }
 $localIp = if ($ipAddresses) { $ipAddresses[0].IPAddress } else { "127.0.0.1" }
@@ -64,6 +67,10 @@ if ($phpExe -and (Test-Path $phpExe)) {
     Write-Host "Akses Jaringan: http://${localIp}:$Port/index.html" -ForegroundColor Cyan
     Write-Host "Tekan CTRL + C untuk menghentikan server." -ForegroundColor Gray
     Write-Host "==========================================================" -ForegroundColor Cyan
+
+    if ($OpenBrowser) {
+        Start-Process "http://localhost:$Port/index.html"
+    }
 
     & $phpExe -S "0.0.0.0:$Port" -t "$root"
     exit

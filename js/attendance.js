@@ -286,6 +286,11 @@ const AttendanceManager = {
     const input = document.getElementById(scope + '-date-input');
     if (input) input.value = todayStr;
 
+    if (scope === 'emp-portal') {
+      this.renderJatahButtons(scope);
+      return;
+    }
+
     const startEl = document.getElementById(scope + '-range-start');
     const endEl = document.getElementById(scope + '-range-end');
     if (startEl && !startEl.value) startEl.value = todayStr;
@@ -296,6 +301,16 @@ const AttendanceManager = {
 
   setJatahMode(scope, mode) {
     if (!this.jatahModes) this.jatahModes = {};
+
+    if (scope === 'emp-portal') {
+      if (mode === 'yesterday') {
+        this.setJatahDate('emp-portal', Store.getYesterdayDateString());
+      } else {
+        this.setJatahDate('emp-portal', Store.getTodayDateString());
+      }
+      return;
+    }
+
     this.jatahModes[scope] = mode;
 
     const todayStr = Store.getTodayDateString();
@@ -326,6 +341,17 @@ const AttendanceManager = {
 
   setJatahDate(scope, dateStr) {
     const todayStr = Store.getTodayDateString();
+    const yestStr = Store.getYesterdayDateString();
+
+    if (scope === 'emp-portal') {
+      if (!this.jatahModes) this.jatahModes = {};
+      this.jatahModes['emp-portal'] = (dateStr === yestStr) ? 'yesterday' : 'today';
+      const input = document.getElementById('emp-portal-date-input');
+      if (input) input.value = (dateStr === yestStr) ? yestStr : todayStr;
+      this.renderJatahButtons('emp-portal');
+      return;
+    }
+
     if (dateStr === todayStr) {
       this.setJatahMode(scope, 'today');
     } else {
@@ -340,8 +366,51 @@ const AttendanceManager = {
   renderJatahButtons(scope) {
     if (!this.jatahModes) this.jatahModes = {};
     const mode = this.jatahModes[scope] || 'today';
-    const activeBg = scope === 'emp-portal' ? 'bg-blue-600' : 'bg-emerald-600';
 
+    if (scope === 'emp-portal') {
+      const btnToday = document.getElementById('jatah-btn-emp-portal-today');
+      const btnYesterday = document.getElementById('jatah-btn-emp-portal-yesterday');
+      const lblToday = document.getElementById('jatah-label-emp-portal-today');
+      const lblYesterday = document.getElementById('jatah-label-emp-portal-yesterday');
+
+      const todayStr = Store.getTodayDateString();
+      const yestStr = Store.getYesterdayDateString();
+
+      if (lblToday) {
+        try {
+          const p = todayStr.split('-');
+          const d = new Date(p[0], p[1] - 1, p[2]);
+          lblToday.innerText = d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
+        } catch (e) {
+          lblToday.innerText = todayStr;
+        }
+      }
+
+      if (lblYesterday) {
+        try {
+          const p = yestStr.split('-');
+          const d = new Date(p[0], p[1] - 1, p[2]);
+          lblYesterday.innerText = d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
+        } catch (e) {
+          lblYesterday.innerText = yestStr;
+        }
+      }
+
+      if (btnToday) {
+        btnToday.className = (mode === 'today')
+          ? 'px-3 py-1.5 text-xs font-bold rounded-lg shadow-xs transition bg-blue-600 text-white cursor-pointer'
+          : 'px-3 py-1.5 text-xs font-bold rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 transition cursor-pointer';
+      }
+
+      if (btnYesterday) {
+        btnYesterday.className = (mode === 'yesterday')
+          ? 'px-3 py-1.5 text-xs font-bold rounded-lg shadow-xs transition bg-blue-600 text-white cursor-pointer'
+          : 'px-3 py-1.5 text-xs font-bold rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 transition cursor-pointer';
+      }
+      return;
+    }
+
+    const activeBg = 'bg-emerald-600';
     const btnToday = document.getElementById(`jatah-btn-${scope}-today`);
     const btnRange = document.getElementById(`jatah-btn-${scope}-range`);
     const lblToday = document.getElementById(`jatah-label-${scope}-today`);
