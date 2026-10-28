@@ -275,7 +275,9 @@ const AttendanceManager = {
   },
 
   initJatahControls() {
-    ['canteen', 'emp-portal', 'tenant1', 'tenant2'].forEach(scope => this.initJatahControl(scope));
+    const tenantScopes = (window.Store && typeof Store.getTenants === 'function') ? Store.getTenants().map(t => t.id) : [];
+    const allScopes = Array.from(new Set(['canteen', 'emp-portal', ...tenantScopes]));
+    allScopes.forEach(scope => this.initJatahControl(scope));
   },
 
   initJatahControl(scope) {

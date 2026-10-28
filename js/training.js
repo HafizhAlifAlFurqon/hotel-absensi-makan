@@ -625,9 +625,7 @@ const TrainingManager = {
 
   downloadCsvTemplateTraining() {
     const lines = [
-      'ID,Nama,Penempatan,Institusi,Status,Password',
-      'TRN-008,Contoh Siswa Satu,Housekeeping Trainee,SMKN 1 Surabaya,Aktif,',
-      'TRN-009,Contoh Siswa Dua,F&B Service Trainee,SMK Negeri 2,Aktif,passcontoh'
+      'ID,Nama,Penempatan,Institusi,Status,Password'
     ];
     const blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);

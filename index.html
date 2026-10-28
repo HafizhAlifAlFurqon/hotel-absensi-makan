@@ -476,33 +476,8 @@
           <p class="text-[10px] sm:text-[11px] text-slate-400 mt-1 truncate">Total beban konsumsi</p>
         </div>
 
-        <div class="bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 shadow-xs hover:border-blue-300 transition">
-          <div class="flex items-center justify-between">
-            <span id="dash-label-tenant1" class="text-xs font-bold text-blue-700 uppercase tracking-wider truncate max-w-[100px] sm:max-w-none">Depot Bu Mamie</span>
-            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-xs sm:text-sm shrink-0">
-              <i class="fa-solid fa-store"></i>
-            </div>
-          </div>
-          <div class="mt-2 flex items-baseline gap-1.5 sm:gap-2">
-            <span id="dash-count-depot1" class="text-xl sm:text-2xl font-extrabold text-slate-900 font-mono">0</span>
-            <span class="text-[11px] sm:text-xs font-semibold text-blue-600">Porsi</span>
-          </div>
-          <p class="text-[10px] sm:text-[11px] text-slate-400 mt-1 truncate">Tenant 1</p>
-        </div>
-
-        <div class="bg-white p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-200 shadow-xs hover:border-purple-300 transition col-span-2 sm:col-span-1">
-          <div class="flex items-center justify-between">
-            <span id="dash-label-tenant2" class="text-xs font-bold text-purple-700 uppercase tracking-wider truncate max-w-[100px] sm:max-w-none">Depot Bu Yuli</span>
-            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center text-xs sm:text-sm shrink-0">
-              <i class="fa-solid fa-utensils"></i>
-            </div>
-          </div>
-          <div class="mt-2 flex items-baseline gap-1.5 sm:gap-2">
-            <span id="dash-count-depot2" class="text-xl sm:text-2xl font-extrabold text-slate-900 font-mono">0</span>
-            <span class="text-[11px] sm:text-xs font-semibold text-purple-600">Porsi</span>
-          </div>
-          <p class="text-[10px] sm:text-[11px] text-slate-400 mt-1 truncate">Tenant 2</p>
-        </div>
+        <!-- Container Kartu Depot/Kantin Dinamis -->
+        <div id="dash-dynamic-tenants-cards" class="contents"></div>
 
       </div>
 
@@ -2187,16 +2162,14 @@
           <select id="batch-default-dept" class="px-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none bg-white">
           </select>
         </div>
-        <button type="button" onclick="EmployeesManager.fillBatchSample()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer">
-          <i class="fa-solid fa-wand-magic-sparkles text-emerald-600"></i> Isi Contoh 10 Karyawan Otomatis
-        </button>
+        
       </div>
 
       <div>
         <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
           Daftar Baris Karyawan:
         </label>
-        <textarea id="batch-emp-textarea" rows="8" placeholder="Contoh:&#10;Budi Santoso, Front Office, Front Desk, budi123&#10;Rina Kartika, Housekeeping, Room Attendant, rina123&#10;Ahmad Hidayat&#10;Dewi Lestari" class="w-full p-3 font-mono text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none transition"></textarea>
+        <textarea id="batch-emp-textarea" rows="8" placeholder="Format input (1 per baris): Nama, Departemen, Jabatan, Password&#10;Contoh: Nama Karyawan, Housekeeping, Staff, pass123" class="w-full p-3 font-mono text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 outline-none transition"></textarea>
       </div>
 
       <div id="batch-modal-alert"></div>
@@ -2729,10 +2702,7 @@
     function renderQuickLoginButtons() {
       const container = document.getElementById('quick-login-grid');
       if (!container) return;
-      const tenants = (window.Store && typeof Store.getTenants === 'function') ? Store.getTenants() : [
-        { id: 'tenant1', name: 'Depot Bu Mamie', password: 'depota123' },
-        { id: 'tenant2', name: 'Depot Bu Yuli', password: 'depotyuli123' }
-      ];
+      const tenants = (window.Store && typeof Store.getTenants === 'function') ? Store.getTenants() : [];
       const emps = (window.Store && typeof Store.getEmployees === 'function') ? Store.getEmployees().filter(e => e.status === 'Aktif') : [];
       const s = (window.Store && typeof Store.getSettings === 'function') ? Store.getSettings() : { adminUsername: 'admin', adminPassword: 'admin123' };
 
@@ -2813,13 +2783,13 @@
   <script data-cfasync="false" src="js/libs/html2pdf.bundle.min.js"></script>
   <script data-cfasync="false" src="js/libs/xlsx.full.min.js"></script>
 
-  <script data-cfasync="false" src="js/store.js?v=20261026_malam19_10"></script>
+  <script data-cfasync="false" src="js/store.js?v=20261028_dynamic"></script>
   <script data-cfasync="false" src="js/auth.js?v=20261026_pwc"></script>
   <script data-cfasync="false" src="js/dashboard.js?v=20261024_malam"></script>
   <script data-cfasync="false" src="js/attendance.js?v=20261028_portal_yesterday"></script>
-  <script data-cfasync="false" src="js/training.js?v=20261026_pwc"></script>
+  <script data-cfasync="false" src="js/training.js?v=20261028_dynamic"></script>
   <script data-cfasync="false" src="js/tenants.js?v=20261016_hosting"></script>
-  <script data-cfasync="false" src="js/employees.js?v=20261026_pwc"></script>
+  <script data-cfasync="false" src="js/employees.js?v=20261028_dynamic"></script>
   <script data-cfasync="false" src="js/qr_cards.js?v=20261016_hosting"></script>
   <script src="js/reports.js?v=20261026_konf2"></script>
   <script data-cfasync="false" src="js/app.js?v=20261026_malam19_10"></script>

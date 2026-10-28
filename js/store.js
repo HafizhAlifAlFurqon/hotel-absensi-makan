@@ -31,14 +31,9 @@ const DEFAULT_SETTINGS = {
   hotelName: 'BeSS Mansion Hotel Surabaya',
   adminUsername: 'admin',
   adminPassword: 'admin123',
-  tenant1Name: 'Depot Bu Mamie',
-  tenant2Name: 'Depot Bu Yuli',
   mealPrice: 15000, // Rp 15.000 per porsi
   bypassTimeForTesting: false, // Mode simulasi waktu
-  tenants: [
-    { id: 'tenant1', name: 'Depot Bu Mamie', password: 'depota123', status: 'Aktif', price: 13000 },
-    { id: 'tenant2', name: 'Depot Bu Yuli', password: 'depotyuli123', status: 'Aktif', price: 13000 }
-  ]
+  tenants: []
 };
 
 const Store = {
@@ -124,21 +119,20 @@ const Store = {
       localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify([]));
     } else {
       try {
-        const currentEmps = JSON.parse(localStorage.getItem(STORAGE_KEYS.EMPLOYEES));
-        // Bersihkan 15 sampel karyawan lama jika pengguna belum pernah menambahkan karyawan sendiri
-        const dummyNames = ['Bambang Pamungkas', 'Siti Nurhaliza', 'Agus Setiawan', 'Juna Rorimpandey', 'Rina Wijaya', 'Dimas Anggara', 'Tri Wahyuni', 'Hendra Gunawan', 'Joko Prabowo', 'Maya Indah', 'Eko Prasetyo', 'Ahmad Fauzi', 'Dewi Lestari', 'Rudi Hartono', 'Slamet Riyadi'];
-        const isDummyOnly = Array.isArray(currentEmps) && currentEmps.length > 0 && currentEmps.every(e => dummyNames.includes(e.name));
-        if (isDummyOnly) {
-          localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify([]));
-        } else if (Array.isArray(currentEmps)) {
-          let changed = false;
-          currentEmps.forEach(e => {
-            if (!e.password) {
-              e.password = 'password123';
-              changed = true;
-            }
-          });
-          if (changed) {
+        let currentEmps = JSON.parse(localStorage.getItem(STORAGE_KEYS.EMPLOYEES));
+        if (Array.isArray(currentEmps)) {
+          // Bersihkan seluruh data karyawan dummy/sampel lama yang mungkin masih tersisa
+          const dummyNames = [
+            'bambang pamungkas', 'siti nurhaliza', 'agus setiawan', 'juna rorimpandey', 'rina wijaya',
+            'dimas anggara', 'tri wahyuni', 'hendra gunawan', 'joko prabowo', 'maya indah',
+            'eko prasetyo', 'ahmad fauzi', 'dewi lestari', 'rudi hartono', 'slamet riyadi',
+            'budi santoso', 'rina kartika', 'ahmad hidayat', 'agus prasetyo', 'sari wulandari',
+            'hendra wijaya', 'mega permata', 'bambang sukoco', 'dian sastro', 'contoh siswa satu',
+            'contoh siswa dua', 'contoh karyawan satu', 'contoh karyawan dua', 'contoh trainee'
+          ];
+          const filtered = currentEmps.filter(e => !dummyNames.includes((e.name || '').trim().toLowerCase()));
+          if (filtered.length !== currentEmps.length) {
+            currentEmps = filtered;
             localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(currentEmps));
           }
         }
@@ -313,17 +307,9 @@ const Store = {
       if (data && data.success) {
         this.isMySQL = true;
 
-        // 1. Data Karyawan dari MySQL
+        // 1. Data Karyawan dari MySQL (Sumber Kebenaran Utama Dinamis)
         if (Array.isArray(data.employees)) {
-          if (data.employees.length > 0) {
-            localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(data.employees));
-          } else {
-            // Jika di MySQL kosong tapi user punya data lokal, upload ke MySQL
-            const localEmps = this.getEmployees();
-            if (localEmps.length > 0) {
-              await this.apiPost('batch_save_employees', { employees: localEmps });
-            }
-          }
+          localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(data.employees));
         }
 
         // 2. Data Riwayat Absensi dari MySQL
@@ -790,17 +776,17 @@ const Store = {
           : defaultPrice
       }));
     }
-    return [
-      { id: 'tenant1', name: s.tenant1Name || 'Depot Bu Mamie', status: 'Aktif', price: defaultPrice },
-      { id: 'tenant2', name: s.tenant2Name || 'Depot Bu Yuli', status: 'Aktif', price: defaultPrice }
-    ];
+    const list = [];
+    if (s.tenant1Name) list.push({ id: 'tenant1', name: s.tenant1Name, status: 'Aktif', price: defaultPrice });
+    if (s.tenant2Name) list.push({ id: 'tenant2', name: s.tenant2Name, status: 'Aktif', price: defaultPrice });
+    return list;
   },
 
   getTenantPrice(tenantKey) {
     if (!tenantKey) return Number(Store.getSettings().mealPrice) || 15000;
     const tenants = Store.getTenants();
     const cleanKey = String(tenantKey).trim().toLowerCase();
-    const t = tenants.find(item => item.id.toLowerCase() === cleanKey || item.name.toLowerCase() === cleanKey);
+    const t = tenants.find(item => (item.id && item.id.toLowerCase() === cleanKey) || (item.name && item.name.toLowerCase() === cleanKey));
     if (t && t.price !== undefined && t.price !== null && !isNaN(Number(t.price)) && Number(t.price) > 0) {
       return Number(t.price);
     }
@@ -812,12 +798,12 @@ const Store = {
     if (!tenantKey) return 'Kantin Hotel';
     const cleanKey = String(tenantKey).trim().toLowerCase();
     const tenants = Store.getTenants();
-    const t = tenants.find(item => item.id.toLowerCase() === cleanKey || item.name.toLowerCase() === cleanKey);
+    const t = tenants.find(item => (item.id && item.id.toLowerCase() === cleanKey) || (item.name && item.name.toLowerCase() === cleanKey));
     if (t) return t.name;
 
     const s = Store.getSettings();
-    if (cleanKey === 'tenant1' || cleanKey === 'depot bu a') return s.tenant1Name || 'Depot Bu Mamie';
-    if (cleanKey === 'tenant2') return s.tenant2Name || 'Depot Bu Yuli';
+    if (cleanKey === 'tenant1' && s.tenant1Name) return s.tenant1Name;
+    if (cleanKey === 'tenant2' && s.tenant2Name) return s.tenant2Name;
     return tenantKey;
   },
 

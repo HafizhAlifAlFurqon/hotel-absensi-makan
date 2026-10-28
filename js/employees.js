@@ -749,23 +749,9 @@ const EmployeesManager = {
   },
 
   fillBatchSample() {
+    // Data dummy hardcode telah dihapus
     const textarea = document.getElementById('batch-emp-textarea');
-    if (!textarea) return;
-
-    const sampleText = [
-      'Budi Santoso, Front Office, Front Desk Agent, budi123',
-      'Rina Kartika, Housekeeping, Room Attendant, rina123',
-      'Ahmad Hidayat, F&B Service, Waiter, ahmad123',
-      'Dewi Lestari, Kitchen, Demi Chef, dewi123',
-      'Agus Prasetyo, Engineering, Technician, agus123',
-      'Sari Wulandari, Sales & Marketing, Sales Executive, sari123',
-      'Hendra Wijaya, Accounting & Finance, Income Auditor, hendra123',
-      'Mega Permata, HRD & Personnel, HR Officer, mega123',
-      'Bambang Sukoco, Security, Security Officer, bambang123',
-      'Dian Sastro, Executive & Admin, Guest Relation Officer, dian123'
-    ].join('\n');
-
-    textarea.value = sampleText;
+    if (textarea) textarea.value = '';
   },
 
   handleBatchSubmit() {
@@ -871,10 +857,7 @@ const EmployeesManager = {
 
   downloadCsvTemplate() {
     const lines = [
-      'ID,Nama,Departemen,Jabatan,Institusi,Trainee,Status,Password',
-      'EMP-013,Contoh Karyawan Satu,Front Office,Front Desk Agent,,Tidak,Aktif,',
-      'EMP-014,Contoh Karyawan Dua,Housekeeping,Room Attendant,,Tidak,Aktif,passcontoh',
-      'TRN-004,Contoh Trainee,Kitchen,Trainee Cook,SMK Negeri 1,Ya,Aktif,'
+      'ID,Nama,Departemen,Jabatan,Institusi,Trainee,Status,Password'
     ];
     const blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
